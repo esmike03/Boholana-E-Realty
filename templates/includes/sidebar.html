@@ -1,0 +1,210 @@
+<!-- Sidebar -->
+<aside
+  class="fixed top-0 left-0 h-full w-64 z-50 flex flex-col"
+  style="background: linear-gradient(180deg, #0f2942 0%, #1a4a7a 100%)"
+>
+  <!-- Brand -->
+  <div class="px-6 py-5 border-b border-white/10">
+    <div class="flex items-center gap-3">
+      <div class="bg-yellow-500 rounded-lg p-2">
+        <i class="fas fa-building text-white text-sm"></i>
+      </div>
+      <div>
+        <h1 class="text-white font-bold text-sm leading-tight">
+          Boholana E-Realty
+        </h1>
+        <p class="text-white/50 text-xs">Property Management</p>
+      </div>
+    </div>
+  </div>
+  <!-- Quick Search -->
+<div class="px-4 py-3 border-b border-white/10">
+    <form action="{% url 'accounts:search' %}" method="GET">
+        <div class="relative">
+            <input type="text" name="q"
+                   placeholder="Quick search..."
+                   class="w-full bg-white/10 text-white placeholder-white/40
+                          text-xs rounded-xl pl-8 pr-3 py-2
+                          border border-white/10
+                          focus:outline-none focus:bg-white/20 transition">
+            
+        </div>
+    </form>
+</div>
+
+  <!-- User Info -->
+  <div class="px-6 py-4 border-b border-white/10">
+    <div class="flex items-center gap-3">
+      <div
+        class="bg-blue-500 rounded-full w-9 h-9 flex items-center justify-center"
+      >
+        <span class="text-white text-sm font-semibold">
+          {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+        </span>
+      </div>
+      <div>
+        <p class="text-white text-xs font-semibold">
+          {{ user.get_full_name|default:user.username }}
+        </p>
+        <span class="text-yellow-400 text-xs">{{ user.get_role_display }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="flex-1 overflow-y-auto py-4">
+    <!-- Main -->
+    <div class="px-6 mb-2">
+      <p class="text-white/40 text-xs font-semibold uppercase tracking-widest">
+        Main
+      </p>
+    </div>
+    <a href="{% url 'accounts:search' %}"
+   class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all
+   {% if 'search' in request.path %}
+       text-white bg-white/15 border-l-4 border-yellow-400
+   {% else %}
+       text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent
+   {% endif %}">
+    <i class="fas fa-search w-4"></i>
+    Search
+</a>
+    <a
+      href="{% url 'dashboard' %}"
+      class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all {% if request.resolver_match.url_name == 'dashboard' %} text-white bg-white/15 border-l-4 border-yellow-400 {% else %} text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent {% endif %}"
+    >
+      <i class="fas fa-tachometer-alt w-4"></i>
+      Dashboard
+    </a>
+<a href="{% url 'accounts:notifications' %}"
+   class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all
+   {% if 'notifications' in request.path %}
+       text-white bg-white/15 border-l-4 border-yellow-400
+   {% else %}
+       text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent
+   {% endif %}">
+    <i class="fas fa-bell w-4"></i>
+    Notifications
+    <span id="sidebar-notif-count"
+          class="ml-auto bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full hidden">
+        0
+    </span>
+</a>
+    <!-- Property -->
+    <div class="px-6 mt-4 mb-2">
+      <p class="text-white/40 text-xs font-semibold uppercase tracking-widest">
+        Property
+      </p>
+    </div>
+    <a
+      href="{% url 'listings:list' %}"
+      class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all {% if 'listings' in request.path %} text-white bg-white/15 border-l-4 border-yellow-400 {% else %} text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent {% endif %}"
+    >
+      <i class="fas fa-home w-4"></i>
+      Listings
+    </a>
+    <a href="{% url 'reservations:appointments' %}"
+   class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all
+   {% if 'appointments' in request.path %}
+       text-white bg-white/15 border-l-4 border-yellow-400
+   {% else %}
+       text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent
+   {% endif %}">
+    <i class="fas fa-calendar w-4"></i>
+    Appointments
+</a>
+
+    <!-- Transactions -->
+    <div class="px-6 mt-4 mb-2">
+      <p class="text-white/40 text-xs font-semibold uppercase tracking-widest">
+        Transactions
+      </p>
+    </div>
+    <a
+      href="{% url 'reservations:list' %}"
+      class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all {% if 'reservations' in request.path %} text-white bg-white/15 border-l-4 border-yellow-400 {% else %} text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent {% endif %}"
+    >
+      <i class="fas fa-calendar-check w-4"></i>
+      Reservations
+    </a>
+    <a
+      href="{% url 'sales:list' %}"
+      class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all {% if 'sales' in request.path %} text-white bg-white/15 border-l-4 border-yellow-400 {% else %} text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent {% endif %}"
+    >
+      <i class="fas fa-handshake w-4"></i>
+      Sales
+    </a>
+    <a
+      href="{% url 'sales:disbursements' %}"
+      class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all {% if 'disbursements' in request.path %} text-white bg-white/15 border-l-4 border-yellow-400 {% else %} text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent {% endif %}"
+    >
+      <i class="fas fa-money-bill-wave w-4"></i>
+      Disbursements
+    </a>
+
+    <!-- Management -->
+    <div class="px-6 mt-4 mb-2">
+      <p class="text-white/40 text-xs font-semibold uppercase tracking-widest">
+        Management
+      </p>
+    </div>
+  <a href="{% url 'documents:list' %}"
+   class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all
+   {% if 'documents' in request.path %}
+       text-white bg-white/15 border-l-4 border-yellow-400
+   {% else %}
+       text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent
+   {% endif %}">
+    <i class="fas fa-file-alt w-4"></i>
+    Documents
+</a>
+    <a
+      href="{% url 'reports:list' %}"
+      class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all {% if 'reports' in request.path %} text-white bg-white/15 border-l-4 border-yellow-400 {% else %} text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent {% endif %}"
+    >
+      <i class="fas fa-chart-bar w-4"></i>
+      Reports
+    </a>
+    <a href="{% url 'listings:tags' %}"
+   class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all
+   {% if 'tags' in request.path %}
+       text-white bg-white/15 border-l-4 border-yellow-400
+   {% else %}
+       text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent
+   {% endif %}">
+    <i class="fas fa-tags w-4"></i>
+    Tags
+</a>
+
+    <!-- Admin only -->
+    {% if user.role == 'broker' or user.role == 'admin' or user.is_superuser %}
+<div class="px-6 mt-4 mb-2">
+  <p class="text-white/40 text-xs font-semibold uppercase tracking-widest">
+    Admin
+  </p>
+</div>
+<a
+  href="{% url 'accounts:users' %}"
+  class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all {% if 'users' in request.path %} text-white bg-white/15 border-l-4 border-yellow-400 {% else %} text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent {% endif %}">
+  <i class="fas fa-users w-4"></i>
+  Manage Users
+</a>
+{% endif %}
+  </nav>
+
+  <!-- Logout at bottom -->
+  <div class="px-6 py-4 border-t border-white/10">
+    <a href="{% url 'accounts:profile' %}"
+       class="flex items-center gap-3 text-white/70 hover:text-white text-sm transition-all mb-3">
+        <i class="fas fa-user-circle w-4"></i>
+        My Profile
+    </a>
+    <a
+      href="{% url 'accounts:logout' %}"
+      class="flex items-center gap-3 text-white/70 hover:text-red-400 text-sm transition-all"
+    >
+      <i class="fas fa-sign-out-alt w-4"></i>
+      Logout
+    </a>
+  </div>
+</aside>

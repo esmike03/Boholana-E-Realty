@@ -1,0 +1,120 @@
+{% extends 'public_base.html' %} {% block title %}My Reservations — Boholana
+E-Realty{% endblock %} {% block content %}
+
+<!-- Header -->
+<section class="bg-white border-b border-gray-100 py-10 px-6">
+  <div class="max-w-7xl mx-auto">
+    <div
+      class="inline-flex items-center gap-2 text-yellow-600 text-xs font-semibold tracking-widest uppercase mb-3"
+    >
+      <span class="block w-5 h-px bg-yellow-600"></span>
+      Client Portal
+    </div>
+    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">
+      My Reservations
+    </h1>
+    <p class="text-gray-400 text-sm mt-1">Track your property reservations</p>
+  </div>
+</section>
+
+<!-- Content -->
+<section class="bg-gray-50 py-10 px-6 min-h-screen">
+  <div class="max-w-7xl mx-auto">
+    <div class="bg-white border border-gray-100 overflow-hidden">
+      <!-- Table header bar -->
+      <div
+        class="px-6 py-4 border-b border-gray-100 flex items-center justify-between"
+      >
+        <p
+          class="text-[10px] font-semibold tracking-widest uppercase text-gray-400"
+        >
+          {{ reservations|length }} Reservation{{ reservations|length|pluralize}}
+        </p>
+        <a
+          href="{% url 'properties' %}"
+          class="text-xs font-medium text-gray-900 border-b border-gray-900 hover:text-yellow-600 hover:border-yellow-600 transition-colors flex items-center gap-1.5"
+        >
+          Browse Properties <i class="fas fa-arrow-right text-[10px]"></i>
+        </a>
+      </div>
+
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-gray-50 border-b border-gray-100">
+            <th
+              class="px-6 py-3 text-left text-[10px] font-semibold tracking-widest uppercase text-gray-400"
+            >
+              Property
+            </th>
+            <th
+              class="px-6 py-3 text-left text-[10px] font-semibold tracking-widest uppercase text-gray-400"
+            >
+              Date
+            </th>
+            <th
+              class="px-6 py-3 text-left text-[10px] font-semibold tracking-widest uppercase text-gray-400"
+            >
+              Fee
+            </th>
+            <th
+              class="px-6 py-3 text-left text-[10px] font-semibold tracking-widest uppercase text-gray-400"
+            >
+              Status
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          {% for reservation in reservations %}
+          <tr class="hover:bg-gray-50 transition-colors group">
+            <td class="px-6 py-4">
+              <a
+                href="{% url 'property_detail' reservation.property.id %}"
+                class="font-semibold text-gray-900 group-hover:text-yellow-600 transition-colors text-sm"
+              >
+                {{ reservation.property.title }}
+              </a>
+              <p class="text-xs text-gray-400 mt-0.5">
+                {{ reservation.property.city }}, 
+                {{reservation.property.province }}
+              </p>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-500">
+              {{ reservation.reservation_date }}
+            </td>
+            <td class="px-6 py-4 text-sm font-semibold text-gray-900">
+              ₱{{ reservation.reservation_fee|floatformat:2 }}
+            </td>
+            <td class="px-6 py-4">
+              <span
+                class="text-[9px] font-semibold tracking-wider uppercase px-2.5 py-1 border {% if reservation.status == 'approved' %}bg-green-50 text-green-700 border-green-200 {% elif reservation.status == 'pending' %}bg-yellow-50 text-yellow-600 border-yellow-200 {% elif reservation.status == 'rejected' %}bg-red-50 text-red-500 border-red-200 {% else %}bg-gray-50 text-gray-500 border-gray-200{% endif %}"
+              >
+                {{ reservation.get_status_display }}
+              </span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="px-6 py-20 text-center">
+              <i class="fas fa-calendar text-3xl text-gray-200 mb-4 block"></i>
+              <p class="text-sm font-medium text-gray-500">
+                You have no reservations yet.
+              </p>
+              <p class="text-xs text-gray-400 mt-1 mb-5">
+                Browse our listings to find your dream property.
+              </p>
+              <a
+                href="{% url 'properties' %}"
+                class="inline-flex items-center gap-2 bg-gray-900 hover:bg-yellow-600 text-white text-xs font-medium px-5 py-2.5 transition-colors"
+              >
+                <i class="fas fa-search text-[10px]"></i> Browse Properties
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

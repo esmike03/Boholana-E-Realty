@@ -1,0 +1,220 @@
+{% extends 'public_base.html' %} {% block title %}Register — Boholana E-Realty{% endblock %} {% block content %}
+
+<div class="min-h-screen flex bg-white">
+
+  <!-- Left Panel -->
+  <div class="hidden lg:flex lg:w-1/2 bg-gray-900 flex-col justify-between p-16">
+    <!-- Logo -->
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 bg-white flex items-center justify-center flex-shrink-0">
+        <span class="text-yellow-500 font-bold text-sm leading-none">B</span>
+      </div>
+      <div class="leading-tight">
+        <p class="text-sm font-semibold text-white tracking-tight">Boholana E-Realty</p>
+        <p class="text-[9px] text-gray-500 tracking-widest uppercase">Property &amp; Legal Services</p>
+      </div>
+    </div>
+
+    <!-- Headline -->
+    <div>
+      <div class="inline-flex items-center gap-2 text-yellow-600 text-xs font-semibold tracking-widest uppercase mb-6">
+        <span class="block w-5 h-px bg-yellow-600"></span>
+        Create an Account
+      </div>
+      <h1 class="text-4xl font-bold text-white leading-tight tracking-tight mb-4">
+        Join Boholana<br><span class="text-yellow-400">E-Realty</span>
+      </h1>
+      <p class="text-gray-500 text-sm leading-relaxed max-w-xs">
+        Create an account to reserve properties and track your purchases in Bohol's finest real estate platform.
+      </p>
+
+      <!-- Feature list -->
+      <div class="mt-10 space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 border border-gray-700 flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-search text-yellow-500 text-xs"></i>
+          </div>
+          <p class="text-sm text-gray-400">Browse all available properties</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 border border-gray-700 flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-calendar-check text-yellow-500 text-xs"></i>
+          </div>
+          <p class="text-sm text-gray-400">Reserve properties online</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 border border-gray-700 flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-file-alt text-yellow-500 text-xs"></i>
+          </div>
+          <p class="text-sm text-gray-400">Track your documents and purchases</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-xs text-gray-600 italic">Luxury. Legality. Bohol.</p>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50 overflow-y-auto">
+    <div class="w-full max-w-md py-8">
+
+      <!-- Mobile logo -->
+      <div class="lg:hidden flex items-center gap-2.5 justify-center mb-10">
+        <div class="w-8 h-8 bg-gray-900 flex items-center justify-center flex-shrink-0">
+          <span class="text-yellow-400 font-bold text-sm leading-none">B</span>
+        </div>
+        <div class="leading-tight">
+          <p class="text-sm font-semibold text-gray-900 tracking-tight">Boholana E-Realty</p>
+          <p class="text-[9px] text-gray-400 tracking-widest uppercase">Property &amp; Legal Services</p>
+        </div>
+      </div>
+
+      <!-- Heading -->
+      <div class="mb-7">
+        <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-2">Get Started</p>
+        <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Create an Account</h2>
+        <p class="text-gray-400 text-sm mt-1">
+          Already have an account?
+          <a href="{% url 'accounts:login' %}" class="text-gray-900 font-medium border-b border-gray-900 hover:text-yellow-600 hover:border-yellow-600 transition-colors">Sign in</a>
+        </p>
+      </div>
+
+      <!-- Messages -->
+      {% if messages %}
+        {% for message in messages %}
+        <div class="mb-5 p-3 text-sm flex items-center gap-2
+          {% if message.tags == 'error' %}bg-red-50 border border-red-200 text-red-600
+          {% else %}bg-green-50 border border-green-200 text-green-600{% endif %}">
+          <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% else %}check-circle{% endif %} text-xs"></i>
+          {{ message }}
+        </div>
+        {% endfor %}
+      {% endif %}
+
+      <!-- Form -->
+      <form method="POST" class="space-y-4">
+        {% csrf_token %}
+
+        <!-- Name -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1.5">First Name</label>
+            <input
+              type="text" name="first_name" required placeholder="Juan"
+              class="w-full px-4 py-2.5 border border-gray-200 bg-white text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1.5">Last Name</label>
+            <input
+              type="text" name="last_name" required placeholder="Dela Cruz"
+              class="w-full px-4 py-2.5 border border-gray-200 bg-white text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors"
+            />
+          </div>
+        </div>
+
+        <!-- Username -->
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">Username</label>
+          <div class="relative">
+            <input
+              type="text" name="username" required placeholder="juandelacruz"
+              class="w-full pl-9 pr-4 py-2.5 border border-gray-200 bg-white text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors"
+            />
+            <i class="fas fa-user absolute left-3.5 top-3 text-gray-300 text-xs"></i>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">Email</label>
+          <div class="relative">
+            <input
+              type="email" name="email" required placeholder="juan@email.com"
+              class="w-full pl-9 pr-4 py-2.5 border border-gray-200 bg-white text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors"
+            />
+            <i class="fas fa-envelope absolute left-3.5 top-3 text-gray-300 text-xs"></i>
+          </div>
+        </div>
+
+        <!-- Phone -->
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">Phone / Viber</label>
+          <div class="relative">
+            <input
+              type="text" name="phone_number" placeholder="+63 912 345 6789"
+              class="w-full pl-9 pr-4 py-2.5 border border-gray-200 bg-white text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors"
+            />
+            <i class="fas fa-phone absolute left-3.5 top-3 text-gray-300 text-xs"></i>
+          </div>
+        </div>
+
+        <!-- Address -->
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">Address</label>
+          <input
+            type="text" name="address" placeholder="Tagbilaran City, Bohol"
+            class="w-full px-4 py-2.5 border border-gray-200 bg-white text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors"
+          />
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">Password</label>
+          <div class="relative">
+            <input
+              type="password" name="password1" id="password1" required placeholder="Minimum 8 characters"
+              class="w-full pl-9 pr-4 py-2.5 border border-gray-200 bg-white text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors"
+            />
+            <i class="fas fa-lock absolute left-3.5 top-3 text-gray-300 text-xs"></i>
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5">Confirm Password</label>
+          <div class="relative">
+            <input
+              type="password" name="password2" id="password2" required placeholder="Repeat your password"
+              class="w-full pl-9 pr-4 py-2.5 border border-gray-200 bg-white text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors"
+            />
+            <i class="fas fa-lock absolute left-3.5 top-3 text-gray-300 text-xs"></i>
+          </div>
+          <p id="password-match" class="text-xs mt-1.5 hidden"></p>
+        </div>
+
+        <button
+          type="submit"
+          class="w-full bg-gray-900 hover:bg-yellow-600 text-white py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 mt-2"
+        >
+          <i class="fas fa-user-plus text-xs"></i> Create Account
+        </button>
+      </form>
+
+      <p class="text-center text-xs text-gray-400 mt-8">
+        &copy; {% now "Y" %} Boholana E-Realty. All rights reserved.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const p1  = document.getElementById("password1");
+  const p2  = document.getElementById("password2");
+  const msg = document.getElementById("password-match");
+
+  p2.addEventListener("input", function () {
+    if (p2.value === "") {
+      msg.classList.add("hidden");
+    } else if (p1.value === p2.value) {
+      msg.textContent = "✓ Passwords match";
+      msg.className = "text-xs mt-1.5 text-green-600";
+    } else {
+      msg.textContent = "✗ Passwords do not match";
+      msg.className = "text-xs mt-1.5 text-red-500";
+    }
+  });
+</script>
+
+{% endblock %}

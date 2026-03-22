@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block title %}Sale #{{ sale.id }} — Boholana E-Realty{% endblock %}
+{% block page_title %}Sale Details{% endblock %}
+{% block page_subtitle %}View full sale information{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Left -->
+    <div class="lg:col-span-2 space-y-5">
+
+        <!-- Sale Info -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="font-bold text-gray-800 text-lg">Sale #{{ sale.id }}</h3>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold
+                    {% if sale.status == 'approved' or sale.status == 'completed' %}bg-green-100 text-green-700
+                    {% elif sale.status == 'pending_verification' %}bg-yellow-100 text-yellow-700
+                    {% elif sale.status == 'cancelled' %}bg-red-100 text-red-700
+                    {% else %}bg-blue-100 text-blue-700{% endif %}">
+                    {{ sale.get_status_display }}
+                </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">Property</p>
+                    <p class="font-medium text-gray-700">{{ sale.property.title }}</p>
+                    <p class="text-xs text-gray-400">{{ sale.property.city }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">Client</p>
+                    <p class="font-medium text-gray-700">
+                        {{ sale.client.get_full_name|default:sale.client.username }}
+                    </p>
+                    <p class="text-xs text-gray-400">{{ sale.client.email }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">Sale Assistant</p>
+                    <p class="font-medium text-gray-700">
+                        {{ sale.sale_assistant.get_full_name|default:"Not assigned" }}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">Broker</p>
+                    <p class="font-medium text-gray-700">
+                        {{ sale.broker.get_full_name|default:"Not assigned" }}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">Payment Scheme</p>
+                    <p class="font-medium text-gray-700">{{ sale.get_payment_scheme_display }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">Sale Date</p>
+                    <p class="font-medium text-gray-700">{{ sale.sale_date }}</p>
+                </div>
+            </div>
+
+            <!-- Pricing -->
+            <div class="mt-5 grid grid-cols-3 gap-4">
+                <div class="bg-gray-50 rounded-xl p-4 text-center">
+                    <p class="text-xs text-gray-400 mb-1">Selling Price</p>
+                    <p class="font-bold text-gray-800">₱{{ sale.selling_price|floatformat:2 }}</p>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-4 text-center">
+                    <p class="text-xs text-gray-400 mb-1">Discount</p>
+                    <p class="font-bold text-red-500">- ₱{{ sale.discount|floatformat:2 }}</p>
+                </div>
+                <div class="bg-blue-50 rounded-xl p-4 text-center">
+                    <p class="text-xs text-blue-400 mb-1">Net Price</p>
+                    <p class="font-bold text-blue-700 text-lg">₱{{ sale.net_price|floatformat:2 }}</p>
+                </div>
+            </div>
+
+            {% if sale.notes %}
+            <div class="mt-4 p-3 bg-gray-50 rounded-xl">
+                <p class="text-xs text-gray-400 mb-1">Notes</p>
+                <p class="text-sm text-gray-600">{{ sale.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Commission Breakdown -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h4 class="font-semibold text-gray-800 text-sm mb-4">
+                Commission Breakdown
+            </h4>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between p-3 bg-green-50 rounded-xl">
+                    <div>
+                        <p class="text-sm font-medium text-green-800">Sale Assistant (2.5%)</p>
+                        <p class="text-xs text-green-600">
+                            {{ sale.sale_assistant.get_full_name|default:"Not assigned" }}
+                        </p>
+                    </div>
+                    <p class="font-bold text-green-700">₱{{ commissions.sale_assistant }}</p>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-purple-50 rounded-xl">
+                    <div>
+                        <p class="text-sm font-medium text-purple-800">Broker (2.5%)</p>
+                        <p class="text-xs text-purple-600">
+                            {{ sale.broker.get_full_name|default:"Not assigned" }}
+                        </p>
+                    </div>
+                    <p class="font-bold text-purple-700">₱{{ commissions.broker }}</p>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
+                    <div>
+                        <p class="text-sm font-medium text-blue-800">Company (1.5%)</p>
+                        <p class="text-xs text-blue-600">Boholana E-Realty</p>
+                    </div>
+                    <p class="font-bold text-blue-700">₱{{ commissions.company }}</p>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-xl">
+                    <div>
+                        <p class="text-sm font-medium text-yellow-800">Owner Proceeds (93.5%)</p>
+                        <p class="text-xs text-yellow-600">
+                            {{ sale.property.owner.get_full_name }}
+                        </p>
+                    </div>
+                    <p class="font-bold text-yellow-700">₱{{ commissions.owner }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Schedule -->
+        {% if payment_schedules %}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h4 class="font-semibold text-gray-800 text-sm mb-4">Payment Schedule</h4>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-xs text-gray-400 border-b border-gray-50">
+                            <th class="py-2 text-left">Due Date</th>
+                            <th class="py-2 text-left">Amount Due</th>
+                            <th class="py-2 text-left">Amount Paid</th>
+                            <th class="py-2 text-left">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                        {% for schedule in payment_schedules %}
+                        <tr>
+                            <td class="py-2 text-gray-600">{{ schedule.due_date }}</td>
+                            <td class="py-2 text-gray-700 font-medium">₱{{ schedule.amount_due|floatformat:2 }}</td>
+                            <td class="py-2 text-gray-700">₱{{ schedule.amount_paid|floatformat:2 }}</td>
+                            <td class="py-2">
+                                <span class="px-2 py-0.5 rounded-full text-xs
+                                    {% if schedule.status == 'paid' %}bg-green-100 text-green-700
+                                    {% elif schedule.status == 'overdue' %}bg-red-100 text-red-700
+                                    {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                    {{ schedule.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Tasks -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="font-semibold text-gray-800 text-sm">Tasks</h4>
+                {% if user.role in 'broker,staff,admin' or user.is_superuser %}
+                <a href="{% url 'sales:assign_task' sale.pk %}"
+                   class="text-xs bg-blue-100 hover:bg-blue-200 text-blue-600 px-3 py-1.5 rounded-xl transition">
+                    <i class="fas fa-plus mr-1"></i>Assign Task
+                </a>
+                {% endif %}
+            </div>
+            <div class="space-y-3">
+                {% for task in tasks %}
+                <div class="flex items-start justify-between p-3 bg-gray-50 rounded-xl">
+                    <div>
+                        <p class="text-sm font-medium text-gray-700">{{ task.title }}</p>
+                        <p class="text-xs text-gray-400 mt-0.5">
+                            Assigned to: {{ task.assigned_to.get_full_name }}
+                            {% if task.due_date %} • Due: {{ task.due_date }}{% endif %}
+                        </p>
+                    </div>
+                    <span class="px-2 py-0.5 rounded-full text-xs
+                        {% if task.priority == 'high' %}bg-red-100 text-red-600
+                        {% elif task.priority == 'medium' %}bg-yellow-100 text-yellow-600
+                        {% else %}bg-gray-100 text-gray-500{% endif %}">
+                        {{ task.get_priority_display }}
+                    </span>
+                </div>
+                {% empty %}
+                <p class="text-gray-400 text-sm">No tasks assigned yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right Actions -->
+    <div class="space-y-5">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <h4 class="font-semibold text-gray-800 text-sm mb-4">Actions</h4>
+            <div class="space-y-2">
+                {% if user.role in 'broker,staff,admin' or user.is_superuser %}
+                    {% if sale.status == 'pending_verification' or sale.status == 'ready_for_approval' %}
+                    <a href="{% url 'sales:verify' sale.pk %}"
+                       class="block w-full text-center bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-xl text-sm font-semibold transition">
+                        <i class="fas fa-check-double mr-2"></i>Verify & Approve
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'sales:update_status' sale.pk %}"
+                       class="block w-full text-center bg-blue-100 hover:bg-blue-200 text-blue-700 py-2.5 rounded-xl text-sm font-semibold transition">
+                        <i class="fas fa-edit mr-2"></i>Update Status
+                    </a>
+                    <a href="{% url 'sales:assign_task' sale.pk %}"
+                       class="block w-full text-center bg-purple-100 hover:bg-purple-200 text-purple-700 py-2.5 rounded-xl text-sm font-semibold transition">
+                        <i class="fas fa-tasks mr-2"></i>Assign Task
+                    </a>
+                {% endif %}
+                <a href="{% url 'sales:list' %}"
+                   class="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Sales
+                </a>
+            </div>
+        </div>
+
+        <!-- Disbursements -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <h4 class="font-semibold text-gray-800 text-sm mb-4">Disbursements</h4>
+            <div class="space-y-2">
+                {% for disbursement in disbursements %}
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                    <div>
+                        <p class="text-xs font-medium text-gray-700">
+                            {{ disbursement.get_disbursement_type_display }}
+                        </p>
+                        <p class="text-xs text-gray-400">
+                            {{ disbursement.recipient.get_full_name }}
+                        </p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs font-bold text-gray-700">
+                            ₱{{ disbursement.amount|floatformat:2 }}
+                        </p>
+                        <span class="text-xs
+                            {% if disbursement.status == 'completed' %}text-green-600
+                            {% elif disbursement.status == 'pending' %}text-yellow-600
+                            {% else %}text-gray-400{% endif %}">
+                            {{ disbursement.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+                <a href="{% url 'sales:disbursements' %}"
+                   class="block text-center text-xs text-blue-500 hover:underline mt-2">
+                    Manage Disbursements
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

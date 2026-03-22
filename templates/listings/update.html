@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+
+{% block title %}Update Property — Boholana E-Realty{% endblock %}
+{% block page_title %}Update Property{% endblock %}
+{% block page_subtitle %}Edit property listing details{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-4 p-3 rounded-lg text-sm
+                    {% if message.tags == 'error' %}bg-red-50 text-red-600 border border-red-200
+                    {% else %}bg-green-50 text-green-600 border border-green-200{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Basic Info -->
+            <div>
+                <h4 class="font-semibold text-gray-700 text-sm mb-4 pb-2 border-b border-gray-100">
+                    Basic Information
+                </h4>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Property Title <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="title" required
+                               value="{{ property.title }}"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                                Property Type <span class="text-red-500">*</span>
+                            </label>
+                            <select name="property_type" required
+                                    class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                                {% for value, label in type_choices %}
+                                    <option value="{{ value }}"
+                                        {% if property.property_type == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                                Price (₱) <span class="text-red-500">*</span>
+                            </label>
+                            <input type="number" name="price" required
+                                   step="0.01" value="{{ property.price }}"
+                                   class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Description
+                        </label>
+                        <textarea name="description" rows="4"
+                                  class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none">{{ property.description }}</textarea>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="is_negotiable" id="is_negotiable"
+                               {% if property.is_negotiable %}checked{% endif %}
+                               class="rounded">
+                        <label for="is_negotiable" class="text-sm text-gray-600">
+                            Price is negotiable
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location -->
+            <div>
+                <h4 class="font-semibold text-gray-700 text-sm mb-4 pb-2 border-b border-gray-100">
+                    Location
+                </h4>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Full Address <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="address" required
+                               value="{{ property.address }}"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                                City <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="city" required
+                                   value="{{ property.city }}"
+                                   class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                                Province
+                            </label>
+                            <input type="text" name="province"
+                                   value="{{ property.province }}"
+                                   class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                                ZIP Code
+                            </label>
+                            <input type="text" name="zip_code"
+                                   value="{{ property.zip_code }}"
+                                   class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                                Latitude
+                            </label>
+                            <input type="number" name="latitude" step="any"
+                                   value="{{ property.latitude|default:'' }}"
+                                   class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                                Longitude
+                            </label>
+                            <input type="number" name="longitude" step="any"
+                                   value="{{ property.longitude|default:'' }}"
+                                   class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Property Details -->
+            <div>
+                <h4 class="font-semibold text-gray-700 text-sm mb-4 pb-2 border-b border-gray-100">
+                    Property Details
+                </h4>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Lot Area (sqm)
+                        </label>
+                        <input type="number" name="lot_area" step="0.01"
+                               value="{{ property.lot_area|default:'' }}"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Floor Area (sqm)
+                        </label>
+                        <input type="number" name="floor_area" step="0.01"
+                               value="{{ property.floor_area|default:'' }}"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Bedrooms
+                        </label>
+                        <input type="number" name="bedrooms" min="0"
+                               value="{{ property.bedrooms }}"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Bathrooms
+                        </label>
+                        <input type="number" name="bathrooms" min="0"
+                               value="{{ property.bathrooms }}"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Garage
+                        </label>
+                        <input type="number" name="garage" min="0"
+                               value="{{ property.garage }}"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                        Amenities
+                    </label>
+                    <textarea name="amenities" rows="2"
+                              class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none">{{ property.amenities|default:'' }}</textarea>
+                </div>
+            </div>
+
+            <!-- Existing Images -->
+            {% if property.images.exists %}
+            <div>
+                <h4 class="font-semibold text-gray-700 text-sm mb-4 pb-2 border-b border-gray-100">
+                    Current Images
+                </h4>
+                <div class="flex flex-wrap gap-3">
+                    {% for image in property.images.all %}
+                    <div class="relative">
+                        <img src="{{ image.image.url }}"
+                             class="w-24 h-20 object-cover rounded-xl border border-gray-200">
+                        {% if image.is_primary %}
+                        <span class="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                            Main
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Owner (broker/staff/admin only) -->
+            {% if user.role != 'property_owner' %}
+            <div>
+                <h4 class="font-semibold text-gray-700 text-sm mb-4 pb-2 border-b border-gray-100">
+                    Ownership
+                </h4>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                        Property Owner
+                    </label>
+                    <select name="owner_id"
+                            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        <option value="">Select Owner</option>
+                        {% for owner in owners %}
+                            <option value="{{ owner.pk }}"
+                                {% if property.owner.pk == owner.pk %}selected{% endif %}>
+                                {{ owner.get_full_name|default:owner.username }}
+                                — {{ owner.email }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Tags -->
+            {% if tags %}
+            <div>
+                <h4 class="font-semibold text-gray-700 text-sm mb-4 pb-2 border-b border-gray-100">
+                    Tags
+                </h4>
+                <div class="flex flex-wrap gap-3">
+                    {% for tag in tags %}
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="tags"
+                                   value="{{ tag.pk }}"
+                                   {% if tag in property.tags.all %}checked{% endif %}
+                                   class="rounded text-blue-500">
+                            <span class="text-sm text-gray-600">{{ tag.name }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Add New Images -->
+            <div>
+                <h4 class="font-semibold text-gray-700 text-sm mb-4 pb-2 border-b border-gray-100">
+                    Add New Images
+                </h4>
+                <div class="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center">
+                    <i class="fas fa-cloud-upload-alt text-gray-300 text-3xl mb-2"></i>
+                    <p class="text-sm text-gray-400 mb-2">Upload additional images</p>
+                    <input type="file" name="images" multiple accept="image/*"
+                           class="text-sm text-gray-500">
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="flex gap-3 pt-2">
+                <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-save mr-2"></i>Save Changes
+                </button>
+                <a href="{% url 'listings:detail' property.pk %}"
+                   class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-6 py-2.5 rounded-xl text-sm font-semibold transition">
+                    Cancel
+                </a>
+            </div>
+
+        </form>
+    </div>
+</div>
+{% endblock %}

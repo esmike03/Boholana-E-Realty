@@ -1,0 +1,24 @@
+{% extends 'public_base.html' %}
+{% block title %}Server Error — Boholana E-Realty{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50">
+    <div class="text-center px-6">
+        <div class="text-8xl font-bold mb-4"
+             style="background: linear-gradient(135deg, #dc2626, #991b1b);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;">
+            500
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-3">Server Error</h2>
+        <p class="text-gray-500 mb-8 max-w-md mx-auto">
+            Something went wrong on our end. Please try again later
+            or contact support if the problem persists.
+        </p>
+        <a href="{% url 'home' %}"
+           class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-sm font-semibold transition">
+            <i class="fas fa-home mr-2"></i>Go Home
+        </a>
+    </div>
+</div>
+{% endblock %}

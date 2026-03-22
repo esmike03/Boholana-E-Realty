@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if viewed_user.is_disabled %}Enable{% else %}Disable{% endif %}
+    Account — Boholana E-Realty
+{% endblock %}
+{% block page_title %}
+    {% if viewed_user.is_disabled %}Enable{% else %}Disable{% endif %} Account
+{% endblock %}
+
+{% block content %}
+<div class="max-w-lg">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+
+        <div class="flex items-center gap-4 mb-5">
+            <div class="{% if viewed_user.is_disabled %}bg-green-100{% else %}bg-red-100{% endif %} rounded-xl p-3">
+                <i class="fas fa-{% if viewed_user.is_disabled %}unlock{% else %}ban{% endif %}
+                   {% if viewed_user.is_disabled %}text-green-600{% else %}text-red-600{% endif %} text-xl"></i>
+            </div>
+            <div>
+                <h3 class="font-semibold text-gray-800">
+                    {% if viewed_user.is_disabled %}Enable{% else %}Disable{% endif %}
+                    {{ viewed_user.get_full_name|default:viewed_user.username }}
+                </h3>
+                <p class="text-gray-400 text-sm">
+                    {% if viewed_user.is_disabled %}
+                        This will restore access to the account.
+                    {% else %}
+                        This will prevent the user from logging in.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+
+            {% if not viewed_user.is_disabled %}
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                        Reason for disabling <span class="text-red-500">*</span>
+                    </label>
+                    <textarea name="reason" rows="3" required
+                              placeholder="Enter reason..."
+                              class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-gray-50 resize-none"></textarea>
+                </div>
+
+                <button type="submit" name="action" value="disable"
+                        class="w-full bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-ban mr-2"></i>Disable Account
+                </button>
+            {% else %}
+                <div class="p-3 bg-red-50 rounded-xl border border-red-100">
+                    <p class="text-xs text-red-600 font-medium">Disabled Reason:</p>
+                    <p class="text-xs text-red-500 mt-1">
+                        {{ viewed_user.disabled_reason|default:"No reason provided." }}
+                    </p>
+                </div>
+
+                <button type="submit" name="action" value="enable"
+                        class="w-full bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-unlock mr-2"></i>Enable Account
+                </button>
+            {% endif %}
+
+            <a href="{% url 'accounts:user_detail' viewed_user.pk %}"
+               class="block text-center text-sm text-gray-400 hover:text-gray-600 transition mt-2">
+                Cancel
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

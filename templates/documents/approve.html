@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Approve Document{% endblock %}
+{% block page_title %}Approve Document{% endblock %}
+
+{% block content %}
+<div class="max-w-lg">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center gap-4 mb-5">
+            <div class="bg-green-100 rounded-xl p-3">
+                <i class="fas fa-check text-green-600 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="font-semibold text-gray-800">Approve Document</h3>
+                <p class="text-gray-400 text-sm">{{ document.title }}</p>
+            </div>
+        </div>
+        <p class="text-sm text-gray-500 mb-5">
+            This will approve the document and make it available for use.
+        </p>
+        <form method="POST" class="flex gap-3">
+            {% csrf_token %}
+            <button type="submit"
+                    class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-xl text-sm font-semibold transition">
+                <i class="fas fa-check mr-2"></i>Approve
+            </button>
+            <a href="{% url 'documents:detail' document.pk %}"
+               class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold transition text-center">
+                Cancel
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

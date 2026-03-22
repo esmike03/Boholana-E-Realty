@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Reservations — Boholana E-Realty{% endblock %}
+{% block page_title %}Manage Reservations{% endblock %}
+{% block page_subtitle %}Track and manage property reservations{% endblock %}
+
+{% block content %}
+
+<!-- Stats -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <p class="text-2xl font-bold text-gray-800">{{ total }}</p>
+        <p class="text-xs text-gray-500 mt-1">Total</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <p class="text-2xl font-bold text-yellow-600">{{ pending }}</p>
+        <p class="text-xs text-gray-500 mt-1">Pending</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <p class="text-2xl font-bold text-green-600">{{ approved }}</p>
+        <p class="text-xs text-gray-500 mt-1">Approved</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <p class="text-2xl font-bold text-red-600">{{ cancelled }}</p>
+        <p class="text-xs text-gray-500 mt-1">Cancelled</p>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100">
+
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="font-semibold text-gray-800 text-sm">All Reservations</h3>
+        <a href="{% url 'reservations:appointments' %}"
+           class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded-xl text-sm font-medium transition">
+            <i class="fas fa-calendar-check mr-2"></i>View Appointments
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="px-6 py-4 border-b border-gray-50">
+        <form method="GET" class="flex flex-wrap gap-3">
+            <input type="text" name="search" value="{{ search }}"
+                   placeholder="Search property or client..."
+                   class="border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-56">
+            <select name="status"
+                    class="border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All Status</option>
+                {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button type="submit"
+                    class="bg-gray-800 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-700 transition">
+                <i class="fas fa-filter mr-1"></i>Filter
+            </button>
+            <a href="{% url 'reservations:list' %}"
+               class="text-gray-400 hover:text-gray-600 px-4 py-2 text-sm">Clear</a>
+        </form>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-xs text-gray-400 border-b border-gray-50 bg-gray-50">
+                    <th class="px-6 py-3 text-left font-medium">#</th>
+                    <th class="px-6 py-3 text-left font-medium">Property</th>
+                    <th class="px-6 py-3 text-left font-medium">Client</th>
+                    <th class="px-6 py-3 text-left font-medium">Date</th>
+                    <th class="px-6 py-3 text-left font-medium">Fee</th>
+                    <th class="px-6 py-3 text-left font-medium">Status</th>
+                    <th class="px-6 py-3 text-left font-medium">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                {% for reservation in reservations %}
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-4 text-gray-400 text-xs">#{{ reservation.id }}</td>
+                    <td class="px-6 py-4">
+                        <p class="font-medium text-gray-800 text-sm">
+                            {{ reservation.property.title|truncatechars:25 }}
+                        </p>
+                        <p class="text-gray-400 text-xs">
+                            {{ reservation.property.city }}
+                        </p>
+                    </td>
+                    <td class="px-6 py-4 text-gray-600 text-sm">
+                        {{ reservation.client.get_full_name|default:reservation.client.username }}
+                    </td>
+                    <td class="px-6 py-4 text-gray-500 text-xs">
+                        {{ reservation.reservation_date }}
+                    </td>
+                    <td class="px-6 py-4 text-gray-700 font-medium text-sm">
+                        ₱{{ reservation.reservation_fee|floatformat:0 }}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium
+                            {% if reservation.status == 'approved' %}bg-green-100 text-green-700
+                            {% elif reservation.status == 'pending' %}bg-yellow-100 text-yellow-700
+                            {% elif reservation.status == 'cancelled' %}bg-red-100 text-red-700
+                            {% elif reservation.status == 'completed' %}bg-blue-100 text-blue-700
+                            {% else %}bg-gray-100 text-gray-600{% endif %}">
+                            {{ reservation.get_status_display }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-1">
+                            <a href="{% url 'reservations:detail' reservation.pk %}"
+                               class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-1.5 rounded-lg transition"
+                               title="View">
+                                <i class="fas fa-eye text-xs"></i>
+                            </a>
+                            {% if user.role in 'broker,staff,sale_assistant,admin' or user.is_superuser %}
+                            <a href="{% url 'reservations:update_status' reservation.pk %}"
+                               class="bg-blue-100 hover:bg-blue-200 text-blue-600 p-1.5 rounded-lg transition"
+                               title="Update Status">
+                                <i class="fas fa-edit text-xs"></i>
+                            </a>
+                            {% endif %}
+                            {% if user.role == 'client' and reservation.status == 'pending' %}
+                            <a href="{% url 'reservations:cancel' reservation.pk %}"
+                               class="bg-red-100 hover:bg-red-200 text-red-600 p-1.5 rounded-lg transition"
+                               title="Cancel">
+                                <i class="fas fa-times text-xs"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="px-6 py-12 text-center text-gray-400">
+                        <i class="fas fa-calendar text-3xl mb-3 block"></i>
+                        No reservations found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

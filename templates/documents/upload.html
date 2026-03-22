@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Document — Boholana E-Realty{% endblock %}
+{% block page_title %}Upload Document{% endblock %}
+{% block page_subtitle %}Upload and categorize a document{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-4 p-3 rounded-lg text-sm
+                    {% if message.tags == 'error' %}bg-red-50 text-red-600
+                    {% else %}bg-green-50 text-green-600{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" class="space-y-5">
+            {% csrf_token %}
+
+            <!-- Document Info -->
+            <div>
+                <h4 class="font-semibold text-gray-700 text-sm mb-4 pb-2 border-b border-gray-100">
+                    Document Information
+                </h4>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Document Title <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="title" required
+                               placeholder="e.g. TCT No. 12345"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                                Document Type <span class="text-red-500">*</span>
+                            </label>
+                            <select name="document_type" required
+                                    class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                                <option value="">Select Type</option>
+                                {% for value, label in type_choices %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                                File Format
+                            </label>
+                            <select name="file_format"
+                                    class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                                {% for value, label in format_choices %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            File <span class="text-red-500">*</span>
+                        </label>
+                        <div class="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center">
+                            <i class="fas fa-cloud-upload-alt text-gray-300 text-3xl mb-2"></i>
+                            <p class="text-sm text-gray-400 mb-2">
+                                PDF, Word, or Image files
+                            </p>
+                            <input type="file" name="file" required
+                                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                   class="text-sm text-gray-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Remarks</label>
+                        <textarea name="remarks" rows="2"
+                                  class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                                Expiry Date (optional)
+                            </label>
+                            <input type="date" name="expiry_date"
+                                   class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        </div>
+                        <div class="flex items-end pb-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" name="is_confidential" class="rounded">
+                                <span class="text-sm text-gray-600">Mark as Confidential</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Link to -->
+            <div>
+                <h4 class="font-semibold text-gray-700 text-sm mb-4 pb-2 border-b border-gray-100">
+                    Link Document To (optional)
+                </h4>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Property</label>
+                        <select name="property_id"
+                                class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                            <option value="">None</option>
+                            {% for property in properties %}
+                                <option value="{{ property.pk }}">
+                                    {{ property.title }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Sale</label>
+                        <select name="sale_id"
+                                class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                            <option value="">None</option>
+                            {% for sale in sales %}
+                                <option value="{{ sale.pk }}">
+                                    Sale #{{ sale.id }} — {{ sale.property.title }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Reservation</label>
+                        <select name="reservation_id"
+                                class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                            <option value="">None</option>
+                            {% for reservation in reservations %}
+                                <option value="{{ reservation.pk }}">
+                                    Reservation #{{ reservation.id }} — {{ reservation.property.title }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-upload mr-2"></i>Upload Document
+                </button>
+                <a href="{% url 'documents:list' %}"
+                   class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-6 py-2.5 rounded-xl text-sm font-semibold transition">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

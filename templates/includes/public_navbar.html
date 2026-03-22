@@ -1,0 +1,79 @@
+<nav class="bg-white border-b border-gray-100 sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <!-- Brand -->
+    <a href="{% url 'home' %}" class="flex items-center gap-2.5">
+      <div
+        class="w-8 h-8 bg-gray-900 flex items-center justify-center flex-shrink-0"
+      >
+        <span class="text-yellow-400 font-bold text-sm leading-none">B</span>
+      </div>
+      <div class="leading-tight">
+        <p class="text-sm font-semibold text-gray-900 tracking-tight">
+          Boholana Realty
+        </p>
+        <p class="text-[9px] text-gray-400 tracking-widest uppercase">
+          Property &amp; Legal Services
+        </p>
+      </div>
+    </a>
+
+    <!-- Nav Links -->
+    
+    <!-- Nav Links -->
+<div class="hidden md:flex items-center gap-8">
+    <a href="{% url 'home' %}"
+       class="text-sm font-medium {% if request.resolver_match.url_name == 'home' %}text-yellow-500{% else %}text-gray-600 hover:text-yellow-500{% endif %} transition">
+        Home
+    </a>
+    <a href="{% url 'properties' %}"
+       class="text-sm font-medium {% if request.resolver_match.url_name == 'properties' %}text-yellow-500{% else %}text-gray-600 hover:text-yellow-500{% endif %} transition">
+        Properties
+    </a>
+    <a href="{% url 'mortgage_calculator' %}"
+       class="text-sm font-medium {% if request.resolver_match.url_name == 'mortgage_calculator' %}text-yellow-500{% else %}text-gray-600 hover:text-yellow-500{% endif %} transition">
+        Calculator
+    </a>
+    <a href="{% url 'contact' %}"
+       class="text-sm font-medium {% if request.resolver_match.url_name == 'contact' %}text-yellow-500{% else %}text-gray-600 hover:text-yellow-500{% endif %} transition">
+        Contact
+    </a>
+</div>
+
+<!-- Auth Buttons -->
+<div class="flex items-center gap-3">
+    {% if user.is_authenticated %}
+        {% if user.role == 'client' %}
+            <a href="{% url 'favorites' %}"
+               class="text-sm text-gray-600 hover:text-red-500 transition font-medium">
+                <i class="fas fa-heart mr-1 text-red-400"></i>Favorites
+            </a>
+            <a href="{% url 'my_reservations' %}"
+               class="text-sm text-gray-600 hover:text-yellow-500 transition font-medium">
+                My Reservations
+            </a>
+        {% else %}
+            <a href="{% url 'dashboard' %}"
+               class="text-sm text-gray-600 hover:text-yellow-500 transition font-medium">
+                Dashboard
+            </a>
+        {% endif %}
+        <a href="{% url 'accounts:logout' %}"
+           class="text-sm bg-red-50 text-red-500 hover:bg-red-100 px-4 py-2 rounded-xl font-medium transition">
+            Logout
+        </a>
+    {% else %}
+        <a href="{% url 'accounts:login' %}"
+           class="text-sm text-gray-600 hover:text-yellow-500 font-medium transition">
+            Sign In
+        </a>
+        <a href="{% url 'accounts:register' %}"
+           class="text-sm bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-xl font-medium transition">
+            Register
+        </a>
+    {% endif %}
+</div>
+
+    <!-- Auth Buttons -->
+    
+  </div>
+</nav>

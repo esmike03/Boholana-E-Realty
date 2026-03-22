@@ -1,0 +1,160 @@
+{% load static tailwind_tags django_browser_reload %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Boholana E-Realty{% endblock %}</title>
+
+    {% tailwind_css %}
+
+    <!-- Font Awesome -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      * {
+        font-family: "Inter", sans-serif;
+      }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+  </head>
+
+  <body class="bg-gray-100">
+    {% if user.is_authenticated %}
+
+    <div class="flex min-h-screen">
+      <!-- Sidebar -->
+      {% include 'includes/sidebar.html' %}
+
+      <!-- Main Content -->
+      <div class="flex-1 flex flex-col ml-64">
+        <!-- Topbar -->
+        {% include 'includes/navbar.html' %}
+
+        <!-- Page Content -->
+        <main class="flex-1 p-6">
+          {% if messages %} {% for message in messages %}
+          <div
+            class="mb-4 p-4 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-800 {% elif message.tags == 'error' %}bg-red-100 text-red-800 {% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-800 {% else %}bg-blue-100 text-blue-800 {% endif %}"
+          >
+            {{ message }}
+          </div>
+          {% endfor %} {% endif %} {% block content %}{% endblock %}
+        </main>
+      </div>
+    </div>
+
+    {% else %} {% block auth_content %}{% endblock %} {% endif %}
+
+    <!-- Browser Auto Reload (Development Only) -->
+    {% django_browser_reload_script %}
+    <script>
+// Load notification count
+function loadNotifCount() {
+    fetch('{% url "accounts:notification_count" %}')
+        .then(res => res.json())
+        .then(data => {
+            const badge = document.getElementById('notif-badge');
+            if (badge) {
+                if (data.count > 0) {
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        })
+        .catch(() => {});
+}
+
+// Load notifications dropdown
+function loadNotifications() {
+    fetch('{% url "accounts:notifications_json" %}', {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(res => res.text())
+    .then(() => {
+        // Just refresh count
+        loadNotifCount();
+    });
+}
+
+// Toggle notification dropdown
+function toggleNotif() {
+    const dropdown = document.getElementById('notif-dropdown');
+    const userDropdown = document.getElementById('user-dropdown');
+    if (userDropdown) userDropdown.classList.add('hidden');
+    dropdown.classList.toggle('hidden');
+
+    if (!dropdown.classList.contains('hidden')) {
+        loadRecentNotifications();
+    }
+}
+
+// Load recent notifications for dropdown
+function loadRecentNotifications() {
+    const list = document.getElementById('notif-list');
+    if (!list) return;
+
+    fetch('/auth/notifications/?format=json')
+        .then(res => res.json())
+        .then(data => {
+            if (data.notifications && data.notifications.length > 0) {
+                list.innerHTML = data.notifications.map(n => `
+                    <a href="/auth/notifications/${n.id}/read/"
+                       class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition ${!n.is_read ? 'bg-blue-50/50' : ''}">
+                        <div class="bg-blue-100 rounded-full p-1.5 mt-0.5 flex-shrink-0">
+                            <i class="fas fa-bell text-blue-500 text-xs"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-medium text-gray-700 truncate">${n.title}</p>
+                            <p class="text-xs text-gray-400 mt-0.5 truncate">${n.message}</p>
+                        </div>
+                        ${!n.is_read ? '<div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>' : ''}
+                    </a>
+                `).join('');
+            } else {
+                list.innerHTML = '<div class="px-4 py-8 text-center text-gray-400 text-xs">No new notifications</div>';
+            }
+        })
+        .catch(() => {
+            list.innerHTML = '<div class="px-4 py-6 text-center text-gray-400 text-xs">Could not load notifications</div>';
+        });
+}
+
+// Auto-load count on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadNotifCount();
+    // Refresh every 60 seconds
+    setInterval(loadNotifCount, 60000);
+});
+ // Keyboard shortcut: Ctrl+K or Cmd+K to focus search
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            const searchInput = document.querySelector('input[name="q"]');
+            if (searchInput) {
+                searchInput.focus();
+                searchInput.select();
+            }
+        }
+
+        // Escape to close dropdowns
+        if (e.key === 'Escape') {
+            document.getElementById('notif-dropdown')?.classList.add('hidden');
+            document.getElementById('user-dropdown')?.classList.add('hidden');
+        }
+    });
+</script>
+    
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

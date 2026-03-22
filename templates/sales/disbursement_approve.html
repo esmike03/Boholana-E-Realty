@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Approve Disbursement{% endblock %}
+{% block page_title %}Approve Disbursement{% endblock %}
+
+{% block content %}
+<div class="max-w-md">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+
+        <div class="flex items-center gap-4 mb-5">
+            <div class="bg-green-100 rounded-xl p-3">
+                <i class="fas fa-money-bill-wave text-green-600 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="font-semibold text-gray-800">Approve Disbursement</h3>
+                <p class="text-gray-400 text-sm">
+                    {{ disbursement.get_disbursement_type_display }}
+                    — {{ disbursement.recipient.get_full_name }}
+                </p>
+            </div>
+        </div>
+
+        <div class="p-4 bg-gray-50 rounded-xl mb-5">
+            <p class="text-xs text-gray-400 mb-1">Current Amount</p>
+            <p class="text-2xl font-bold text-gray-800">
+                ₱{{ disbursement.amount|floatformat:2 }}
+            </p>
+            {% if disbursement.percentage %}
+            <p class="text-xs text-gray-400 mt-1">{{ disbursement.percentage }}% commission</p>
+            {% endif %}
+        </div>
+
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                    Edit Amount (optional)
+                </label>
+                <input type="number" name="amount" step="0.01"
+                       value="{{ disbursement.amount }}"
+                       class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-gray-50">
+            </div>
+            <div class="flex gap-3">
+                <button type="submit"
+                        class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-check mr-2"></i>Approve
+                </button>
+                <a href="{% url 'sales:disbursements' %}"
+                   class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold transition text-center">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,140 @@
+{% extends 'public_base.html' %}
+
+{% block title %}My Favorites — Boholana E-Realty{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<section class="py-10"
+         style="background: linear-gradient(135deg, #0f2942 0%, #1a4a7a 100%);">
+    <div class="max-w-7xl mx-auto px-6">
+        <h1 class="text-2xl font-bold text-white">
+            <i class="fas fa-heart text-red-400 mr-2"></i>My Favorites
+        </h1>
+        <p class="text-white/60 text-sm mt-1">
+            Properties you have saved
+        </p>
+    </div>
+</section>
+
+<section class="py-12 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-6">
+
+        {% if properties %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for property in properties %}
+            <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-gray-100">
+
+                <!-- Image -->
+                <div class="relative h-48 bg-gray-200 overflow-hidden">
+                    {% if property.images.exists %}
+                        <img src="{{ property.images.first.image.url }}"
+                             alt="{{ property.title }}"
+                             class="w-full h-full object-cover hover:scale-105 transition duration-300">
+                    {% else %}
+                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
+                            <i class="fas fa-home text-blue-300 text-4xl"></i>
+                        </div>
+                    {% endif %}
+
+                    <!-- Remove favorite -->
+                    <button onclick="removeFavorite({{ property.pk }}, this)"
+                            class="absolute top-3 right-3 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center transition shadow-md"
+                            title="Remove from favorites">
+                        <i class="fas fa-heart text-xs"></i>
+                    </button>
+
+                    <!-- Status badge -->
+                    <span class="absolute top-3 left-3 text-xs font-semibold px-2 py-1 rounded-full
+                        {% if property.listing_status == 'approved' %}bg-green-500 text-white
+                        {% elif property.listing_status == 'reserved' %}bg-yellow-500 text-white
+                        {% else %}bg-red-500 text-white{% endif %}">
+                        {{ property.get_listing_status_display }}
+                    </span>
+                </div>
+
+                <!-- Info -->
+                <div class="p-5">
+                    <h3 class="font-semibold text-gray-800 hover:text-blue-600 transition">
+                        <a href="{% url 'property_detail' property.pk %}">
+                            {{ property.title }}
+                        </a>
+                    </h3>
+                    <p class="text-gray-400 text-xs mt-1 flex items-center gap-1">
+                        <i class="fas fa-map-marker-alt text-yellow-500"></i>
+                        {{ property.city }}, {{ property.province }}
+                    </p>
+                    <div class="flex gap-3 mt-2 text-xs text-gray-500">
+                        {% if property.bedrooms %}
+                            <span>
+                                <i class="fas fa-bed mr-1"></i>{{ property.bedrooms }}
+                            </span>
+                        {% endif %}
+                        {% if property.bathrooms %}
+                            <span>
+                                <i class="fas fa-bath mr-1"></i>{{ property.bathrooms }}
+                            </span>
+                        {% endif %}
+                        {% if property.lot_area %}
+                            <span>
+                                <i class="fas fa-ruler-combined mr-1"></i>{{ property.lot_area }}sqm
+                            </span>
+                        {% endif %}
+                    </div>
+                    <div class="mt-4 flex items-center justify-between">
+                        <p class="text-blue-600 font-bold text-lg">
+                            ₱{{ property.price|floatformat:0 }}
+                        </p>
+                        <a href="{% url 'property_detail' property.pk %}"
+                           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-xl text-xs font-semibold transition">
+                            View
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <div class="text-center py-20">
+            <div class="bg-red-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-5">
+                <i class="fas fa-heart text-red-400 text-3xl"></i>
+            </div>
+            <h3 class="font-bold text-gray-800 text-xl mb-2">No saved properties yet</h3>
+            <p class="text-gray-500 text-sm mb-6">
+                Browse our listings and save your favorite properties.
+            </p>
+            <a href="{% url 'properties' %}"
+               class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold text-sm transition">
+                <i class="fas fa-home mr-2"></i>Browse Properties
+            </a>
+        </div>
+        {% endif %}
+
+    </div>
+</section>
+
+<script>
+function removeFavorite(propertyId, btn) {
+    fetch(`/manage/listings/${propertyId}/favorite/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.favorited) {
+            // Remove card from DOM
+            const card = btn.closest('.bg-white');
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.9)';
+            card.style.transition = 'all 0.3s';
+            setTimeout(() => card.remove(), 300);
+        }
+    });
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,139 @@
+<!-- Topbar -->
+<header
+  class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-40"
+>
+  <!-- Page Title -->
+  <div>
+    <h2 class="text-gray-800 font-semibold text-base">
+      {% block page_title %}Dashboard{% endblock %}
+    </h2>
+    <p class="text-gray-400 text-xs">
+      {% block page_subtitle %}Welcome back!{% endblock %}
+    </p>
+  </div>
+
+  <!-- Right Side -->
+  <div class="flex items-center gap-4">
+    <!-- Search -->
+    <!-- Search -->
+<form action="{% url 'accounts:search' %}" method="GET"
+      class="relative hidden md:block">
+    <input type="text"
+           name="q"
+           placeholder="Search anything..."
+           value="{{ request.GET.q|default:'' }}"
+           class="bg-gray-100 text-sm rounded-xl pl-9 pr-4 py-2 w-56
+                  focus:outline-none focus:ring-2 focus:ring-blue-500
+                  focus:w-72 transition-all duration-300">
+    <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+</form>
+
+    <!-- Notifications -->
+    <!-- Notifications -->
+<div class="relative">
+    <button onclick="toggleNotif()"
+            class="relative p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition"
+            id="notif-btn">
+        <i class="fas fa-bell text-gray-600 text-sm"></i>
+        <span id="notif-badge"
+              class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full hidden">
+        </span>
+    </button>
+
+    <!-- Dropdown -->
+    <div id="notif-dropdown"
+         class="hidden absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-lg border border-gray-100 z-50">
+        <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+            <p class="text-sm font-semibold text-gray-700">Notifications</p>
+            <a href="{% url 'accounts:notifications' %}?mark_all_read=1"
+               class="text-xs text-blue-500 hover:underline">
+                Mark all read
+            </a>
+        </div>
+        <div id="notif-list" class="divide-y divide-gray-50 max-h-72 overflow-y-auto">
+            <div class="px-4 py-8 text-center text-gray-400 text-sm">
+                <i class="fas fa-bell-slash mb-2 block text-xl"></i>
+                Loading...
+            </div>
+        </div>
+        <div class="px-4 py-3 border-t border-gray-100 text-center">
+            <a href="{% url 'accounts:notifications' %}"
+               class="text-xs text-blue-500 hover:underline">
+                View all notifications
+            </a>
+        </div>
+    </div>
+</div>
+
+    <!-- User Menu -->
+    <div class="relative">
+      <button
+        onclick="toggleUserMenu()"
+        class="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 rounded-lg px-3 py-2 transition"
+      >
+        <div
+          class="bg-blue-500 rounded-full w-7 h-7 flex items-center justify-center"
+        >
+          <span class="text-white text-xs font-bold">
+            {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+          </span>
+        </div>
+        <span class="text-sm text-gray-700 hidden md:block"
+          >{{ user.get_full_name|default:user.username }}</span
+        >
+        <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+      </button>
+
+      <!-- Dropdown -->
+      <div
+        id="user-dropdown"
+        class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50"
+      >
+        <div class="px-4 py-3 border-b border-gray-100">
+          <p class="text-xs font-semibold text-gray-700">
+            {{ user.get_full_name|default:user.username }}
+          </p>
+          <p class="text-xs text-yellow-500">{{ user.get_role_display }}</p>
+        </div>
+        <div class="py-1">
+          <a
+            href="{% url 'accounts:profile' %}"
+            class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition"
+          >
+            <i class="fas fa-user w-4 text-gray-400"></i> Profile
+          </a>
+          <a
+            href="{% url 'accounts:logout' %}"
+            class="flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition"
+          >
+            <i class="fas fa-sign-out-alt w-4"></i> Logout
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  function toggleNotif() {
+    const dropdown = document.getElementById("notif-dropdown");
+    const userDropdown = document.getElementById("user-dropdown");
+    userDropdown.classList.add("hidden");
+    dropdown.classList.toggle("hidden");
+  }
+
+  function toggleUserMenu() {
+    const dropdown = document.getElementById("user-dropdown");
+    const notifDropdown = document.getElementById("notif-dropdown");
+    notifDropdown.classList.add("hidden");
+    dropdown.classList.toggle("hidden");
+  }
+
+  // Close dropdowns when clicking outside
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest(".relative")) {
+      document.getElementById("notif-dropdown").classList.add("hidden");
+      document.getElementById("user-dropdown").classList.add("hidden");
+    }
+  });
+</script>

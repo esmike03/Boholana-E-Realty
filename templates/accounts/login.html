@@ -1,0 +1,214 @@
+{% extends 'base.html' %} {% block auth_content %}
+
+<div class="min-h-screen flex bg-white">
+  <!-- Left Panel -->
+  <div
+    class="hidden lg:flex lg:w-1/2 bg-gray-900 flex-col justify-between p-16"
+  >
+    <!-- Logo -->
+    <div class="flex items-center gap-2.5">
+      <div
+        class="w-8 h-8 bg-white flex items-center justify-center flex-shrink-0"
+      >
+        <span class="text-yellow-500 font-bold text-sm leading-none">B</span>
+      </div>
+      <div class="leading-tight">
+        <p class="text-sm font-semibold text-white tracking-tight">
+          Boholana E-Realty
+        </p>
+        <p class="text-[9px] text-gray-500 tracking-widest uppercase">
+          Property &amp; Legal Services
+        </p>
+      </div>
+    </div>
+
+    <!-- Headline -->
+    <div>
+      <div
+        class="inline-flex items-center gap-2 text-yellow-600 text-xs font-semibold tracking-widest uppercase mb-6"
+      >
+        <span class="block w-5 h-px bg-yellow-600"></span>
+        Bohol's #1 Platform
+      </div>
+      <h1
+        class="text-4xl font-bold text-white leading-tight tracking-tight mb-4"
+      >
+        Your trusted<br />partner in<br /><span class="text-yellow-400"
+          >Bohol real estate</span
+        >
+      </h1>
+      <p class="text-gray-500 text-sm leading-relaxed max-w-xs">
+        A complete property management system built for Bohol's growing real
+        estate market.
+      </p>
+
+      <!-- Feature list -->
+      <div class="mt-10 space-y-4">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-8 h-8 border border-gray-700 flex items-center justify-center flex-shrink-0"
+          >
+            <i class="fas fa-home text-yellow-500 text-xs"></i>
+          </div>
+          <p class="text-sm text-gray-400">Manage property listings</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div
+            class="w-8 h-8 border border-gray-700 flex items-center justify-center flex-shrink-0"
+          >
+            <i class="fas fa-handshake text-yellow-500 text-xs"></i>
+          </div>
+          <p class="text-sm text-gray-400">Track sales and reservations</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div
+            class="w-8 h-8 border border-gray-700 flex items-center justify-center flex-shrink-0"
+          >
+            <i class="fas fa-file-alt text-yellow-500 text-xs"></i>
+          </div>
+          <p class="text-sm text-gray-400">Document tracking system</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div
+            class="w-8 h-8 border border-gray-700 flex items-center justify-center flex-shrink-0"
+          >
+            <i class="fas fa-chart-bar text-yellow-500 text-xs"></i>
+          </div>
+          <p class="text-sm text-gray-400">Generate detailed reports</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom -->
+    <p class="text-xs text-gray-600 italic">Luxury. Legality. Bohol.</p>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50">
+    <div class="w-full max-w-md">
+      <!-- Mobile logo -->
+      <div class="lg:hidden flex items-center gap-2.5 justify-center mb-10">
+        <div
+          class="w-8 h-8 bg-gray-900 flex items-center justify-center flex-shrink-0"
+        >
+          <span class="text-yellow-400 font-bold text-sm leading-none">B</span>
+        </div>
+        <div class="leading-tight">
+          <p class="text-sm font-semibold text-gray-900 tracking-tight">
+            Boholana E-Realty
+          </p>
+          <p class="text-[9px] text-gray-400 tracking-widest uppercase">
+            Property &amp; Legal Services
+          </p>
+        </div>
+      </div>
+
+      <!-- Heading -->
+      <div class="mb-8">
+        <p
+          class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-2"
+        >
+          Welcome Back
+        </p>
+        <h2 class="text-2xl font-bold text-gray-900 tracking-tight">
+          Sign in to your account
+        </h2>
+        <p class="text-gray-400 text-sm mt-1">
+          Enter your credentials to continue.
+        </p>
+      </div>
+
+      <!-- Messages -->
+      {% if messages %} {% for message in messages %}
+      <div
+        class="mb-5 p-3 text-sm flex items-center gap-2 {% if message.tags == 'error' %}bg-red-50 border border-red-200 text-red-600 {% else %}bg-green-50 border border-green-200 text-green-600{% endif %}"
+      >
+        <i
+          class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% else %}check-circle{% endif %} text-xs"
+        ></i>
+        {{ message }}
+      </div>
+      {% endfor %} {% endif %}
+
+      <!-- Form -->
+      <form
+        method="POST"
+        action="{% url 'accounts:login' %}?next={{ request.GET.next }}"
+        class="space-y-5"
+      >
+        {% csrf_token %}
+
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5"
+            >Username</label
+          >
+          <div class="relative">
+            <input
+              type="text"
+              name="username"
+              required
+              placeholder="Enter your username"
+              class="w-full pl-10 pr-4 py-3 border border-gray-200 bg-white text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors"
+            />
+            <i
+              class="fas fa-user absolute left-3.5 top-3.5 text-gray-300 text-xs"
+            ></i>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1.5"
+            >Password</label
+          >
+          <div class="relative">
+            <input
+              type="password"
+              name="password"
+              id="password"
+              required
+              placeholder="Enter your password"
+              class="w-full pl-10 pr-10 py-3 border border-gray-200 bg-white text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors"
+            />
+            <i
+              class="fas fa-lock absolute left-3.5 top-3.5 text-gray-300 text-xs"
+            ></i>
+            <button
+              type="button"
+              onclick="togglePassword()"
+              class="absolute right-3.5 top-3.5 text-gray-300 hover:text-gray-500 transition-colors"
+            >
+              <i class="fas fa-eye text-xs" id="eye-icon"></i>
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="w-full bg-gray-900 hover:bg-yellow-600 text-white py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+        >
+          <i class="fas fa-sign-in-alt text-xs"></i> Sign In
+        </button>
+      </form>
+
+      <p class="text-center text-xs text-gray-400 mt-10">
+        &copy; {% now "Y" %} Boholana E-Realty. All rights reserved.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  function togglePassword() {
+    const input = document.getElementById("password");
+    const icon = document.getElementById("eye-icon");
+    if (input.type === "password") {
+      input.type = "text";
+      icon.classList.replace("fa-eye", "fa-eye-slash");
+    } else {
+      input.type = "password";
+      icon.classList.replace("fa-eye-slash", "fa-eye");
+    }
+  }
+</script>
+
+{% endblock %}

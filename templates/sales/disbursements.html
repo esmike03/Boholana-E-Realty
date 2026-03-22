@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Disbursements — Boholana E-Realty{% endblock %}
+{% block page_title %}Disbursements{% endblock %}
+{% block page_subtitle %}Manage commission disbursements{% endblock %}
+
+{% block content %}
+
+<!-- Stats -->
+<div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <p class="text-2xl font-bold text-yellow-600">{{ in_review_count }}</p>
+        <p class="text-xs text-gray-500 mt-1">In Review</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <p class="text-2xl font-bold text-blue-600">{{ pending_count }}</p>
+        <p class="text-xs text-gray-500 mt-1">Pending Payment</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <p class="text-2xl font-bold text-green-600">{{ completed_count }}</p>
+        <p class="text-xs text-gray-500 mt-1">Completed</p>
+    </div>
+</div>
+
+<!-- Tabs + Table -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100">
+
+    <!-- Tabs -->
+    <div class="px-6 py-4 border-b border-gray-100 flex gap-4">
+        <a href="?tab=all"
+           class="text-sm font-medium pb-1 {% if tab == 'all' %}text-blue-600 border-b-2 border-blue-600{% else %}text-gray-400 hover:text-gray-600{% endif %}">
+            All
+        </a>
+        <a href="?tab=in_review"
+           class="text-sm font-medium pb-1 {% if tab == 'in_review' %}text-blue-600 border-b-2 border-blue-600{% else %}text-gray-400 hover:text-gray-600{% endif %}">
+            In Review
+        </a>
+        <a href="?tab=pending"
+           class="text-sm font-medium pb-1 {% if tab == 'pending' %}text-blue-600 border-b-2 border-blue-600{% else %}text-gray-400 hover:text-gray-600{% endif %}">
+            Pending
+        </a>
+        <a href="?tab=completed"
+           class="text-sm font-medium pb-1 {% if tab == 'completed' %}text-blue-600 border-b-2 border-blue-600{% else %}text-gray-400 hover:text-gray-600{% endif %}">
+            Completed
+        </a>
+    </div>
+
+    <!-- Total -->
+    <div class="px-6 py-3 bg-gray-50 border-b border-gray-100">
+        <p class="text-sm text-gray-500">
+            Total Amount:
+            <span class="font-bold text-gray-800">₱{{ total_amount|floatformat:2 }}</span>
+        </p>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-xs text-gray-400 border-b border-gray-50 bg-gray-50">
+                    <th class="px-6 py-3 text-left font-medium">Sale</th>
+                    <th class="px-6 py-3 text-left font-medium">Recipient</th>
+                    <th class="px-6 py-3 text-left font-medium">Type</th>
+                    <th class="px-6 py-3 text-left font-medium">Amount</th>
+                    <th class="px-6 py-3 text-left font-medium">%</th>
+                    <th class="px-6 py-3 text-left font-medium">Status</th>
+                    <th class="px-6 py-3 text-left font-medium">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                {% for disbursement in disbursements %}
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-4 text-gray-600 text-xs">
+                        Sale #{{ disbursement.sale.id }}
+                        <p class="text-gray-400">{{ disbursement.sale.property.title|truncatechars:20 }}</p>
+                    </td>
+                    <td class="px-6 py-4 text-gray-700 text-sm">
+                        {{ disbursement.recipient.get_full_name|default:disbursement.recipient.username }}
+                        <p class="text-gray-400 text-xs">{{ disbursement.recipient.get_role_display }}</p>
+                    </td>
+                    <td class="px-6 py-4 text-gray-500 text-xs">
+                        {{ disbursement.get_disbursement_type_display }}
+                    </td>
+                    <td class="px-6 py-4 font-bold text-gray-800">
+                        ₱{{ disbursement.amount|floatformat:2 }}
+                    </td>
+                    <td class="px-6 py-4 text-gray-400 text-xs">
+                        {% if disbursement.percentage %}{{ disbursement.percentage }}%{% else %}—{% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium
+                            {% if disbursement.status == 'completed' %}bg-green-100 text-green-700
+                            {% elif disbursement.status == 'pending' %}bg-blue-100 text-blue-700
+                            {% elif disbursement.status == 'in_review' %}bg-yellow-100 text-yellow-700
+                            {% else %}bg-gray-100 text-gray-600{% endif %}">
+                            {{ disbursement.get_status_display }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-1">
+                            {% if user.role in 'broker,admin' or user.is_superuser %}
+                                {% if disbursement.status == 'in_review' %}
+                                <a href="{% url 'sales:disbursement_approve' disbursement.pk %}"
+                                   class="bg-green-100 hover:bg-green-200 text-green-600 px-3 py-1.5 rounded-lg text-xs transition">
+                                    Approve
+                                </a>
+                                {% endif %}
+                            {% endif %}
+                            {% if disbursement.recipient == user and disbursement.status == 'pending' %}
+                            <a href="{% url 'sales:disbursement_receive' disbursement.pk %}"
+                               class="bg-blue-100 hover:bg-blue-200 text-blue-600 px-3 py-1.5 rounded-lg text-xs transition">
+                                Confirm Receipt
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="px-6 py-12 text-center text-gray-400">
+                        <i class="fas fa-money-bill-wave text-3xl mb-3 block"></i>
+                        No disbursements found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

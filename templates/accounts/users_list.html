@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Users — Boholana E-Realty{% endblock %}
+{% block page_title %}Manage Users{% endblock %}
+{% block page_subtitle %}Create and manage system accounts{% endblock %}
+
+{% block content %}
+
+<!-- Stats -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between mb-3">
+            <div class="bg-blue-100 rounded-xl p-3">
+                <i class="fas fa-users text-blue-600"></i>
+            </div>
+        </div>
+        <p class="text-2xl font-bold text-gray-800">{{ total_users }}</p>
+        <p class="text-sm text-gray-500 mt-1">Total Users</p>
+    </div>
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between mb-3">
+            <div class="bg-green-100 rounded-xl p-3">
+                <i class="fas fa-user-check text-green-600"></i>
+            </div>
+        </div>
+        <p class="text-2xl font-bold text-gray-800">{{ active_users }}</p>
+        <p class="text-sm text-gray-500 mt-1">Active Users</p>
+    </div>
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between mb-3">
+            <div class="bg-red-100 rounded-xl p-3">
+                <i class="fas fa-user-slash text-red-600"></i>
+            </div>
+        </div>
+        <p class="text-2xl font-bold text-gray-800">{{ disabled_users }}</p>
+        <p class="text-sm text-gray-500 mt-1">Disabled Users</p>
+    </div>
+</div>
+
+<!-- Filters & Table -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100">
+
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h3 class="font-semibold text-gray-800 text-sm">All Users</h3>
+        <a href="{% url 'accounts:user_create' %}"
+           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 w-fit">
+            <i class="fas fa-plus"></i> Create User
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="px-6 py-4 border-b border-gray-50">
+        <form method="GET" class="flex flex-wrap gap-3">
+            <input type="text"
+                   name="search"
+                   value="{{ search }}"
+                   placeholder="Search name, email, username..."
+                   class="border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64">
+            <select name="role"
+                    class="border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All Roles</option>
+                {% for value, label in role_choices %}
+                    <option value="{{ value }}" {% if role_filter == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+            <select name="status"
+                    class="border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All Status</option>
+                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                <option value="disabled" {% if status_filter == 'disabled' %}selected{% endif %}>Disabled</option>
+            </select>
+            <button type="submit"
+                    class="bg-gray-800 text-white px-4 py-2 rounded-xl text-sm font-medium transition hover:bg-gray-700">
+                <i class="fas fa-filter mr-1"></i> Filter
+            </button>
+            <a href="{% url 'accounts:users' %}"
+               class="text-gray-400 hover:text-gray-600 px-4 py-2 text-sm transition">
+                Clear
+            </a>
+        </form>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-xs text-gray-400 border-b border-gray-50 bg-gray-50">
+                    <th class="px-6 py-3 text-left font-medium">User</th>
+                    <th class="px-6 py-3 text-left font-medium">Role</th>
+                    <th class="px-6 py-3 text-left font-medium">Contact</th>
+                    <th class="px-6 py-3 text-left font-medium">Status</th>
+                    <th class="px-6 py-3 text-left font-medium">Joined</th>
+                    <th class="px-6 py-3 text-left font-medium">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                {% for user in users %}
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-blue-500 rounded-full w-9 h-9 flex items-center justify-center flex-shrink-0">
+                                {% if user.profile_picture %}
+                                    <img src="{{ user.profile_picture.url }}"
+                                         class="w-9 h-9 rounded-full object-cover">
+                                {% else %}
+                                    <span class="text-white text-xs font-bold">
+                                        {{ user.get_initials }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-800">
+                                    {{ user.get_full_name|default:user.username }}
+                                </p>
+                                <p class="text-gray-400 text-xs">{{ user.email }}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold
+                            {% if user.role == 'broker' %}bg-purple-100 text-purple-700
+                            {% elif user.role == 'admin' %}bg-red-100 text-red-700
+                            {% elif user.role == 'staff' %}bg-blue-100 text-blue-700
+                            {% elif user.role == 'sale_assistant' %}bg-green-100 text-green-700
+                            {% elif user.role == 'property_owner' %}bg-yellow-100 text-yellow-700
+                            {% else %}bg-gray-100 text-gray-700{% endif %}">
+                            {{ user.get_role_display }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-gray-500 text-xs">
+                        <p>{{ user.phone_number|default:"—" }}</p>
+                        <p class="text-gray-400">@{{ user.username }}</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        {% if user.is_disabled %}
+                            <span class="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                                Disabled
+                            </span>
+                        {% elif user.is_verified %}
+                            <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                Verified
+                            </span>
+                        {% else %}
+                            <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+                                Active
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-gray-400 text-xs">
+                        {{ user.date_joined|date:"M d, Y" }}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                            <a href="{% url 'accounts:user_detail' user.pk %}"
+                               class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-1.5 rounded-lg transition"
+                               title="View">
+                                <i class="fas fa-eye text-xs"></i>
+                            </a>
+                            <a href="{% url 'accounts:user_update' user.pk %}"
+                               class="bg-blue-100 hover:bg-blue-200 text-blue-600 p-1.5 rounded-lg transition"
+                               title="Edit">
+                                <i class="fas fa-edit text-xs"></i>
+                            </a>
+                            <a href="{% url 'accounts:assign_role' user.pk %}"
+                               class="bg-purple-100 hover:bg-purple-200 text-purple-600 p-1.5 rounded-lg transition"
+                               title="Assign Role">
+                                <i class="fas fa-user-tag text-xs"></i>
+                            </a>
+                            <a href="{% url 'accounts:user_disable' user.pk %}"
+                               class="{% if user.is_disabled %}bg-green-100 hover:bg-green-200 text-green-600{% else %}bg-red-100 hover:bg-red-200 text-red-600{% endif %} p-1.5 rounded-lg transition"
+                               title="{% if user.is_disabled %}Enable{% else %}Disable{% endif %}">
+                                <i class="fas fa-{% if user.is_disabled %}unlock{% else %}ban{% endif %} text-xs"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="px-6 py-12 text-center text-gray-400">
+                        <i class="fas fa-users text-3xl mb-3 block"></i>
+                        No users found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

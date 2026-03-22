@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ property.title }} — Boholana E-Realty{% endblock %}
+{% block page_title %}Property Details{% endblock %}
+{% block page_subtitle %}View full property information{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Left -->
+    <div class="lg:col-span-2 space-y-5">
+
+        <!-- Images -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            {% if property.images.exists %}
+                <img src="{{ property.images.first.image.url }}"
+                     alt="{{ property.title }}"
+                     class="w-full h-64 object-cover">
+                {% if property.images.count > 1 %}
+                <div class="flex gap-2 p-3 overflow-x-auto">
+                    {% for image in property.images.all %}
+                        <img src="{{ image.image.url }}"
+                             class="h-16 w-24 object-cover rounded-lg flex-shrink-0 cursor-pointer border-2 border-transparent hover:border-blue-500 transition">
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="w-full h-64 flex items-center justify-center bg-gray-100">
+                    <i class="fas fa-home text-gray-300 text-5xl"></i>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Info -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div class="flex items-start justify-between mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">{{ property.title }}</h2>
+                    <p class="text-gray-400 text-sm mt-1">
+                        <i class="fas fa-map-marker-alt text-yellow-500 mr-1"></i>
+                        {{ property.address }}, {{ property.city }}, {{ property.province }}
+                    </p>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold
+                    {% if property.listing_status == 'approved' %}bg-green-100 text-green-700
+                    {% elif property.listing_status == 'pending_approval' %}bg-yellow-100 text-yellow-700
+                    {% elif property.listing_status == 'flagged' %}bg-red-100 text-red-700
+                    {% elif property.listing_status == 'sold' %}bg-blue-100 text-blue-700
+                    {% else %}bg-gray-100 text-gray-500{% endif %}">
+                    {{ property.get_listing_status_display }}
+                </span>
+            </div>
+
+            <!-- Price -->
+            <div class="bg-blue-50 rounded-xl p-4 mb-5">
+                <p class="text-2xl font-bold text-blue-600">₱{{ property.price|floatformat:0 }}</p>
+                <p class="text-xs text-blue-400 mt-0.5">
+                    {{ property.get_property_type_display }}
+                    {% if property.is_negotiable %} • Negotiable{% endif %}
+                </p>
+            </div>
+
+            <!-- Details Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+                {% if property.lot_area %}
+                <div class="text-center p-3 bg-gray-50 rounded-xl">
+                    <i class="fas fa-ruler-combined text-blue-500 mb-1"></i>
+                    <p class="text-xs text-gray-500 mt-1">Lot Area</p>
+                    <p class="text-sm font-semibold text-gray-700">{{ property.lot_area }} sqm</p>
+                </div>
+                {% endif %}
+                {% if property.bedrooms %}
+                <div class="text-center p-3 bg-gray-50 rounded-xl">
+                    <i class="fas fa-bed text-purple-500 mb-1"></i>
+                    <p class="text-xs text-gray-500 mt-1">Bedrooms</p>
+                    <p class="text-sm font-semibold text-gray-700">{{ property.bedrooms }}</p>
+                </div>
+                {% endif %}
+                {% if property.bathrooms %}
+                <div class="text-center p-3 bg-gray-50 rounded-xl">
+                    <i class="fas fa-bath text-yellow-500 mb-1"></i>
+                    <p class="text-xs text-gray-500 mt-1">Bathrooms</p>
+                    <p class="text-sm font-semibold text-gray-700">{{ property.bathrooms }}</p>
+                </div>
+                {% endif %}
+                {% if property.garage %}
+                <div class="text-center p-3 bg-gray-50 rounded-xl">
+                    <i class="fas fa-car text-green-500 mb-1"></i>
+                    <p class="text-xs text-gray-500 mt-1">Garage</p>
+                    <p class="text-sm font-semibold text-gray-700">{{ property.garage }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Description -->
+            {% if property.description %}
+            <div class="mb-4">
+                <h4 class="font-semibold text-gray-700 text-sm mb-2">Description</h4>
+                <p class="text-gray-500 text-sm leading-relaxed">{{ property.description }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Amenities -->
+            {% if property.amenities %}
+            <div>
+                <h4 class="font-semibold text-gray-700 text-sm mb-2">Amenities</h4>
+                <p class="text-gray-500 text-sm">{{ property.amenities }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Tags -->
+            {% if property.tags.exists %}
+            <div class="mt-4">
+                <h4 class="font-semibold text-gray-700 text-sm mb-2">Tags</h4>
+                <div class="flex flex-wrap gap-2">
+                    {% for tag in property.tags.all %}
+                        <span class="bg-blue-100 text-blue-600 text-xs px-3 py-1 rounded-full">
+                            {{ tag.name }}
+                        </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- Status Logs -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h4 class="font-semibold text-gray-800 text-sm mb-4">Status History</h4>
+            <div class="space-y-3">
+                {% for log in status_logs %}
+                <div class="flex items-start gap-3">
+                    <div class="bg-blue-100 rounded-full p-1.5 mt-0.5">
+                        <i class="fas fa-circle text-blue-500 text-xs"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            <span class="font-medium">{{ log.old_status }}</span>
+                            → <span class="font-medium">{{ log.new_status }}</span>
+                        </p>
+                        {% if log.remarks %}
+                            <p class="text-xs text-gray-400 mt-0.5">{{ log.remarks }}</p>
+                        {% endif %}
+                        <p class="text-xs text-gray-400 mt-0.5">
+                            {{ log.changed_at|date:"M d, Y h:i A" }}
+                            {% if log.changed_by %}by {{ log.changed_by.get_full_name|default:log.changed_by.username }}{% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-400 text-sm">No status history yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right -->
+    <div class="space-y-5">
+
+        <!-- Actions -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <h4 class="font-semibold text-gray-800 text-sm mb-4">Actions</h4>
+            <div class="space-y-2">
+                <a href="{% url 'listings:update' property.pk %}"
+                   class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-edit mr-2"></i>Edit Property
+                </a>
+
+                {% if user.role in 'broker,admin' or user.is_superuser %}
+                    {% if property.listing_status == 'pending_approval' or property.listing_status == 'flagged' %}
+                        <a href="{% url 'listings:approve' property.pk %}"
+                           class="block w-full text-center bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-xl text-sm font-semibold transition">
+                            <i class="fas fa-check mr-2"></i>Approve Listing
+                        </a>
+                        <a href="{% url 'listings:reject' property.pk %}"
+                           class="block w-full text-center bg-red-100 hover:bg-red-200 text-red-700 py-2.5 rounded-xl text-sm font-semibold transition">
+                            <i class="fas fa-times mr-2"></i>Reject Listing
+                        </a>
+                    {% endif %}
+
+                    {% if property.listing_status == 'approved' %}
+                        <form method="POST" action="{% url 'listings:mark_sold' property.pk %}">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="w-full bg-blue-100 hover:bg-blue-200 text-blue-700 py-2.5 rounded-xl text-sm font-semibold transition">
+                                <i class="fas fa-handshake mr-2"></i>Mark as Sold
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    <a href="{% url 'listings:archive' property.pk %}"
+                       class="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold transition">
+                        <i class="fas fa-archive mr-2"></i>Archive
+                    </a>
+                {% endif %}
+
+                {% if user.role in 'broker,staff,admin' or user.is_superuser %}
+                    <a href="{% url 'listings:flag' property.pk %}"
+                       class="block w-full text-center bg-orange-100 hover:bg-orange-200 text-orange-700 py-2.5 rounded-xl text-sm font-semibold transition">
+                        <i class="fas fa-flag mr-2"></i>Flag for Review
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Ownership -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <h4 class="font-semibold text-gray-800 text-sm mb-4">Ownership</h4>
+            <div class="space-y-3">
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">Property Owner</p>
+                    <p class="text-sm font-medium text-gray-700">
+                        {{ property.owner.get_full_name|default:property.owner.username }}
+                    </p>
+                    <p class="text-xs text-gray-400">{{ property.owner.email }}</p>
+                </div>
+                {% if property.broker %}
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">Broker</p>
+                    <p class="text-sm font-medium text-gray-700">
+                        {{ property.broker.get_full_name|default:property.broker.username }}
+                    </p>
+                </div>
+                {% endif %}
+                {% if property.approved_by %}
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">Approved By</p>
+                    <p class="text-sm font-medium text-gray-700">
+                        {{ property.approved_by.get_full_name|default:property.approved_by.username }}
+                    </p>
+                    <p class="text-xs text-gray-400">{{ property.approved_at|date:"M d, Y" }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Flagged Info -->
+        {% if property.listing_status == 'flagged' and property.flagged_reason %}
+        <div class="bg-red-50 rounded-2xl border border-red-100 p-5">
+            <h4 class="font-semibold text-red-700 text-sm mb-2">
+                <i class="fas fa-flag mr-2"></i>Flagged Reason
+            </h4>
+            <p class="text-red-600 text-sm">{{ property.flagged_reason }}</p>
+            {% if property.flagged_by %}
+            <p class="text-red-400 text-xs mt-2">
+                By {{ property.flagged_by.get_full_name|default:property.flagged_by.username }}
+                on {{ property.flagged_at|date:"M d, Y" }}
+            </p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Rejected Info -->
+        {% if property.listing_status == 'rejected' and property.rejected_reason %}
+        <div class="bg-red-50 rounded-2xl border border-red-100 p-5">
+            <h4 class="font-semibold text-red-700 text-sm mb-2">
+                <i class="fas fa-times-circle mr-2"></i>Rejection Reason
+            </h4>
+            <p class="text-red-600 text-sm">{{ property.rejected_reason }}</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'listings:list' %}"
+       class="text-sm text-gray-400 hover:text-gray-600 transition">
+        <i class="fas fa-arrow-left mr-1"></i>Back to Listings
+    </a>
+</div>
+{% endblock %}

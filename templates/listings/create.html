@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Property — Boholana E-Realty{% endblock %}
+{% block page_title %}Add Property{% endblock %}
+{% block page_subtitle %}Create a new property listing{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-4 p-3 rounded-lg text-sm
+                    {% if message.tags == 'error' %}bg-red-50 text-red-600 border border-red-200
+                    {% else %}bg-green-50 text-green-600 border border-green-200{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Basic Info -->
+            <div>
+                <h4 class="font-semibold text-gray-700 text-sm mb-4 pb-2 border-b border-gray-100">
+                    Basic Information
+                </h4>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Property Title <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="title" required
+                               placeholder="e.g. 3BR House in Tagbilaran"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                                Property Type <span class="text-red-500">*</span>
+                            </label>
+                            <select name="property_type" required
+                                    class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                                <option value="">Select Type</option>
+                                {% for value, label in type_choices %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                                Price (₱) <span class="text-red-500">*</span>
+                            </label>
+                            <input type="number" name="price" required step="0.01"
+                                   placeholder="0.00"
+                                   class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Description</label>
+                        <textarea name="description" rows="4"
+                                  placeholder="Describe the property..."
+                                  class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none"></textarea>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="is_negotiable" id="is_negotiable" class="rounded">
+                        <label for="is_negotiable" class="text-sm text-gray-600">Price is negotiable</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location -->
+            <div>
+                <h4 class="font-semibold text-gray-700 text-sm mb-4 pb-2 border-b border-gray-100">
+                    Location
+                </h4>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Full Address <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="address" required
+                               placeholder="Street, Barangay"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                                City <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="city" required
+                                   placeholder="e.g. Tagbilaran"
+                                   class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">Province</label>
+                            <input type="text" name="province"
+                                   value="Bohol"
+                                   class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">ZIP Code</label>
+                            <input type="text" name="zip_code"
+                                   class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">Latitude</label>
+                            <input type="number" name="latitude" step="any"
+                                   placeholder="e.g. 9.6500"
+                                   class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1.5">Longitude</label>
+                            <input type="number" name="longitude" step="any"
+                                   placeholder="e.g. 123.8500"
+                                   class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Property Details -->
+            <div>
+                <h4 class="font-semibold text-gray-700 text-sm mb-4 pb-2 border-b border-gray-100">
+                    Property Details
+                </h4>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Lot Area (sqm)</label>
+                        <input type="number" name="lot_area" step="0.01"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Floor Area (sqm)</label>
+                        <input type="number" name="floor_area" step="0.01"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Bedrooms</label>
+                        <input type="number" name="bedrooms" min="0" value="0"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Bathrooms</label>
+                        <input type="number" name="bathrooms" min="0" value="0"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Garage</label>
+                        <input type="number" name="garage" min="0" value="0"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">Amenities</label>
+                    <textarea name="amenities" rows="2"
+                              placeholder="Pool, Garden, Parking, etc."
+                              class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none"></textarea>
+                </div>
+            </div>
+
+            <!-- Owner (for broker/staff/admin) -->
+            {% if user.role != 'property_owner' %}
+            <div>
+                <h4 class="font-semibold text-gray-700 text-sm mb-4 pb-2 border-b border-gray-100">
+                    Ownership
+                </h4>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">Property Owner</label>
+                    <select name="owner_id"
+                            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        <option value="">Select Owner</option>
+                        {% for owner in owners %}
+                            <option value="{{ owner.pk }}">
+                                {{ owner.get_full_name|default:owner.username }} — {{ owner.email }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Tags -->
+            {% if tags %}
+            <div>
+                <h4 class="font-semibold text-gray-700 text-sm mb-4 pb-2 border-b border-gray-100">
+                    Tags
+                </h4>
+                <div class="flex flex-wrap gap-2">
+                    {% for tag in tags %}
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="tags" value="{{ tag.pk }}"
+                                   class="rounded text-blue-500">
+                            <span class="text-sm text-gray-600">{{ tag.name }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Images -->
+            <div>
+                <h4 class="font-semibold text-gray-700 text-sm mb-4 pb-2 border-b border-gray-100">
+                    Property Images
+                </h4>
+                <div class="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center">
+                    <i class="fas fa-cloud-upload-alt text-gray-300 text-3xl mb-2"></i>
+                    <p class="text-sm text-gray-400 mb-2">Upload property images</p>
+                    <input type="file" name="images" multiple accept="image/*"
+                           class="text-sm text-gray-500">
+                    <p class="text-xs text-gray-400 mt-1">First image will be the primary photo</p>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="flex gap-3 pt-2">
+                <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-paper-plane mr-2"></i>Submit for Approval
+                </button>
+                <a href="{% url 'listings:list' %}"
+                   class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-6 py-2.5 rounded-xl text-sm font-semibold transition">
+                    Cancel
+                </a>
+            </div>
+
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ document.title }} — Boholana E-Realty{% endblock %}
+{% block page_title %}Document Details{% endblock %}
+{% block page_subtitle %}View document information and audit trail{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Left -->
+    <div class="lg:col-span-2 space-y-5">
+
+        <!-- Document Info -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div class="flex items-start justify-between mb-5">
+                <div class="flex items-center gap-4">
+                    <div class="bg-blue-100 rounded-2xl p-4">
+                        <i class="fas fa-file-alt text-blue-600 text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-gray-800 text-lg">{{ document.title }}</h2>
+                        <p class="text-gray-400 text-sm mt-0.5">
+                            {{ document.get_document_type_display }}
+                            • v{{ document.version }}
+                            {% if document.is_confidential %}
+                                • <span class="text-red-400 font-medium">Confidential</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold
+                    {% if document.status == 'approved' %}bg-green-100 text-green-700
+                    {% elif document.status == 'pending_approval' %}bg-yellow-100 text-yellow-700
+                    {% elif document.status == 'rejected' %}bg-red-100 text-red-700
+                    {% else %}bg-gray-100 text-gray-600{% endif %}">
+                    {{ document.get_status_display }}
+                </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">Uploaded By</p>
+                    <p class="font-medium text-gray-700">
+                        {{ document.uploaded_by.get_full_name|default:document.uploaded_by.username }}
+                    </p>
+                    <p class="text-xs text-gray-400">
+                        {{ document.uploaded_by.get_role_display }}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">Reviewed By</p>
+                    <p class="font-medium text-gray-700">
+                        {% if document.reviewed_by %}
+                            {{ document.reviewed_by.get_full_name }}
+                        {% else %}
+                            <span class="text-gray-300">Not yet reviewed</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">File Format</p>
+                    <p class="font-medium text-gray-700">
+                        {{ document.get_file_format_display }}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">Uploaded On</p>
+                    <p class="font-medium text-gray-700">
+                        {{ document.created_at|date:"M d, Y h:i A" }}
+                    </p>
+                </div>
+                {% if document.expiry_date %}
+                <div>
+                    <p class="text-xs text-gray-400 mb-1">Expiry Date</p>
+                    <p class="font-medium text-gray-700">{{ document.expiry_date }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if document.remarks %}
+            <div class="mt-4 p-3 bg-gray-50 rounded-xl">
+                <p class="text-xs text-gray-400 mb-1">Remarks</p>
+                <p class="text-sm text-gray-600">{{ document.remarks }}</p>
+            </div>
+            {% endif %}
+
+            {% if document.rejection_feedback %}
+            <div class="mt-4 p-3 bg-red-50 rounded-xl border border-red-100">
+                <p class="text-xs text-red-500 font-medium mb-1">Rejection Feedback</p>
+                <p class="text-sm text-red-600">{{ document.rejection_feedback }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Linked To -->
+            <div class="mt-5 flex flex-wrap gap-2">
+                {% if document.property %}
+                <a href="{% url 'listings:detail' document.property.pk %}"
+                   class="bg-green-100 text-green-700 text-xs px-3 py-1.5 rounded-full hover:bg-green-200 transition">
+                    <i class="fas fa-home mr-1"></i>{{ document.property.title|truncatechars:20 }}
+                </a>
+                {% endif %}
+                {% if document.sale %}
+                <a href="{% url 'sales:detail' document.sale.pk %}"
+                   class="bg-blue-100 text-blue-700 text-xs px-3 py-1.5 rounded-full hover:bg-blue-200 transition">
+                    <i class="fas fa-handshake mr-1"></i>Sale #{{ document.sale.id }}
+                </a>
+                {% endif %}
+                {% if document.reservation %}
+                <a href="{% url 'reservations:detail' document.reservation.pk %}"
+                   class="bg-yellow-100 text-yellow-700 text-xs px-3 py-1.5 rounded-full hover:bg-yellow-200 transition">
+                    <i class="fas fa-calendar mr-1"></i>Reservation #{{ document.reservation.id }}
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Download -->
+            <div class="mt-5">
+                <a href="{{ document.file.url }}" target="_blank"
+                   class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-download"></i> Download File
+                </a>
+            </div>
+        </div>
+
+        <!-- Audit Trail -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h4 class="font-semibold text-gray-800 text-sm mb-4">
+                <i class="fas fa-history mr-2 text-blue-500"></i>Audit Trail
+            </h4>
+            <div class="space-y-3">
+                {% for log in audit_logs %}
+                <div class="flex items-start gap-3">
+                    <div class="bg-blue-100 rounded-full p-1.5 mt-0.5 flex-shrink-0">
+                        <i class="fas fa-circle text-blue-500 text-xs"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            <span class="font-medium">{{ log.get_action_display }}</span>
+                            {% if log.performed_by %}
+                                by {{ log.performed_by.get_full_name|default:log.performed_by.username }}
+                            {% endif %}
+                        </p>
+                        {% if log.description %}
+                            <p class="text-xs text-gray-400 mt-0.5">{{ log.description }}</p>
+                        {% endif %}
+                        <p class="text-xs text-gray-400 mt-0.5">
+                            {{ log.performed_at|date:"M d, Y h:i A" }}
+                        </p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-400 text-sm">No audit logs yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right Actions -->
+    <div class="space-y-5">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <h4 class="font-semibold text-gray-800 text-sm mb-4">Actions</h4>
+            <div class="space-y-2">
+
+                {% if user.role in 'broker,admin' or user.is_superuser %}
+                    {% if document.status == 'pending_approval' %}
+                    <a href="{% url 'documents:approve' document.pk %}"
+                       class="block w-full text-center bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-xl text-sm font-semibold transition">
+                        <i class="fas fa-check mr-2"></i>Approve
+                    </a>
+                    <a href="{% url 'documents:reject' document.pk %}"
+                       class="block w-full text-center bg-red-100 hover:bg-red-200 text-red-700 py-2.5 rounded-xl text-sm font-semibold transition">
+                        <i class="fas fa-times mr-2"></i>Reject
+                    </a>
+                    {% endif %}
+                {% endif %}
+
+                {% if document.uploaded_by == user or user.role in 'broker,admin' or user.is_superuser %}
+                <a href="{% url 'documents:update' document.pk %}"
+                   class="block w-full text-center bg-blue-100 hover:bg-blue-200 text-blue-700 py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-edit mr-2"></i>Update Document
+                </a>
+                {% endif %}
+
+                <a href="{{ document.file.url }}" target="_blank"
+                   class="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-eye mr-2"></i>View File
+                </a>
+                <a href="{% url 'documents:list' %}"
+                   class="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

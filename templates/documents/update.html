@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Update Document{% endblock %}
+{% block page_title %}Update Document{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h3 class="font-semibold text-gray-800 mb-5">{{ document.title }}</h3>
+        <form method="POST" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1.5">Title</label>
+                <input type="text" name="title"
+                       value="{{ document.title }}"
+                       class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">Document Type</label>
+                    <select name="document_type"
+                            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        {% for value, label in type_choices %}
+                            <option value="{{ value }}"
+                                {% if document.document_type == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">Expiry Date</label>
+                    <input type="date" name="expiry_date"
+                           value="{{ document.expiry_date|default:'' }}"
+                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1.5">Remarks</label>
+                <textarea name="remarks" rows="2"
+                          class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none">{{ document.remarks|default:'' }}</textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                    Replace File (optional — will increment version)
+                </label>
+                <input type="file" name="file"
+                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                       class="text-sm text-gray-500">
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" name="is_confidential"
+                       {% if document.is_confidential %}checked{% endif %}
+                       class="rounded">
+                <label class="text-sm text-gray-600">Mark as Confidential</label>
+            </div>
+            <div class="flex gap-3">
+                <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-save mr-2"></i>Save Changes
+                </button>
+                <a href="{% url 'documents:detail' document.pk %}"
+                   class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-6 py-2.5 rounded-xl text-sm font-semibold transition">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

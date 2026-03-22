@@ -1,0 +1,477 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile — Boholana E-Realty{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+{% block page_subtitle %}Manage your account information{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Left — Profile Card -->
+    <div class="lg:col-span-1 space-y-5">
+
+        <!-- Avatar Card -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
+            <div class="relative inline-block mb-4">
+                {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture.url }}"
+                         class="w-24 h-24 rounded-full object-cover border-4 border-blue-100">
+                {% else %}
+                    <div class="w-24 h-24 rounded-full bg-blue-500 flex items-center justify-center border-4 border-blue-100 mx-auto">
+                        <span class="text-white text-3xl font-bold">
+                            {{ user.get_initials }}
+                        </span>
+                    </div>
+                {% endif %}
+                <label for="avatar-upload"
+                       class="absolute bottom-0 right-0 bg-blue-600 text-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer hover:bg-blue-700 transition">
+                    <i class="fas fa-camera text-xs"></i>
+                </label>
+                <input type="file" id="avatar-upload" accept="image/*" class="hidden"
+                       onchange="uploadAvatar(this)">
+            </div>
+
+            <h3 class="font-bold text-gray-800 text-lg">
+                {{ user.get_full_name|default:user.username }}
+            </h3>
+            <p class="text-gray-400 text-sm">@{{ user.username }}</p>
+
+            <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold
+                {% if user.role == 'broker' %}bg-purple-100 text-purple-700
+                {% elif user.role == 'admin' %}bg-red-100 text-red-700
+                {% elif user.role == 'staff' %}bg-blue-100 text-blue-700
+                {% elif user.role == 'sale_assistant' %}bg-green-100 text-green-700
+                {% elif user.role == 'property_owner' %}bg-yellow-100 text-yellow-700
+                {% else %}bg-gray-100 text-gray-700{% endif %}">
+                {{ user.get_role_display }}
+            </span>
+
+            {% if user.is_verified %}
+            <div class="mt-3 flex items-center justify-center gap-1 text-green-500 text-xs">
+                <i class="fas fa-check-circle"></i>
+                <span>Verified Account</span>
+            </div>
+            {% endif %}
+
+            <div class="mt-4 pt-4 border-t border-gray-100 space-y-2 text-sm text-left">
+                {% if user.email %}
+                <div class="flex items-center gap-2 text-gray-500">
+                    <i class="fas fa-envelope w-4 text-gray-400"></i>
+                    {{ user.email }}
+                </div>
+                {% endif %}
+                {% if user.phone_number %}
+                <div class="flex items-center gap-2 text-gray-500">
+                    <i class="fas fa-phone w-4 text-gray-400"></i>
+                    {{ user.phone_number }}
+                </div>
+                {% endif %}
+                {% if user.address %}
+                <div class="flex items-center gap-2 text-gray-500">
+                    <i class="fas fa-map-marker-alt w-4 text-gray-400"></i>
+                    {{ user.address|truncatechars:30 }}
+                </div>
+                {% endif %}
+                <div class="flex items-center gap-2 text-gray-500">
+                    <i class="fas fa-calendar w-4 text-gray-400"></i>
+                    Joined {{ user.date_joined|date:"M d, Y" }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        {% if user.role == 'client' %}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <h4 class="font-semibold text-gray-800 text-sm mb-4">My Activity</h4>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-500">
+                        <i class="fas fa-calendar-check mr-2 text-yellow-500"></i>
+                        Reservations
+                    </span>
+                    <span class="font-bold text-gray-700">
+                        {{ user.reservations.count }}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-500">
+                        <i class="fas fa-heart mr-2 text-red-400"></i>
+                        Saved Properties
+                    </span>
+                    <span class="font-bold text-gray-700">
+                        {{ user.favorite_properties.count }}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-500">
+                        <i class="fas fa-handshake mr-2 text-blue-500"></i>
+                        Purchases
+                    </span>
+                    <span class="font-bold text-gray-700">
+                        {{ user.purchases.count }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if user.role == 'sale_assistant' %}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <h4 class="font-semibold text-gray-800 text-sm mb-4">My Stats</h4>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-500">
+                        <i class="fas fa-handshake mr-2 text-green-500"></i>
+                        Total Sales
+                    </span>
+                    <span class="font-bold text-gray-700">
+                        {{ user.assisted_sales.count }}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-500">
+                        <i class="fas fa-money-bill mr-2 text-yellow-500"></i>
+                        Disbursements
+                    </span>
+                    <span class="font-bold text-gray-700">
+                        {{ user.disbursements.count }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Right — Edit Form -->
+    <div class="lg:col-span-2 space-y-5">
+
+        <!-- Messages -->
+        {% if messages %}
+        {% for message in messages %}
+        <div class="p-4 rounded-xl text-sm
+            {% if message.tags == 'error' %}bg-red-50 text-red-600 border border-red-200
+            {% else %}bg-green-50 text-green-600 border border-green-200{% endif %}">
+            <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% else %}check-circle{% endif %} mr-2"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Personal Info -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h4 class="font-semibold text-gray-800 text-sm mb-5 pb-2 border-b border-gray-100">
+                Personal Information
+            </h4>
+            <form method="POST" enctype="multipart/form-data" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="personal">
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            First Name
+                        </label>
+                        <input type="text" name="first_name"
+                               value="{{ user.first_name }}"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Last Name
+                        </label>
+                        <input type="text" name="last_name"
+                               value="{{ user.last_name }}"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                        Email
+                    </label>
+                    <input type="email" name="email"
+                           value="{{ user.email }}"
+                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Phone Number
+                        </label>
+                        <input type="text" name="phone_number"
+                               value="{{ user.phone_number|default:'' }}"
+                               placeholder="+63 912 345 6789"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Gender
+                        </label>
+                        <select name="gender"
+                                class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                            <option value="">Prefer not to say</option>
+                            <option value="male"
+                                {% if user.gender == 'male' %}selected{% endif %}>
+                                Male
+                            </option>
+                            <option value="female"
+                                {% if user.gender == 'female' %}selected{% endif %}>
+                                Female
+                            </option>
+                            <option value="other"
+                                {% if user.gender == 'other' %}selected{% endif %}>
+                                Other
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Birth Date
+                        </label>
+                        <input type="date" name="birth_date"
+                               value="{{ user.birth_date|default:'' }}"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Profile Picture
+                        </label>
+                        <input type="file" name="profile_picture"
+                               accept="image/*"
+                               class="w-full text-sm text-gray-500 border border-gray-200 rounded-xl px-3 py-2 bg-gray-50">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                        Address
+                    </label>
+                    <textarea name="address" rows="2"
+                              class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none">{{ user.address|default:'' }}</textarea>
+                </div>
+
+                <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-save mr-2"></i>Save Changes
+                </button>
+            </form>
+        </div>
+
+        <!-- Change Password -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h4 class="font-semibold text-gray-800 text-sm mb-5 pb-2 border-b border-gray-100">
+                Change Password
+            </h4>
+            <form method="POST" class="space-y-4" id="password-form">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="password">
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                        Current Password
+                    </label>
+                    <div class="relative">
+                        <input type="password" name="current_password"
+                               id="current-pw"
+                               class="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        <i class="fas fa-lock absolute left-3.5 top-3 text-gray-400 text-sm"></i>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            New Password
+                        </label>
+                        <div class="relative">
+                            <input type="password" name="new_password"
+                                   id="new-pw"
+                                   class="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                            <i class="fas fa-lock absolute left-3.5 top-3 text-gray-400 text-sm"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Confirm Password
+                        </label>
+                        <div class="relative">
+                            <input type="password" name="confirm_password"
+                                   id="confirm-pw"
+                                   class="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                            <i class="fas fa-lock absolute left-3.5 top-3 text-gray-400 text-sm"></i>
+                        </div>
+                    </div>
+                </div>
+                <p id="pw-match" class="text-xs hidden"></p>
+
+                <button type="submit"
+                        class="bg-gray-800 hover:bg-gray-900 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-key mr-2"></i>Change Password
+                </button>
+            </form>
+        </div>
+
+        <!-- Property Preferences (Client only) -->
+        {% if user.role == 'client' %}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h4 class="font-semibold text-gray-800 text-sm mb-5 pb-2 border-b border-gray-100">
+                Property Preferences
+            </h4>
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="preferences">
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Preferred Type
+                        </label>
+                        <select name="preferred_property_type"
+                                class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                            <option value="">Any</option>
+                            <option value="house"
+                                {% if preference.preferred_property_type == 'house' %}selected{% endif %}>
+                                House
+                            </option>
+                            <option value="lot"
+                                {% if preference.preferred_property_type == 'lot' %}selected{% endif %}>
+                                Lot
+                            </option>
+                            <option value="condo"
+                                {% if preference.preferred_property_type == 'condo' %}selected{% endif %}>
+                                Condominium
+                            </option>
+                            <option value="commercial"
+                                {% if preference.preferred_property_type == 'commercial' %}selected{% endif %}>
+                                Commercial
+                            </option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Preferred Location
+                        </label>
+                        <input type="text" name="preferred_location"
+                               value="{{ preference.preferred_location|default:'' }}"
+                               placeholder="e.g. Tagbilaran City"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Min Budget (₱)
+                        </label>
+                        <input type="number" name="min_budget"
+                               value="{{ preference.min_budget|default:'' }}"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Max Budget (₱)
+                        </label>
+                        <input type="number" name="max_budget"
+                               value="{{ preference.max_budget|default:'' }}"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Preferred Bedrooms
+                        </label>
+                        <input type="number" name="preferred_bedrooms" min="0"
+                               value="{{ preference.preferred_bedrooms|default:'' }}"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                            Preferred Bathrooms
+                        </label>
+                        <input type="number" name="preferred_bathrooms" min="0"
+                               value="{{ preference.preferred_bathrooms|default:'' }}"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                        Desired Amenities
+                    </label>
+                    <input type="text" name="preferred_amenities"
+                           value="{{ preference.preferred_amenities|default:'' }}"
+                           placeholder="Pool, Garden, Parking..."
+                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                </div>
+
+                <!-- Notification Preferences -->
+                <div class="pt-3 border-t border-gray-100">
+                    <p class="text-xs font-medium text-gray-600 mb-3">
+                        Notifications
+                    </p>
+                    <div class="flex gap-6">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="email_notifications"
+                                   {% if preference.email_notifications %}checked{% endif %}
+                                   class="rounded text-blue-500">
+                            <span class="text-sm text-gray-600">Email</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="sms_notifications"
+                                   {% if preference.sms_notifications %}checked{% endif %}
+                                   class="rounded text-blue-500">
+                            <span class="text-sm text-gray-600">SMS</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-save mr-2"></i>Save Preferences
+                </button>
+            </form>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+    // Password match checker
+    document.getElementById('confirm-pw').addEventListener('input', function() {
+        const newPw = document.getElementById('new-pw').value;
+        const msg = document.getElementById('pw-match');
+        if (this.value === '') {
+            msg.classList.add('hidden');
+        } else if (newPw === this.value) {
+            msg.textContent = '✓ Passwords match';
+            msg.className = 'text-xs text-green-500';
+        } else {
+            msg.textContent = '✗ Passwords do not match';
+            msg.className = 'text-xs text-red-500';
+        }
+    });
+
+    // Avatar upload preview
+    function uploadAvatar(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const avatarEl = document.querySelector('.w-24.h-24.rounded-full');
+                if (avatarEl.tagName === 'IMG') {
+                    avatarEl.src = e.target.result;
+                }
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+
+{% endblock %}

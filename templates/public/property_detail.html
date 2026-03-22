@@ -1,0 +1,273 @@
+{% extends 'public_base.html' %}
+{% load humanize %}
+{% block title %}{{ property.title }} — Boholana E-Realty{% endblock %}
+
+{% block content %}
+
+<section class="bg-gray-50 py-10 px-6 min-h-screen">
+  <div class="max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- ── LEFT ── -->
+      <div class="lg:col-span-2 flex flex-col gap-5">
+
+        <!-- Images -->
+        <div class="bg-white border border-gray-100 overflow-hidden">
+          {% if property.images.exists %}
+            <img src="{{ property.images.first.image.url }}"
+                 alt="{{ property.title }}"
+                 class="w-full h-72 object-cover" />
+            {% if property.images.count > 1 %}
+            <div class="flex gap-2 p-3 overflow-x-auto border-t border-gray-100">
+              {% for image in property.images.all %}
+              <img src="{{ image.image.url }}" alt="photo"
+                   class="h-16 w-24 object-cover flex-shrink-0 cursor-pointer border-2 border-transparent hover:border-yellow-500 transition-colors" />
+              {% endfor %}
+            </div>
+            {% endif %}
+          {% else %}
+          <div class="w-full h-72 flex flex-col items-center justify-center gap-3 bg-gray-50">
+            <i class="fas fa-home text-5xl text-gray-200"></i>
+            <span class="text-xs tracking-widest uppercase text-gray-300">No image available</span>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Title & Info -->
+        <div class="bg-white border border-gray-100 p-6">
+          <div class="flex items-start justify-between gap-4 mb-5">
+            <div>
+              <h1 class="text-xl font-bold text-gray-900 tracking-tight">{{ property.title }}</h1>
+              <p class="text-gray-400 text-sm mt-1.5 flex items-center gap-1.5">
+                <i class="fas fa-map-marker-alt text-yellow-500 text-xs"></i>
+                {{ property.address }}, {{ property.city }}, {{ property.province }}
+              </p>
+            </div>
+            <span class="flex-shrink-0 text-[9px] font-semibold tracking-wider uppercase px-2.5 py-1 border
+              {% if property.listing_status == 'approved' %}bg-gray-900 text-white border-gray-900
+              {% elif property.listing_status == 'reserved' %}bg-yellow-50 text-yellow-600 border-yellow-200
+              {% elif property.listing_status == 'sold' %}bg-red-50 text-red-500 border-red-200
+              {% else %}bg-gray-50 text-gray-500 border-gray-200{% endif %}">
+              {{ property.get_listing_status_display }}
+            </span>
+          </div>
+
+          <!-- Price -->
+          <div class="p-5 bg-gray-900 mb-5">
+            <p class="text-3xl font-bold text-yellow-400">₱ {{ property.price|floatformat:0|intcomma }}</p>
+            <p class="text-xs text-gray-500 mt-1">
+              {{ property.get_property_type_display }}{% if property.is_negotiable %} &nbsp;·&nbsp; Negotiable{% endif %}
+            </p>
+          </div>
+
+          <!-- Spec grid -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <div class="p-3 bg-gray-50 border border-gray-100 text-center">
+              <i class="fas fa-home text-gray-400 text-sm mb-1.5 block"></i>
+              <p class="text-[10px] text-gray-400 uppercase tracking-wider">Type</p>
+              <p class="text-sm font-semibold text-gray-800 mt-0.5">{{ property.get_property_type_display }}</p>
+            </div>
+            {% if property.lot_area %}
+            <div class="p-3 bg-gray-50 border border-gray-100 text-center">
+              <i class="fas fa-ruler-combined text-gray-400 text-sm mb-1.5 block"></i>
+              <p class="text-[10px] text-gray-400 uppercase tracking-wider">Lot Area</p>
+              <p class="text-sm font-semibold text-gray-800 mt-0.5">{{ property.lot_area }} sqm</p>
+            </div>
+            {% endif %}
+            {% if property.bedrooms %}
+            <div class="p-3 bg-gray-50 border border-gray-100 text-center">
+              <i class="fas fa-bed text-gray-400 text-sm mb-1.5 block"></i>
+              <p class="text-[10px] text-gray-400 uppercase tracking-wider">Bedrooms</p>
+              <p class="text-sm font-semibold text-gray-800 mt-0.5">{{ property.bedrooms }}</p>
+            </div>
+            {% endif %}
+            {% if property.bathrooms %}
+            <div class="p-3 bg-gray-50 border border-gray-100 text-center">
+              <i class="fas fa-bath text-gray-400 text-sm mb-1.5 block"></i>
+              <p class="text-[10px] text-gray-400 uppercase tracking-wider">Bathrooms</p>
+              <p class="text-sm font-semibold text-gray-800 mt-0.5">{{ property.bathrooms }}</p>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Description -->
+          {% if property.description %}
+          <div class="mb-5">
+            <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-2">Description</p>
+            <p class="text-sm text-gray-500 leading-relaxed">{{ property.description }}</p>
+          </div>
+          {% endif %}
+
+          <!-- Amenities -->
+          {% if property.amenities %}
+          <div class="mb-5">
+            <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-2">Amenities</p>
+            <p class="text-sm text-gray-500">{{ property.amenities }}</p>
+          </div>
+          {% endif %}
+
+          <!-- Tags -->
+          {% if property.tags.exists %}
+          <div>
+            <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-2">Tags</p>
+            <div class="flex flex-wrap gap-2">
+              {% for tag in property.tags.all %}
+              <span class="text-xs text-gray-500 border border-gray-200 px-3 py-1">{{ tag.name }}</span>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+
+      </div>
+
+      <!-- ── RIGHT ── -->
+      <div class="lg:col-span-1 flex flex-col gap-5">
+
+        <!-- Contact Broker -->
+        <div class="bg-white border border-gray-100 p-5">
+          <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-4">Contact Broker</p>
+
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-10 h-10 bg-gray-900 flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-user text-yellow-400 text-sm"></i>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-gray-900">
+                {% if property.broker %}{{ property.broker.get_full_name|default:property.broker.username }}{% else %}Boholana E-Realty{% endif %}
+              </p>
+              <p class="text-xs text-gray-400">Licensed Broker</p>
+            </div>
+          </div>
+
+          <form method="POST" action="{% url 'contact' %}" class="space-y-3">
+            {% csrf_token %}
+            <input type="hidden" name="property_id" value="{{ property.id }}" />
+            <input type="text" name="name" placeholder="Your Name"
+              class="w-full border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-white" />
+            <input type="text" name="phone" placeholder="Your Phone / Viber"
+              class="w-full border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-white" />
+            <textarea name="message" rows="3" placeholder="I'm interested in this property..."
+              class="w-full border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-white resize-none"></textarea>
+            <button type="submit"
+              class="w-full bg-gray-900 hover:bg-yellow-600 text-white py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2">
+              <i class="fas fa-paper-plane text-xs"></i> Send Inquiry
+            </button>
+          </form>
+        </div>
+
+        <!-- Actions -->
+        {% if property.listing_status == 'approved' %}
+        <div class="bg-white border border-gray-100 p-5">
+          <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-1">Interested?</p>
+          <p class="text-xs text-gray-400 mb-4">Reserve this property or schedule a visit with our team.</p>
+
+          {% if user.is_authenticated %}
+          <div class="flex flex-col gap-2">
+            <a href="{% url 'reservations:appointment_create' property.pk %}"
+              class="w-full text-center bg-yellow-500 hover:bg-yellow-400 text-white py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2">
+              <i class="fas fa-calendar-check text-xs"></i> Schedule a Visit
+            </a>
+            <a href="{% url 'reservations:create' property.pk %}"
+              class="w-full text-center bg-gray-900 hover:bg-yellow-600 text-white py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2">
+              <i class="fas fa-bookmark text-xs"></i> Reserve Property
+            </a>
+            <a href="{% url 'reservations:chat' property.pk %}"
+              class="w-full text-center border border-gray-200 hover:border-gray-900 text-gray-600 hover:text-gray-900 py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2">
+              <i class="fas fa-comments text-xs"></i> Chat with Broker
+            </a>
+
+            <!-- Quick Mortgage Calc -->
+            <div class="border border-gray-100 bg-gray-50 p-4 mt-1">
+              <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-3">Estimate Monthly Payment</p>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs text-gray-400">Monthly estimate</span>
+                <span id="quick-monthly" class="text-sm font-bold text-gray-900">₱0</span>
+              </div>
+              <div class="space-y-3">
+                <div>
+                  <div class="flex justify-between text-[10px] text-gray-400 mb-1">
+                    <span>Down Payment</span><span id="quick-down-pct">20%</span>
+                  </div>
+                  <input type="range" id="quick-down" min="5" max="50" step="5" value="20"
+                    class="w-full h-1 bg-gray-200 appearance-none cursor-pointer accent-yellow-500"/>
+                </div>
+                <div>
+                  <div class="flex justify-between text-[10px] text-gray-400 mb-1">
+                    <span>Loan Term</span><span id="quick-term-display">20 years</span>
+                  </div>
+                  <input type="range" id="quick-term" min="5" max="30" step="5" value="20"
+                    class="w-full h-1 bg-gray-200 appearance-none cursor-pointer accent-yellow-500"/>
+                </div>
+              </div>
+              <a href="{% url 'mortgage_calculator' %}"
+                class="block text-center mt-3 text-[10px] font-semibold tracking-widest uppercase text-yellow-600 hover:text-yellow-700 transition-colors">
+                Full Calculator →
+              </a>
+            </div>
+
+            <!-- Favorite -->
+            <button onclick="toggleFavorite({{ property.pk }})" id="fav-btn"
+              class="w-full py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2 border
+              {% if is_favorited %}bg-red-50 text-red-500 border-red-200 hover:bg-red-100{% else %}border-gray-200 text-gray-500 hover:border-gray-900 hover:text-gray-900{% endif %}">
+              <i class="fas fa-heart text-xs"></i>
+              <span id="fav-text">{% if is_favorited %}Saved{% else %}Save Property{% endif %}</span>
+            </button>
+          </div>
+
+          {% else %}
+          <a href="{% url 'accounts:login' %}"
+            class="block text-center w-full bg-gray-900 hover:bg-yellow-600 text-white py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2">
+            <i class="fas fa-sign-in-alt text-xs"></i> Login to Reserve
+          </a>
+          {% endif %}
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const propPrice = {{ property.price }};
+
+  function quickCalc() {
+    const downPct = parseFloat(document.getElementById('quick-down').value);
+    const years   = parseFloat(document.getElementById('quick-term').value);
+    const rate    = 6.5;
+    const down    = propPrice * (downPct / 100);
+    const loan    = propPrice - down;
+    const mr      = (rate / 100) / 12;
+    const n       = years * 12;
+    const monthly = loan * (mr * Math.pow(1 + mr, n)) / (Math.pow(1 + mr, n) - 1);
+    document.getElementById('quick-monthly').textContent   = '₱' + Math.round(monthly).toLocaleString('en-PH');
+    document.getElementById('quick-down-pct').textContent  = downPct + '%';
+    document.getElementById('quick-term-display').textContent = years + ' years';
+  }
+
+  const qd = document.getElementById('quick-down');
+  const qt = document.getElementById('quick-term');
+  if (qd) { qd.addEventListener('input', quickCalc); qt.addEventListener('input', quickCalc); quickCalc(); }
+
+  function toggleFavorite(propertyId) {
+    fetch(`/manage/listings/${propertyId}/favorite/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      const btn  = document.getElementById('fav-btn');
+      const text = document.getElementById('fav-text');
+      if (data.favorited) {
+        btn.className = btn.className.replace('border-gray-200 text-gray-500 hover:border-gray-900 hover:text-gray-900', 'bg-red-50 text-red-500 border-red-200 hover:bg-red-100');
+        text.textContent = 'Saved';
+      } else {
+        btn.className = btn.className.replace('bg-red-50 text-red-500 border-red-200 hover:bg-red-100', 'border-gray-200 text-gray-500 hover:border-gray-900 hover:text-gray-900');
+        text.textContent = 'Save Property';
+      }
+    });
+  }
+</script>
+
+{% endblock %}

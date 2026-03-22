@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Verify Sale #{{ sale.id }}{% endblock %}
+{% block page_title %}Verify Sale{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+
+        <h3 class="font-bold text-gray-800 mb-5">
+            Sale #{{ sale.id }} — {{ sale.property.title }}
+        </h3>
+
+        <!-- Sale Summary -->
+        <div class="p-4 bg-gray-50 rounded-xl mb-5">
+            <div class="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                    <p class="text-xs text-gray-400">Client</p>
+                    <p class="font-medium">{{ sale.client.get_full_name }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400">Sale Date</p>
+                    <p class="font-medium">{{ sale.sale_date }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400">Selling Price</p>
+                    <p class="font-medium">₱{{ sale.selling_price|floatformat:2 }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-400">Net Price</p>
+                    <p class="font-bold text-blue-600">₱{{ sale.net_price|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approve -->
+        <form method="POST" class="space-y-4 mb-4">
+            {% csrf_token %}
+            <button type="submit" name="action" value="approve"
+                    class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl text-sm font-semibold transition">
+                <i class="fas fa-check mr-2"></i>Approve Sale
+            </button>
+        </form>
+
+        <!-- Correct discrepancy -->
+        <div class="border border-gray-200 rounded-xl p-4">
+            <p class="text-sm font-semibold text-gray-700 mb-3">
+                Found discrepancy? Correct here:
+            </p>
+            <form method="POST" class="space-y-3">
+                {% csrf_token %}
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Selling Price</label>
+                        <input type="number" name="selling_price"
+                               value="{{ sale.selling_price }}" step="0.01"
+                               class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Discount</label>
+                        <input type="number" name="discount"
+                               value="{{ sale.discount }}" step="0.01"
+                               class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-500 mb-1">Notes</label>
+                    <textarea name="notes" rows="2"
+                              class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none">{{ sale.notes }}</textarea>
+                </div>
+                <button type="submit" name="action" value="correct"
+                        class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-edit mr-2"></i>Correct & Mark Ready
+                </button>
+            </form>
+        </div>
+
+        <a href="{% url 'sales:detail' sale.pk %}"
+           class="block text-center text-sm text-gray-400 hover:text-gray-600 mt-4">
+            Cancel
+        </a>
+    </div>
+</div>
+{% endblock %}

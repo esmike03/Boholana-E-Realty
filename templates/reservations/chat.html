@@ -1,0 +1,159 @@
+{% extends 'public_base.html' %}
+{% block title %}Chat — {{ property.title }}{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<section class="bg-white border-b border-gray-100 py-10 px-6">
+  <div class="max-w-7xl mx-auto">
+    <div class="inline-flex items-center gap-2 text-yellow-600 text-xs font-semibold tracking-widest uppercase mb-3">
+      <span class="block w-5 h-px bg-yellow-600"></span>
+      Client Portal
+    </div>
+    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Chat with Broker</h1>
+    <p class="text-gray-400 text-sm mt-1">Re: {{ property.title }}</p>
+  </div>
+</section>
+
+<section class="bg-gray-50 py-10 px-6 min-h-screen">
+  <div class="max-w-3xl mx-auto">
+    <div class="bg-white border border-gray-100 overflow-hidden">
+
+      <!-- Chat Header -->
+      <div class="px-5 py-4 bg-gray-900 border-b border-gray-800 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 bg-white flex items-center justify-center flex-shrink-0">
+            <span class="text-yellow-500 font-bold text-sm leading-none">B</span>
+          </div>
+          <div>
+            <p class="text-white font-semibold text-sm">
+              {% if receiver %}{{ receiver.get_full_name|default:receiver.username }}{% else %}Boholana E-Realty{% endif %}
+            </p>
+            <p class="text-xs mt-0.5">
+              {% if availability and availability.is_available %}
+                <span class="text-green-400">● Online</span>
+              {% else %}
+                <span class="text-gray-500">● Offline</span>
+              {% endif %}
+            </p>
+          </div>
+        </div>
+        <p class="text-gray-500 text-xs hidden sm:block">{{ property.title|truncatechars:30 }}</p>
+      </div>
+
+      <!-- Unavailable notice -->
+      {% if availability and not availability.is_available %}
+      <div class="px-5 py-3 bg-yellow-50 border-b border-yellow-100 flex items-center gap-2">
+        <i class="fas fa-info-circle text-yellow-500 text-xs flex-shrink-0"></i>
+        <p class="text-xs text-yellow-700">{{ availability.unavailable_message }}</p>
+      </div>
+      {% endif %}
+
+      <!-- No receiver -->
+      {% if not receiver %}
+      <div class="py-16 text-center px-6">
+        <i class="fas fa-user-slash text-3xl text-gray-200 mb-4 block"></i>
+        <p class="text-sm font-medium text-gray-500">No broker or agent available at the moment.</p>
+        <p class="text-xs text-gray-400 mt-1 mb-6">Please reach out to us directly.</p>
+        <a href="{% url 'contact' %}"
+          class="inline-flex items-center gap-2 bg-gray-900 hover:bg-yellow-600 text-white text-xs font-medium px-5 py-2.5 transition-colors">
+          <i class="fas fa-envelope text-[10px]"></i> Contact Us Instead
+        </a>
+      </div>
+
+      {% else %}
+
+      <!-- Messages -->
+      <div class="h-96 overflow-y-auto p-6 space-y-4 bg-gray-50" id="messages-container">
+        {% for msg in chat_messages %}
+        <div class="flex {% if msg.sender == request.user %}justify-end{% endif %}">
+          <div class="max-w-xs lg:max-w-sm">
+            <div class="px-4 py-2.5 text-sm
+              {% if msg.sender == request.user %}
+                bg-gray-900 text-white
+              {% else %}
+                bg-white border border-gray-100 text-gray-700
+              {% endif %}">
+              {{ msg.message }}
+            </div>
+            <p class="text-[10px] text-gray-400 mt-1 {% if msg.sender == request.user %}text-right{% endif %}">
+              {{ msg.created_at|date:"h:i A" }}
+            </p>
+          </div>
+        </div>
+        {% empty %}
+        <div class="text-center text-gray-300 py-12">
+          <i class="fas fa-comments text-3xl mb-3 block"></i>
+          <p class="text-sm">No messages yet. Start the conversation!</p>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Quick replies -->
+      <div class="px-5 py-3 border-t border-gray-100 flex flex-wrap gap-2 bg-white">
+        <button type="button" onclick="fillMessage('I am interested in this property.')"
+          class="text-xs border border-gray-200 hover:border-yellow-500 hover:text-yellow-600 text-gray-500 px-3 py-1.5 transition-colors">
+          I'm interested
+        </button>
+        <button type="button" onclick="fillMessage('Can I schedule a visit?')"
+          class="text-xs border border-gray-200 hover:border-yellow-500 hover:text-yellow-600 text-gray-500 px-3 py-1.5 transition-colors">
+          Schedule a visit
+        </button>
+        <button type="button" onclick="fillMessage('What is the final price?')"
+          class="text-xs border border-gray-200 hover:border-yellow-500 hover:text-yellow-600 text-gray-500 px-3 py-1.5 transition-colors">
+          Ask about price
+        </button>
+        <button type="button" onclick="fillMessage('Is this property still available?')"
+          class="text-xs border border-gray-200 hover:border-yellow-500 hover:text-yellow-600 text-gray-500 px-3 py-1.5 transition-colors">
+          Check availability
+        </button>
+      </div>
+
+      <!-- Input -->
+      <div class="px-5 py-4 border-t border-gray-100 bg-white">
+        <form method="POST" class="flex gap-3" id="chat-form">
+          {% csrf_token %}
+          <input type="text" name="message" id="message-input"
+            placeholder="Type your message..." autocomplete="off"
+            class="flex-1 border border-gray-200 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 bg-white focus:outline-none focus:border-gray-900 transition-colors" />
+          <button type="submit"
+            class="bg-gray-900 hover:bg-yellow-600 text-white px-5 py-2.5 text-sm transition-colors flex items-center justify-center">
+            <i class="fas fa-paper-plane text-xs"></i>
+          </button>
+        </form>
+      </div>
+
+      {% endif %}
+    </div>
+
+    <!-- Back link -->
+    <div class="mt-5">
+      <a href="{% url 'property_detail' property.pk %}"
+        class="text-xs text-gray-400 hover:text-gray-700 transition-colors flex items-center gap-1.5">
+        <i class="fas fa-arrow-left text-[10px]"></i> Back to Property
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+  const container = document.getElementById('messages-container');
+  if (container) container.scrollTop = container.scrollHeight;
+
+  function fillMessage(text) {
+    const input = document.getElementById('message-input');
+    if (input) { input.value = text; input.focus(); }
+  }
+
+  const input = document.getElementById('message-input');
+  if (input) {
+    input.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('chat-form').submit();
+      }
+    });
+  }
+</script>
+
+{% endblock %}

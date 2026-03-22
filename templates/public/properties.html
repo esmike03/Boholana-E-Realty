@@ -1,0 +1,370 @@
+{% extends 'public_base.html' %} 
+{% load humanize %}
+{% block title %}Browse Properties — Boholana
+E-Realty{% endblock %} {% block content %}
+
+<!-- Page Header -->
+<section class="bg-white border-b border-gray-100 py-10 px-6">
+  <div class="max-w-7xl mx-auto">
+    <div
+      class="inline-flex items-center gap-2 text-yellow-600 text-xs font-semibold tracking-widest uppercase mb-3"
+    >
+      <span class="block w-5 h-px bg-yellow-600"></span>
+      Bohol Real Estate
+    </div>
+    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">
+      Browse Properties
+    </h1>
+    <p class="text-gray-400 text-sm mt-1">
+      Find your perfect property in Bohol
+    </p>
+  </div>
+</section>
+
+<!-- Main Content -->
+<section class="bg-gray-50 py-10 px-6 min-h-screen">
+  <div class="max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <!-- Sidebar Filters -->
+      <div class="lg:col-span-1">
+        <div class="bg-white border border-gray-100 p-5 sticky top-20">
+          <p
+            class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-4"
+          >
+            Filter Properties
+          </p>
+
+          <form method="GET" action="{% url 'properties' %}">
+            <!-- Search -->
+            <div class="mb-4">
+              <label class="text-xs font-medium text-gray-500 mb-1.5 block"
+                >Search</label
+              >
+              <input
+                type="text"
+                name="search"
+                value="{{ request.GET.search }}"
+                placeholder="Keyword..."
+                class="w-full border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors"
+              />
+            </div>
+
+            <!-- Property Type -->
+            <div class="mb-4">
+              <label class="text-xs font-medium text-gray-500 mb-1.5 block"
+                >Property Type</label
+              >
+              <select
+                name="type"
+                class="w-full border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-gray-900 transition-colors bg-white"
+              >
+                <option value="">All Types</option>
+                <option
+                  value="house"
+                  {%
+                  if
+                  request.GET.type=""
+                  ="house"
+                  %}selected{%
+                  endif
+                  %}
+                >
+                  House
+                </option>
+                <option
+                  value="lot"
+                  {%
+                  if
+                  request.GET.type=""
+                  ="lot"
+                  %}selected{%
+                  endif
+                  %}
+                >
+                  Lot
+                </option>
+                <option
+                  value="condo"
+                  {%
+                  if
+                  request.GET.type=""
+                  ="condo"
+                  %}selected{%
+                  endif
+                  %}
+                >
+                  Condominium
+                </option>
+                <option
+                  value="commercial"
+                  {%
+                  if
+                  request.GET.type=""
+                  ="commercial"
+                  %}selected{%
+                  endif
+                  %}
+                >
+                  Commercial
+                </option>
+                <option
+                  value="apartment"
+                  {%
+                  if
+                  request.GET.type=""
+                  ="apartment"
+                  %}selected{%
+                  endif
+                  %}
+                >
+                  Apartment
+                </option>
+              </select>
+            </div>
+
+            <!-- Listing Type -->
+            <div class="mb-4">
+              <label class="text-xs font-medium text-gray-500 mb-1.5 block"
+                >Listing Type</label
+              >
+              <select
+                name="listing_type"
+                class="w-full border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-gray-900 transition-colors bg-white"
+              >
+                <option value="">All</option>
+                <option
+                  value="sale"
+                  {%
+                  if
+                  request.GET.listing_type=""
+                  ="sale"
+                  %}selected{%
+                  endif
+                  %}
+                >
+                  For Sale
+                </option>
+                <option
+                  value="rent"
+                  {%
+                  if
+                  request.GET.listing_type=""
+                  ="rent"
+                  %}selected{%
+                  endif
+                  %}
+                >
+                  For Rent
+                </option>
+              </select>
+            </div>
+
+            <!-- Min Price -->
+            <div class="mb-4">
+              <label class="text-xs font-medium text-gray-500 mb-1.5 block"
+                >Min Price (₱)</label
+              >
+              <input
+                type="number"
+                name="min_price"
+                value="{{ request.GET.min_price }}"
+                placeholder="0"
+                class="w-full border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors"
+              />
+            </div>
+
+            <!-- Max Price -->
+            <div class="mb-4">
+              <label class="text-xs font-medium text-gray-500 mb-1.5 block"
+                >Max Price (₱)</label
+              >
+              <input
+                type="number"
+                name="max_price"
+                value="{{ request.GET.max_price }}"
+                placeholder="Any"
+                class="w-full border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors"
+              />
+            </div>
+
+            <!-- City -->
+            <div class="mb-6">
+              <label class="text-xs font-medium text-gray-500 mb-1.5 block"
+                >City</label
+              >
+              <input
+                type="text"
+                name="city"
+                value="{{ request.GET.city }}"
+                placeholder="e.g. Tagbilaran"
+                class="w-full border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors"
+              />
+            </div>
+
+            <button
+              type="submit"
+              class="w-full bg-gray-900 hover:bg-yellow-600 text-white py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+            >
+              <i class="fas fa-filter text-xs"></i> Apply Filters
+            </button>
+
+            <a
+              href="{% url 'properties' %}"
+              class="block text-center mt-3 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              Clear filters
+            </a>
+          </form>
+        </div>
+      </div>
+
+      <!-- Listings -->
+      <div class="lg:col-span-3">
+        <!-- Results bar -->
+        <div class="flex items-center justify-between mb-5">
+          <p class="text-sm text-gray-500">
+            Showing
+            <span class="font-semibold text-gray-900"
+              >{{ properties.count }}</span
+            >
+            properties
+          </p>
+          <select
+            class="border border-gray-200 px-3 py-2 text-sm text-gray-600 focus:outline-none focus:border-gray-900 bg-white transition-colors"
+          >
+            <option>Latest First</option>
+            <option>Price: Low to High</option>
+            <option>Price: High to Low</option>
+          </select>
+        </div>
+
+        <!-- Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {% for property in properties %}
+          <a
+            href="{% url 'property_detail' property.id %}"
+            class="group block bg-white border border-gray-100 hover:border-gray-300 hover:shadow-lg transition-all duration-300"
+          >
+            <!-- Image -->
+            <div class="relative h-44 bg-gray-100 overflow-hidden">
+              {% if property.images.exists %}
+              <img
+                src="{{ property.images.first.image.url }}"
+                alt="{{ property.title }}"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              {% else %}
+              <div
+                class="w-full h-full flex flex-col items-center justify-center gap-2 bg-gray-50"
+              >
+                <i class="fas fa-home text-3xl text-gray-200"></i>
+                <span class="text-xs tracking-widest uppercase text-gray-300"
+                  >No image</span
+                >
+              </div>
+              {% endif %}
+
+              <!-- Status badge -->
+              <span
+                class="absolute top-3 left-3 text-[9px] font-semibold tracking-wider uppercase px-2.5 py-1 {% if property.status == 'available' %}bg-gray-900 text-white {% elif property.status == 'reserved' %}bg-yellow-50 text-yellow-600 border border-yellow-200 {% else %}bg-red-50 text-red-500 border border-red-200{% endif %}"
+              >
+                {{ property.get_status_display }}
+              </span>
+            </div>
+
+            <!-- Info -->
+            <div class="p-4">
+              <h3
+                class="font-semibold text-gray-900 text-sm leading-snug mb-1 group-hover:text-yellow-600 transition-colors"
+              >
+                {{ property.title }}
+              </h3>
+              <p class="text-xs text-gray-400 flex items-center gap-1.5 mb-3">
+                <i
+                  class="fas fa-map-marker-alt text-yellow-500 text-[10px]"
+                ></i>
+                {{ property.city }}, {{ property.province }}
+              </p>
+
+              <!-- Specs -->
+              <div
+                class="flex gap-3 text-xs text-gray-400 py-2.5 border-t border-b border-gray-100 mb-3"
+              >
+                {% if property.bedrooms %}<span class="flex items-center gap-1"
+                  ><i class="fas fa-bed text-gray-300"></i> 
+                  {{ property.bedrooms}}</span
+                >{% endif %} {% if property.bathrooms %}<span
+                  class="flex items-center gap-1"
+                  ><i class="fas fa-bath text-gray-300"></i> {{property.bathrooms }}</span
+                >{% endif %} {% if property.lot_area %}<span
+                  class="flex items-center gap-1"
+                  ><i class="fas fa-ruler-combined text-gray-300"></i>
+                   {{ property.lot_area }} sqm</span
+                >{% endif %}
+              </div>
+
+              <!-- Price -->
+              <div class="flex items-baseline justify-between">
+                <span class="text-base font-bold text-gray-900"
+                  >₱ {{ property.price|floatformat:0|intcomma }}</span
+                >
+                <span
+                  class="text-[10px] tracking-wider uppercase text-gray-400 border border-gray-100 px-2 py-0.5"
+                >
+                  {{ property.get_property_type_display }}
+                </span>
+              </div>
+            </div>
+          </a>
+          {% empty %}
+          <div
+            class="col-span-3 py-20 text-center border border-gray-100 bg-white"
+          >
+            <i class="fas fa-search text-3xl text-gray-200 mb-4 block"></i>
+            <p class="font-medium text-gray-500">No properties found.</p>
+            <p class="text-sm text-gray-400 mt-1">
+              Try adjusting your filters.
+            </p>
+            <a
+              href="{% url 'properties' %}"
+              class="inline-block mt-5 text-xs font-medium text-gray-900 border-b border-gray-900 hover:text-yellow-600 hover:border-yellow-600 transition-colors"
+            >
+              Clear all filters
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+    // Auto-submit on select change
+    document.querySelectorAll('select[name="listing_type"], select[name="type"]').forEach(el => {
+        el.addEventListener('change', function() {
+            this.closest('form').submit();
+        });
+    });
+
+    // Sort auto-submit
+    const sortEl = document.querySelector('select[name="sort"]');
+    if (sortEl) {
+        sortEl.addEventListener('change', function() {
+            const url = new URL(window.location.href);
+            url.searchParams.set('sort', this.value);
+            window.location.href = url.toString();
+        });
+    }
+
+    // Price range display
+    const minPrice = document.querySelector('input[name="min_price"]');
+    const maxPrice = document.querySelector('input[name="max_price"]');
+
+    function formatPrice(val) {
+        return val ? '₱' + parseInt(val).toLocaleString() : '';
+    }
+</script>
+{% endblock %}

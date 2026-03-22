@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Tag — Boholana E-Realty{% endblock %}
+{% block page_title %}Delete Tag{% endblock %}
+
+{% block content %}
+<div class="max-w-md">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+
+        <div class="flex items-center gap-4 mb-5">
+            <div class="bg-red-100 rounded-xl p-3">
+                <i class="fas fa-trash text-red-600 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="font-semibold text-gray-800">Delete Tag</h3>
+                <p class="text-gray-400 text-sm">This action cannot be undone.</p>
+            </div>
+        </div>
+
+        <div class="p-4 bg-red-50 rounded-xl border border-red-100 mb-5">
+            <p class="text-sm text-red-700">
+                You are about to delete the tag
+                <span class="font-bold">"{{ tag.name }}"</span>.
+            </p>
+            <p class="text-xs text-red-500 mt-2">
+                <i class="fas fa-info-circle mr-1"></i>
+                This will remove the tag from
+                <strong>{{ tag.properties.count }}</strong>
+                propert{{ tag.properties.count|pluralize:"y,ies" }}.
+            </p>
+        </div>
+
+        <form method="POST" class="flex gap-3">
+            {% csrf_token %}
+            <button type="submit"
+                    class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl text-sm font-semibold transition">
+                <i class="fas fa-trash mr-2"></i>Delete Tag
+            </button>
+            <a href="{% url 'listings:tags' %}"
+               class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold transition text-center">
+                Cancel
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

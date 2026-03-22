@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ viewed_user.get_full_name }} — Boholana E-Realty{% endblock %}
+{% block page_title %}User Details{% endblock %}
+{% block page_subtitle %}View account information{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Left — Profile Card -->
+    <div class="lg:col-span-1">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
+
+            <div class="bg-blue-500 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+                {% if viewed_user.profile_picture %}
+                    <img src="{{ viewed_user.profile_picture.url }}"
+                         class="w-20 h-20 rounded-full object-cover">
+                {% else %}
+                    <span class="text-white text-2xl font-bold">
+                        {{ viewed_user.get_initials }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <h3 class="font-bold text-gray-800 text-lg">
+                {{ viewed_user.get_full_name|default:viewed_user.username }}
+            </h3>
+            <p class="text-gray-400 text-sm">@{{ viewed_user.username }}</p>
+
+            <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold
+                {% if viewed_user.role == 'broker' %}bg-purple-100 text-purple-700
+                {% elif viewed_user.role == 'admin' %}bg-red-100 text-red-700
+                {% elif viewed_user.role == 'staff' %}bg-blue-100 text-blue-700
+                {% elif viewed_user.role == 'sale_assistant' %}bg-green-100 text-green-700
+                {% elif viewed_user.role == 'property_owner' %}bg-yellow-100 text-yellow-700
+                {% else %}bg-gray-100 text-gray-700{% endif %}">
+                {{ viewed_user.get_role_display }}
+            </span>
+
+            {% if viewed_user.is_disabled %}
+                <div class="mt-3 p-2 bg-red-50 rounded-lg">
+                    <p class="text-red-600 text-xs font-medium">Account Disabled</p>
+                    {% if viewed_user.disabled_reason %}
+                        <p class="text-red-400 text-xs mt-1">{{ viewed_user.disabled_reason }}</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div class="mt-5 space-y-2">
+                <a href="{% url 'accounts:user_update' viewed_user.pk %}"
+                   class="block w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-edit mr-2"></i>Edit Account
+                </a>
+                <a href="{% url 'accounts:assign_role' viewed_user.pk %}"
+                   class="block w-full bg-purple-100 hover:bg-purple-200 text-purple-700 py-2 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-user-tag mr-2"></i>Assign Role
+                </a>
+                <a href="{% url 'accounts:user_disable' viewed_user.pk %}"
+                   class="block w-full {% if viewed_user.is_disabled %}bg-green-100 hover:bg-green-200 text-green-700{% else %}bg-red-100 hover:bg-red-200 text-red-700{% endif %} py-2 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-{% if viewed_user.is_disabled %}unlock{% else %}ban{% endif %} mr-2"></i>
+                    {% if viewed_user.is_disabled %}Enable{% else %}Disable{% endif %} Account
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right — Details -->
+    <div class="lg:col-span-2 space-y-5">
+
+        <!-- Info -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h4 class="font-semibold text-gray-800 text-sm mb-4">Account Information</h4>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <p class="text-gray-400 text-xs mb-1">Email</p>
+                    <p class="text-gray-700">{{ viewed_user.email|default:"—" }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-xs mb-1">Phone</p>
+                    <p class="text-gray-700">{{ viewed_user.phone_number|default:"—" }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-xs mb-1">Address</p>
+                    <p class="text-gray-700">{{ viewed_user.address|default:"—" }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-xs mb-1">Gender</p>
+                    <p class="text-gray-700">{{ viewed_user.get_gender_display|default:"—" }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-xs mb-1">Employee ID</p>
+                    <p class="text-gray-700">{{ viewed_user.employee_id|default:"—" }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-xs mb-1">Department</p>
+                    <p class="text-gray-700">{{ viewed_user.department|default:"—" }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-xs mb-1">Assigned By</p>
+                    <p class="text-gray-700">
+                        {{ viewed_user.assigned_by.get_full_name|default:"—" }}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-xs mb-1">Date Joined</p>
+                    <p class="text-gray-700">{{ viewed_user.date_joined|date:"M d, Y" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Logs -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h4 class="font-semibold text-gray-800 text-sm mb-4">Recent Activity</h4>
+            <div class="space-y-3">
+                {% for log in activity_logs %}
+                <div class="flex items-start gap-3">
+                    <div class="bg-blue-100 rounded-full p-1.5 mt-0.5">
+                        <i class="fas fa-circle text-blue-500 text-xs"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-700">{{ log.description }}</p>
+                        <p class="text-xs text-gray-400 mt-0.5">
+                            {{ log.created_at|date:"M d, Y h:i A" }}
+                            {% if log.ip_address %}• {{ log.ip_address }}{% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-400 text-sm">No activity logs yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'accounts:users' %}"
+       class="text-sm text-gray-400 hover:text-gray-600 transition">
+        <i class="fas fa-arrow-left mr-1"></i>Back to Users
+    </a>
+</div>
+{% endblock %}

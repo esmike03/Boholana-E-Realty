@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Confirm Receipt{% endblock %}
+{% block page_title %}Confirm Payment Receipt{% endblock %}
+
+{% block content %}
+<div class="max-w-md">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+
+        <div class="flex items-center gap-4 mb-5">
+            <div class="bg-blue-100 rounded-xl p-3">
+                <i class="fas fa-hand-holding-usd text-blue-600 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="font-semibold text-gray-800">Confirm Receipt</h3>
+                <p class="text-gray-400 text-sm">
+                    {{ disbursement.get_disbursement_type_display }}
+                </p>
+            </div>
+        </div>
+
+        <div class="p-4 bg-blue-50 rounded-xl mb-5 text-center">
+            <p class="text-xs text-blue-400 mb-1">Amount to Receive</p>
+            <p class="text-3xl font-bold text-blue-700">
+                ₱{{ disbursement.amount|floatformat:2 }}
+            </p>
+            <p class="text-xs text-blue-400 mt-1">
+                Sale #{{ disbursement.sale.id }} — {{ disbursement.sale.property.title }}
+            </p>
+        </div>
+
+        <p class="text-sm text-gray-500 mb-5">
+            By clicking confirm, you acknowledge that you have received the payment
+            of ₱{{ disbursement.amount|floatformat:2 }} for this transaction.
+        </p>
+
+        <form method="POST" class="space-y-3">
+            {% csrf_token %}
+            <button type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-sm font-semibold transition">
+                <i class="fas fa-check-circle mr-2"></i>Confirm Receipt
+            </button>
+            <a href="{% url 'sales:disbursements' %}"
+               class="block text-center text-sm text-gray-400 hover:text-gray-600 transition">
+                Cancel
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

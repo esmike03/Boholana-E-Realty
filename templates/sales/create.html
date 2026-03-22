@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}New Sale — Boholana E-Realty{% endblock %}
+{% block page_title %}Create Sale{% endblock %}
+{% block page_subtitle %}Record a new property sale{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-4 p-3 rounded-lg text-sm
+                    {% if message.tags == 'error' %}bg-red-50 text-red-600{% else %}bg-green-50 text-green-600{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" class="space-y-5">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                        Property <span class="text-red-500">*</span>
+                    </label>
+                    <select name="property_id" required
+                            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        <option value="">Select Property</option>
+                        {% for property in properties %}
+                            <option value="{{ property.pk }}">
+                                {{ property.title }} — ₱{{ property.price|floatformat:0 }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                        Client <span class="text-red-500">*</span>
+                    </label>
+                    <select name="client_id" required
+                            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        <option value="">Select Client</option>
+                        {% for client in clients %}
+                            <option value="{{ client.pk }}">
+                                {{ client.get_full_name|default:client.username }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">Sale Assistant</label>
+                    <select name="sale_assistant_id"
+                            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        <option value="">Select Sale Assistant</option>
+                        {% for sa in sale_assistants %}
+                            <option value="{{ sa.pk }}">
+                                {{ sa.get_full_name|default:sa.username }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                        Payment Scheme <span class="text-red-500">*</span>
+                    </label>
+                    <select name="payment_scheme" required
+                            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        <option value="">Select Scheme</option>
+                        {% for value, label in payment_schemes %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                        Selling Price (₱) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" name="selling_price" required
+                           step="0.01" placeholder="0.00"
+                           id="selling_price"
+                           oninput="computeNet()"
+                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">Discount (₱)</label>
+                    <input type="number" name="discount"
+                           step="0.01" value="0" placeholder="0.00"
+                           id="discount"
+                           oninput="computeNet()"
+                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">Net Price (₱)</label>
+                    <input type="text" id="net_price_display"
+                           readonly value="0.00"
+                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-blue-50 text-blue-700 font-bold cursor-not-allowed">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                        Sale Date <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" name="sale_date" required
+                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                        Linked Reservation (optional)
+                    </label>
+                    <select name="reservation_id"
+                            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        <option value="">None</option>
+                        {% for reservation in reservations %}
+                            <option value="{{ reservation.pk }}">
+                                #{{ reservation.id }} — {{ reservation.property.title }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1.5">Notes</label>
+                <textarea name="notes" rows="3"
+                          class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none"></textarea>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-plus mr-2"></i>Create Sale
+                </button>
+                <a href="{% url 'sales:list' %}"
+                   class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-6 py-2.5 rounded-xl text-sm font-semibold transition">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function computeNet() {
+    const selling = parseFloat(document.getElementById('selling_price').value) || 0;
+    const discount = parseFloat(document.getElementById('discount').value) || 0;
+    const net = selling - discount;
+    document.getElementById('net_price_display').value = net.toFixed(2);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,346 @@
+{% extends 'public_base.html' %} 
+{% load humanize %}
+{% block title %}Boholana E-Realty — Find Your Dream Property in Bohol{% endblock %} {% block content %}
+
+<link
+  href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+  rel="stylesheet"
+/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ["Plus Jakarta Sans", "sans-serif"] },
+        colors: {
+          gold: {
+            DEFAULT: "#B8922A",
+            light: "#D4AA4A",
+            pale: "#FDF8EE",
+          },
+        },
+      },
+    },
+  };
+</script>
+
+<!-- HERO -->
+<section class="pt-32 pb-20 px-6">
+  <div
+    class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center"
+  >
+    <!-- Left -->
+    <div>
+      <div
+        class="inline-flex items-center gap-2 text-gold text-xs font-semibold tracking-widest uppercase mb-5"
+      >
+        <span class="block w-6 h-px bg-gold"></span>
+        Bohol's #1 Real Estate Platform
+      </div>
+
+      <h1
+        class="text-5xl xl:text-6xl font-bold text-gray-900 leading-tight tracking-tight mb-5"
+      >
+        Find Your Dream<br />
+        <span class="text-gold">Property in Bohol</span>
+      </h1>
+
+      <p
+        class="text-gray-400 text-base font-light leading-relaxed mb-8 max-w-md"
+      >
+        Discover verified houses, lots, condos, and commercial spaces across
+        beautiful Bohol. Trusted by hundreds of property owners and clients.
+      </p>
+
+      <!-- Search -->
+      <form
+        action="{% url 'properties' %}"
+        method="GET"
+        class="flex border-2 border-gray-900 overflow-hidden mb-4"
+      >
+        <input
+          type="text"
+          name="search"
+          placeholder="Search location, property type…"
+          class="flex-1 px-4 py-3 text-sm text-gray-800 placeholder-gray-300 outline-none bg-white"
+        />
+        <button
+          type="submit"
+          class="bg-gray-900 hover:bg-gold transition-colors text-white px-5 text-sm font-medium flex items-center gap-2"
+        >
+          <i class="fas fa-search text-xs"></i> Search
+        </button>
+      </form>
+
+      <!-- Chips -->
+      <div class="flex flex-wrap gap-2">
+        <a
+          href="{% url 'properties' %}?type=house"
+          class="text-xs text-gray-500 border border-gray-200 rounded-full px-4 py-1.5 hover:border-gold hover:text-gold hover:bg-gold-pale transition-all"
+          >🏠 Houses</a
+        >
+        <a
+          href="{% url 'properties' %}?type=lot"
+          class="text-xs text-gray-500 border border-gray-200 rounded-full px-4 py-1.5 hover:border-gold hover:text-gold hover:bg-gold-pale transition-all"
+          >🏞 Lots</a
+        >
+        <a
+          href="{% url 'properties' %}?type=condo"
+          class="text-xs text-gray-500 border border-gray-200 rounded-full px-4 py-1.5 hover:border-gold hover:text-gold hover:bg-gold-pale transition-all"
+          >🏢 Condos</a
+        >
+        <a
+          href="{% url 'properties' %}?type=commercial"
+          class="text-xs text-gray-500 border border-gray-200 rounded-full px-4 py-1.5 hover:border-gold hover:text-gold hover:bg-gold-pale transition-all"
+          >🏪 Commercial</a
+        >
+      </div>
+    </div>
+
+    <!-- Right — stat cards -->
+    <div class="grid grid-cols-2 gap-4">
+      <div class="border border-gray-100 p-7">
+        <p class="text-4xl font-bold text-gray-900">{{ total_properties }}+</p>
+        <p class="text-xs text-gray-400 mt-2 tracking-wide">
+          Properties Listed
+        </p>
+      </div>
+      <div class="bg-gray-900 p-7">
+        <p class="text-4xl font-bold text-gold-light">
+          {{ available_properties }}+
+        </p>
+        <p class="text-xs text-gray-500 mt-2 tracking-wide">Available Now</p>
+      </div>
+      <div class="border border-gray-100 p-7">
+        <p class="text-4xl font-bold text-gray-900">{{ sold_properties }}+</p>
+        <p class="text-xs text-gray-400 mt-2 tracking-wide">Properties Sold</p>
+      </div>
+      <div class="bg-gold-pale border border-gold/20 p-7">
+        <p class="text-4xl font-bold text-gold">100%</p>
+        <p class="text-xs text-gold/50 mt-2 tracking-wide">
+          Client Satisfaction
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="max-w-7xl mx-auto px-6"><hr class="border-gray-100" /></div>
+
+<!-- FEATURED PROPERTIES -->
+<section class="py-20 px-6">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex items-end justify-between mb-10">
+      <div>
+        <p
+          class="text-xs font-semibold tracking-widest uppercase text-gold mb-2"
+        >
+          Curated Listings
+        </p>
+        <h2 class="text-3xl font-bold text-gray-900 tracking-tight">
+          Latest Properties
+        </h2>
+      </div>
+      <a
+        href="{% url 'properties' %}"
+        class="text-sm font-medium text-gray-900 border-b border-gray-900 pb-0.5 hover:text-gold hover:border-gold transition-colors flex items-center gap-1.5"
+      >
+        View all <i class="fas fa-arrow-right text-xs"></i>
+      </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for property in featured_properties %}
+      <a
+        href="{% url 'property_detail' property.id %}"
+        class="group block border border-gray-100 hover:border-gray-300 hover:shadow-lg transition-all duration-300"
+      >
+        <!-- Image -->
+        <div class="relative h-52 bg-gray-100 overflow-hidden">
+          {% if property.images.first %}
+          <img
+            src="{{ property.images.first.image.url }}"
+            alt="{{ property.title }}"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+          {% else %}
+          <div
+            class="w-full h-full flex flex-col items-center justify-center gap-2 bg-gray-50"
+          >
+            <i class="fas fa-home text-3xl text-gray-200"></i>
+            <span class="text-xs tracking-widest uppercase text-gray-300"
+              >No image</span
+            >
+          </div>
+          {% endif %}
+
+          <span
+            class="absolute top-3 left-3 text-[9px] font-semibold tracking-wider uppercase px-2.5 py-1 {% if property.status == 'available' %}bg-gray-900 text-white {% elif property.status == 'reserved' %}bg-gold-pale text-gold border border-gold/30 {% else %}bg-red-50 text-red-500 border border-red-200{% endif %}"
+          >
+            {{ property.get_status_display }}
+          </span>
+
+          <span
+            class="absolute top-3 right-3 text-[9px] tracking-wider uppercase px-2.5 py-1 bg-white/90 text-gray-600 border border-gray-100"
+          >
+            {{ property.get_property_type_display }}
+          </span>
+        </div>
+
+        <!-- Body -->
+        <div class="p-5">
+          <h3
+            class="font-semibold text-gray-900 text-base leading-snug mb-1.5 group-hover:text-gold transition-colors"
+          >
+            {{ property.title }}
+          </h3>
+          <p class="text-xs text-gray-400 flex items-center gap-1.5 mb-4">
+            <i class="fas fa-map-marker-alt text-gold text-[10px]"></i>
+            {{ property.city }}, {{ property.province }}
+          </p>
+
+          <div class="flex gap-4 py-3 border-t border-b border-gray-100 mb-4">
+            {% if property.bedrooms %}<span
+              class="text-xs text-gray-400 flex items-center gap-1"
+              ><i class="fas fa-bed text-gray-300 text-[10px]"></i> 
+              {{property.bedrooms }} Bed</span
+            >{% endif %} {% if property.bathrooms %}<span
+              class="text-xs text-gray-400 flex items-center gap-1"
+              ><i class="fas fa-bath text-gray-300 text-[10px]"></i> 
+              {{property.bathrooms }} Bath</span
+            >{% endif %} {% if property.lot_area %}<span
+              class="text-xs text-gray-400 flex items-center gap-1"
+              ><i class="fas fa-ruler-combined text-gray-300 text-[10px]"></i>
+              {{ property.lot_area }} sqm</span
+            >{% endif %}
+          </div>
+
+          <div class="flex items-baseline justify-between">
+            <span class="text-xl font-bold text-gray-900"
+              >₱ {{ property.price|floatformat:0|intcomma }}</span
+            >
+            <span class="text-[10px] tracking-wider uppercase text-gray-400"
+              >{{ property.get_listing_type_display }}</span
+            >
+          </div>
+        </div>
+      </a>
+      {% empty %}
+      <div class="col-span-3 py-20 text-center border border-gray-100">
+        <i class="fas fa-home text-3xl text-gray-200 mb-3 block"></i>
+        <p class="text-sm text-gray-300">No properties listed yet.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- WHY US -->
+<section class="bg-gray-50 py-20 px-6">
+  <div class="max-w-7xl mx-auto">
+    <p class="text-xs font-semibold tracking-widest uppercase text-gold mb-2">
+      Our Promise
+    </p>
+    <h2 class="text-3xl font-bold text-gray-900 tracking-tight mb-12">
+      Why Choose Us
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-px bg-gray-200">
+      <div class="bg-white p-10 hover:bg-gold-pale transition-colors group">
+        <div
+          class="w-10 h-10 bg-gold-pale group-hover:bg-white flex items-center justify-center text-gold mb-6 transition-colors"
+        >
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <p
+          class="text-[10px] font-semibold tracking-widest text-gold mb-3 uppercase"
+        >
+          01
+        </p>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">
+          Trusted &amp; Verified
+        </h3>
+        <p class="text-sm text-gray-400 leading-relaxed font-light">
+          All properties are verified by licensed brokers, ensuring every
+          listing is legitimate and legally sound.
+        </p>
+      </div>
+      <div class="bg-white p-10 hover:bg-gold-pale transition-colors group">
+        <div
+          class="w-10 h-10 bg-gold-pale group-hover:bg-white flex items-center justify-center text-gold mb-6 transition-colors"
+        >
+          <i class="fas fa-handshake"></i>
+        </div>
+        <p
+          class="text-[10px] font-semibold tracking-widest text-gold mb-3 uppercase"
+        >
+          02
+        </p>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">
+          Easy Transactions
+        </h3>
+        <p class="text-sm text-gray-400 leading-relaxed font-light">
+          Seamless reservation and purchase process — from inquiry to title
+          transfer, handled online with ease.
+        </p>
+      </div>
+      <div class="bg-white p-10 hover:bg-gold-pale transition-colors group">
+        <div
+          class="w-10 h-10 bg-gold-pale group-hover:bg-white flex items-center justify-center text-gold mb-6 transition-colors"
+        >
+          <i class="fas fa-balance-scale"></i>
+        </div>
+        <p
+          class="text-[10px] font-semibold tracking-widest text-gold mb-3 uppercase"
+        >
+          03
+        </p>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">
+          Legal Partnership
+        </h3>
+        <p class="text-sm text-gray-400 leading-relaxed font-light">
+          Our in-house legal team ensures every contract and deed is airtight —
+          protecting you every step of the way.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="bg-gray-900 py-20 px-6">
+  <div
+    class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-12"
+  >
+    <div class="max-w-xl">
+      <p class="text-xs font-semibold tracking-widest uppercase text-gold mb-4">
+        Get Started Today
+      </p>
+      <h2
+        class="text-4xl font-bold text-white leading-tight tracking-tight mb-4"
+      >
+        Ready to Find Your<br /><span class="text-gold">Dream Property?</span>
+      </h2>
+      <p class="text-sm text-gray-500 leading-relaxed font-light">
+        Browse our listings and connect with our licensed brokers and legal
+        team. Your property journey starts here.
+      </p>
+    </div>
+    <div class="flex flex-col sm:flex-row lg:flex-col gap-3 flex-shrink-0">
+      <a
+        href="{% url 'properties' %}"
+        class="bg-gold hover:bg-gold-light transition-colors text-white text-sm font-medium px-8 py-3.5 flex items-center justify-center gap-2 whitespace-nowrap"
+      >
+        <i class="fas fa-search text-xs"></i> Browse Properties
+      </a>
+      <a
+        href="{% url 'contact' %}"
+        class="border border-white/20 hover:border-gold hover:text-gold transition-colors text-white/60 text-sm font-medium px-8 py-3.5 flex items-center justify-center gap-2 whitespace-nowrap"
+      >
+        <i class="fas fa-envelope text-xs"></i> Contact Us
+      </a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
