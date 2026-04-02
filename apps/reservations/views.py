@@ -99,17 +99,50 @@ def reservation_create(request, property_pk):
         messages.error(request, 'This property is not available for reservation.')
         return redirect('property_detail', pk=property_pk)
 
+    # ✅ Check 1 — Prevent non-clients from reserving
+    if request.user.role != 'client':
+        messages.error(request, 'Only clients can make reservations.')
+        return redirect('property_detail', pk=property_pk)
+
+    # ✅ Check 2 — Prevent duplicate active reservation
+    existing = Reservation.objects.filter(
+        property=property,
+        client=request.user,
+        status__in=['pending', 'approved']
+    ).first()
+
+    if existing:
+        messages.warning(
+            request,
+            f'You already have an active reservation for this property. '
+            f'Status: {existing.get_status_display()}'
+        )
+        return redirect('my_reservations')
+
     if request.method == 'POST':
         reservation_date = request.POST.get('reservation_date')
+        expiry_date = request.POST.get('expiry_date') or None
         reservation_fee = request.POST.get('reservation_fee', 0)
         payment_method = request.POST.get('payment_method', 'cash')
         notes = request.POST.get('notes', '')
+
+        # ✅ Check 3 — Double-check on POST too (race condition protection)
+        existing_post = Reservation.objects.filter(
+            property=property,
+            client=request.user,
+            status__in=['pending', 'approved']
+        ).first()
+
+        if existing_post:
+            messages.warning(request, 'You already have an active reservation for this property.')
+            return redirect('my_reservations')
 
         reservation = Reservation.objects.create(
             property=property,
             client=request.user,
             status='pending',
             reservation_date=reservation_date,
+            expiry_date=expiry_date,
             reservation_fee=reservation_fee,
             payment_method=payment_method,
             notes=notes,
@@ -122,9 +155,10 @@ def reservation_create(request, property_pk):
             new_status='pending',
             remarks='Reservation created.'
         )
+
         notify_reservation_created(reservation)
         messages.success(request, 'Reservation submitted successfully!')
-        return redirect('reservations:detail', pk=reservation.pk)
+        return redirect('my_reservations')
 
     return render(request, 'reservations/create.html', {
         'property': property,
@@ -252,17 +286,56 @@ def appointment_create(request, property_pk):
         messages.error(request, 'This property is not available for appointment.')
         return redirect('property_detail', pk=property_pk)
 
+    # ✅ Only clients can book appointments
+    if request.user.role != 'client':
+        messages.error(request, 'Only clients can schedule appointments.')
+        return redirect('property_detail', pk=property_pk)
+
+    # ✅ Prevent duplicate active appointment
+    existing = Appointment.objects.filter(
+        property=property,
+        client=request.user,
+        status__in=['pending', 'confirmed']
+    ).first()
+
+    if existing:
+        messages.warning(
+            request,
+            f'You already have an active appointment for this property. '
+            f'Status: {existing.get_status_display()}'
+        )
+        return redirect('my_reservations')
+
     if request.method == 'POST':
         preferred_date = request.POST.get('preferred_date')
         preferred_time = request.POST.get('preferred_time')
         notes = request.POST.get('notes', '')
 
-        # Check if date is blocked
-        if preferred_date in property.blocked_dates:
-            messages.error(request, 'This date is not available. Please choose another date.')
+        # ✅ Check blocked dates
+        blocked = property.blocked_dates or []
+        if preferred_date in blocked:
+            messages.error(
+                request,
+                'This date is not available. Please choose another date.'
+            )
             return render(request, 'reservations/appointment_create.html', {
-                'property': property
+                'property': property,
+                'blocked_dates': blocked,
             })
+
+        # ✅ Race condition protection — check again on POST
+        existing_post = Appointment.objects.filter(
+            property=property,
+            client=request.user,
+            status__in=['pending', 'confirmed']
+        ).first()
+
+        if existing_post:
+            messages.warning(
+                request,
+                'You already have an active appointment for this property.'
+            )
+            return redirect('my_reservations')
 
         appointment = Appointment.objects.create(
             property=property,
@@ -288,16 +361,19 @@ def appointment_create(request, property_pk):
                 additional_notes=request.POST.get('additional_notes', ''),
             )
 
-        # ✅ Notify INSIDE POST block BEFORE redirect
         notify_appointment_created(appointment)
 
-        messages.success(request, 'Appointment scheduled successfully! We will confirm shortly.')
-        return redirect('reservations:appointments')
+        messages.success(
+            request,
+            'Appointment scheduled successfully! We will confirm shortly.'
+        )
 
-    # ✅ GET request — just show the form
+        # ✅ Redirect to client side
+        return redirect('my_reservations')
+
     return render(request, 'reservations/appointment_create.html', {
         'property': property,
-        'blocked_dates': property.blocked_dates,
+        'blocked_dates': property.blocked_dates or [],
     })
 
 
@@ -483,3 +559,25 @@ def get_chat_messages(request, property_pk):
     } for m in messages_qs]
 
     return JsonResponse({'messages': data})
+
+@login_required
+def appointment_cancel(request, pk):
+    appointment = get_object_or_404(Appointment, pk=pk)
+
+    # Only the client who made it can cancel
+    if appointment.client != request.user:
+        messages.error(request, 'You can only cancel your own appointments.')
+        return redirect('my_reservations')
+
+    # Can only cancel pending appointments
+    if appointment.status not in ['pending', 'confirmed']:
+        messages.error(request, 'This appointment can no longer be cancelled.')
+        return redirect('my_reservations')
+
+    if request.method == 'POST':
+        appointment.status = 'cancelled'
+        appointment.save()
+        messages.success(request, 'Appointment cancelled successfully.')
+        return redirect('my_reservations')
+
+    return redirect('my_reservations')

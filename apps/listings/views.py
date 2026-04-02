@@ -631,3 +631,43 @@ def tag_detail(request, pk):
         'properties': properties,
         'total': properties.count(),
     })
+    
+def property_detail_view(request, pk):
+    property = get_object_or_404(Property, pk=pk)
+
+    related_properties = Property.objects.filter(
+        listing_status='approved',
+        property_type=property.property_type
+    ).exclude(pk=pk)[:3]
+
+    is_favorited = False
+    has_active_reservation = False
+    has_active_appointment = False  # ✅ Add this
+
+    if request.user.is_authenticated:
+        is_favorited = property.favorited_by.filter(
+            pk=request.user.pk
+        ).exists()
+
+        if request.user.role == 'client':
+            from apps.reservations.models import Reservation, Appointment
+            has_active_reservation = Reservation.objects.filter(
+                property=property,
+                client=request.user,
+                status__in=['pending', 'approved']
+            ).exists()
+
+            # ✅ Check active appointment
+            has_active_appointment = Appointment.objects.filter(
+                property=property,
+                client=request.user,
+                status__in=['pending', 'confirmed']
+            ).exists()
+
+    return render(request, 'public/property_detail.html', {
+        'property': property,
+        'related_properties': related_properties,
+        'is_favorited': is_favorited,
+        'has_active_reservation': has_active_reservation,
+        'has_active_appointment': has_active_appointment,  # ✅
+    })

@@ -38,6 +38,18 @@ urlpatterns = [
     path('manage/sales/', include('apps.sales.urls')),
     path('manage/documents/', include('apps.documents.urls')),
     path('manage/reports/', include('apps.reports.urls')),
+    
+    # ✅ Public appointment create URL
+    path('appointment/<int:property_pk>/', reservation_views.appointment_create, name='appointment_create'),
+    
+    # Client Side
+    path('my-reservations/', reservation_views.my_reservations, name='my_reservations'),
+    path('reserve/<int:property_pk>/', reservation_views.reservation_create, name='reservation_create'),
+    path('appointment/<int:property_pk>/', reservation_views.appointment_create, name='appointment_create'),
+
+    # ✅ Add these cancel URLs
+    path('my-reservations/reservation/<int:pk>/cancel/', reservation_views.reservation_cancel, name='reservation_cancel'),
+    path('my-reservations/appointment/<int:pk>/cancel/', reservation_views.appointment_cancel, name='appointment_cancel'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
