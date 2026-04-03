@@ -1,0 +1,25 @@
+# Python
+venv/
+*.pyc
+*.pyo
+__pycache__/
+*.egg-info/
+dist/
+build/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+media/
+
+# Environment variables
+.env
+*.env
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
+desktop.ini
