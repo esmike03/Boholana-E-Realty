@@ -28,7 +28,6 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = FALSE #config('DEBUG', cast=bool, default=True)
 
-ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -50,7 +49,6 @@ INSTALLED_APPS += [
     
     'tailwind',
     'theme',
-    'django_browser_reload',
     'cloudinary', 
     'cloudinary_storage',
 ]
@@ -74,7 +72,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django_browser_reload.middleware.BrowserReloadMiddleware',
+    #'django_browser_reload.middleware.BrowserReloadMiddleware',
 ]
 
 ROOT_URLCONF = 'boholana_erealty.urls'
@@ -193,6 +191,6 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.ngrok-free.app', '.ngrok-free.dev']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.ngrok-free.app', '.ngrok-free.dev', '.onrender.com']
 
 CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']#['https://*.ngrok-free.app', 'https://*.ngrok-free.dev']
