@@ -50,7 +50,7 @@ urlpatterns = [
     # ✅ Add these cancel URLs
     path('my-reservations/reservation/<int:pk>/cancel/', reservation_views.reservation_cancel, name='reservation_cancel'),
     path('my-reservations/appointment/<int:pk>/cancel/', reservation_views.appointment_cancel, name='appointment_cancel'),
-
+    
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # ✅ Error handlers OUTSIDE urlpatterns list

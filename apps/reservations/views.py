@@ -236,7 +236,7 @@ def reservation_cancel(request, pk):
         )
 
         messages.success(request, 'Reservation cancelled successfully.')
-        return redirect('reservations:list')
+        return redirect('my_reservations') ##reservations:list
 
     return render(request, 'reservations/cancel.html', {
         'reservation': reservation
@@ -467,58 +467,62 @@ def my_reservations(request):
 def chat_view(request, property_pk):
     property = get_object_or_404(Property, pk=property_pk)
 
-    # Get receiver based on role
     if request.user.role == 'client':
+        # Client chats with broker/sale_assistant
         receiver = property.broker or CustomUser.objects.filter(
             role__in=['broker', 'sale_assistant']
         ).first()
     else:
-        receiver_id = request.GET.get('client_id')
-        receiver = get_object_or_404(
-            CustomUser, pk=receiver_id
-        ) if receiver_id else None
+        # Broker/staff replies to a specific client
+        client_id = request.GET.get('client_id')
+        if not client_id:
+            return redirect('reservations:chat_inbox')
+        receiver = get_object_or_404(CustomUser, pk=client_id)
 
-    # ✅ Renamed to chat_messages to avoid conflict
-    chat_messages = []
-    if receiver:
-        chat_messages = ChatMessage.objects.filter(
-            Q(sender=request.user, receiver=receiver) |
-            Q(sender=receiver, receiver=request.user),
-            property=property
-        ).order_by('created_at')
+    if not receiver:
+        messages.error(request, 'No broker available at the moment.')
+        return redirect('property_detail', pk=property_pk)
 
-        # Mark as read
-        ChatMessage.objects.filter(
-            sender=receiver,
-            receiver=request.user,
-            property=property,
-            is_read=False
-        ).update(is_read=True)
+    # Get messages between the two users
+    chat_messages = ChatMessage.objects.filter(
+        Q(sender=request.user, receiver=receiver) |
+        Q(sender=receiver, receiver=request.user),
+        property=property
+    ).order_by('created_at')
 
-    # Check availability
-    availability = None
-    if receiver:
-        availability, _ = ChatAvailability.objects.get_or_create(
-            user=receiver
-        )
+    # Mark as read
+    ChatMessage.objects.filter(
+        sender=receiver,
+        receiver=request.user,
+        property=property,
+        is_read=False
+    ).update(is_read=True)
 
-    # Handle POST (send message)
+    # Availability
+    availability, _ = ChatAvailability.objects.get_or_create(user=receiver)
+
     if request.method == 'POST':
         message_text = request.POST.get('message', '').strip()
-        if message_text and receiver:
+        if message_text:
             ChatMessage.objects.create(
                 sender=request.user,
                 receiver=receiver,
                 property=property,
                 message=message_text,
             )
-        # ✅ Redirect back to chat instead of JsonResponse
-        return redirect('reservations:chat', property_pk=property_pk)
+
+        # ✅ Redirect based on role
+        if request.user.role == 'client':
+            return redirect('reservations:chat', property_pk=property_pk)
+        else:
+            return redirect(
+                f"{request.path}?client_id={receiver.pk}"
+            )
 
     return render(request, 'reservations/chat.html', {
         'property': property,
         'receiver': receiver,
-        'chat_messages': chat_messages,  # ✅ renamed
+        'chat_messages': chat_messages,
         'availability': availability,
     })
 
@@ -579,5 +583,60 @@ def appointment_cancel(request, pk):
         appointment.save()
         messages.success(request, 'Appointment cancelled successfully.')
         return redirect('my_reservations')
-
+    
     return redirect('my_reservations')
+
+@login_required
+def chat_inbox(request):
+    """Shows all conversations for broker/staff/sale_assistant"""
+    user = request.user
+
+    if user.role not in ['broker', 'admin', 'staff', 'sale_assistant'] \
+            and not user.is_superuser:
+        messages.error(request, 'You do not have permission.')
+        return redirect('dashboard')
+
+    # Get all unique conversations (latest message per client+property)
+    from django.db.models import Max, OuterRef, Subquery
+
+    # Get latest message timestamp per sender+property pair
+    latest_messages = ChatMessage.objects.filter(
+        Q(receiver=user) | Q(sender=user)
+    ).values('property').annotate(
+        latest=Max('created_at')
+    ).order_by('-latest')
+
+    # Get unique conversations
+    conversations = []
+    seen = set()
+
+    all_messages = ChatMessage.objects.filter(
+        Q(receiver=user) | Q(sender=user)
+    ).select_related(
+        'sender', 'receiver', 'property'
+    ).order_by('-created_at')
+
+    for msg in all_messages:
+        # Identify the other person
+        other = msg.sender if msg.receiver == user else msg.receiver
+        key = (other.pk, msg.property.pk)
+
+        if key not in seen:
+            seen.add(key)
+            unread_count = ChatMessage.objects.filter(
+                sender=other,
+                receiver=user,
+                property=msg.property,
+                is_read=False
+            ).count()
+            conversations.append({
+                'other_user': other,
+                'property': msg.property,
+                'last_message': msg,
+                'unread_count': unread_count,
+            })
+
+    return render(request, 'reservations/chat_inbox.html', {
+        'conversations': conversations,
+        'total_unread': sum(c['unread_count'] for c in conversations),
+    })

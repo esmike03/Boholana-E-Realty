@@ -90,6 +90,22 @@
         0
     </span>
 </a>
+
+<a href="{% url 'reservations:chat_inbox' %}"
+   class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all
+   {% if 'chat' in request.path and 'manage' in request.path %}
+       text-white bg-white/15 border-l-4 border-yellow-400
+   {% else %}
+       text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent
+   {% endif %}">
+    <i class="fas fa-comments w-4"></i>
+    Chat Inbox
+    {% if total_unread_chat > 0 %}
+    <span class="ml-auto bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+        {{ total_unread_chat }}
+    </span>
+    {% endif %}
+</a>
     <!-- Property -->
     <div class="px-6 mt-4 mb-2">
       <p class="text-white/40 text-xs font-semibold uppercase tracking-widest">

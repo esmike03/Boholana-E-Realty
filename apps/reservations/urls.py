@@ -23,4 +23,11 @@ urlpatterns = [
     path('chat/<int:property_pk>/', views.chat_view, name='chat'),
     path('chat/<int:property_pk>/messages/', views.get_chat_messages, name='chat_messages'),
     path('chat/toggle-availability/', views.toggle_chat_availability, name='toggle_availability'),
+    
+       # ✅ Chat inbox for broker/staff
+    path('chat/', views.chat_inbox, name='chat_inbox'),
+    path('chat/<int:property_pk>/', views.chat_view, name='chat'),
+    path('chat/toggle-availability/', views.toggle_chat_availability, name='toggle_availability'),
+    path('chat/messages/<int:property_pk>/', views.get_chat_messages, name='get_chat_messages'),
+
 ]
