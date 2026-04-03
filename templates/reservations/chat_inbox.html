@@ -66,7 +66,7 @@
 
             <!-- Avatar -->
             <div class="relative flex-shrink-0">
-                <div class="w-11 h-11 rounded-full bg-blue-500 flex items-center justify-center">
+                <div class="w-11 h-11 rounded-full p-2 bg-blue-500 flex items-center justify-center">
                     {% if convo.other_user.profile_picture %}
                         <img src="{{ convo.other_user.profile_picture.url }}"
                              class="w-11 h-11 rounded-full object-cover">
@@ -77,7 +77,7 @@
                     {% endif %}
                 </div>
                 {% if convo.unread_count > 0 %}
-                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                <span class="absolute top-0 right bg-red-500 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center font-bold">
                     {{ convo.unread_count }}
                 </span>
                 {% endif %}
