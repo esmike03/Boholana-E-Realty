@@ -26,13 +26,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = FALSE #config('DEBUG', cast=bool, default=True)
+DEBUG = False #config('DEBUG', cast=bool, default=True)
 
 
 
 # Application definition
 
-INSTALLED_APPS += [
+INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
