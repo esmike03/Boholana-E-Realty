@@ -640,3 +640,55 @@ def chat_inbox(request):
         'conversations': conversations,
         'total_unread': sum(c['unread_count'] for c in conversations),
     })
+    
+@login_required
+def client_chat_inbox(request):
+    """Chat inbox for clients — shows all their conversations"""
+    user = request.user
+
+    if user.role != 'client':
+        return redirect('reservations:chat_inbox')
+
+    # Get all unique conversations for this client
+    all_messages = ChatMessage.objects.filter(
+        Q(sender=user) | Q(receiver=user)
+    ).select_related(
+        'sender', 'receiver', 'property'
+    ).order_by('-created_at')
+
+    conversations = []
+    seen = set()
+
+    for msg in all_messages:
+        other = msg.sender if msg.receiver == user else msg.receiver
+        key = (other.pk, msg.property.pk)
+
+        if key not in seen:
+            seen.add(key)
+            unread_count = ChatMessage.objects.filter(
+                sender=other,
+                receiver=user,
+                property=msg.property,
+                is_read=False
+            ).count()
+            conversations.append({
+                'other_user': other,
+                'property': msg.property,
+                'last_message': msg,
+                'unread_count': unread_count,
+            })
+
+    total_unread = sum(c['unread_count'] for c in conversations)
+
+    return render(request, 'reservations/client_chat_inbox.html', {
+        'conversations': conversations,
+        'total_unread': total_unread,
+    })
+    
+@login_required
+def client_unread_count(request):
+    count = ChatMessage.objects.filter(
+        receiver=request.user,
+        is_read=False
+    ).count()
+    return JsonResponse({'count': count})

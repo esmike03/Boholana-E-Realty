@@ -125,7 +125,16 @@
     <i class="fas fa-calendar w-4"></i>
     Appointments
 </a>
-
+  <a href="{% url 'accounts:inquiries' %}"
+   class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all
+   {% if 'inquiries' in request.path %}
+       text-white bg-white/15 border-l-4 border-yellow-400
+   {% else %}
+       text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent
+   {% endif %}">
+    <i class="fas fa-envelope w-4"></i>
+    Inquiries
+</a>
     <!-- Transactions -->
     <div class="px-6 mt-4 mb-2">
       <p class="text-white/40 text-xs font-semibold uppercase tracking-widest">

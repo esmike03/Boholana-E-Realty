@@ -24,7 +24,28 @@
     </style>
     {% block extra_css %}{% endblock %}
   </head>
+  {% if user.is_authenticated and user.role == 'client' %}
+  <script>
+  function loadClientUnread() {
+      fetch('/chat/unread-count/')
+          .then(res => res.json())
+          .then(data => {
+              const badge = document.getElementById('nav-unread-badge');
+              if (badge && data.count > 0) {
+                  badge.textContent = data.count;
+                  badge.classList.remove('hidden');
+              }
+          })
+          .catch(() => {});
+  }
 
+  document.addEventListener('DOMContentLoaded', function() {
+      loadClientUnread();
+      // Refresh every 30 seconds
+      setInterval(loadClientUnread, 30000);
+  });
+  </script>
+  {% endif %}
   <body class="bg-white">
     <!-- Public Navbar -->
     {% include 'includes/public_navbar.html' %}

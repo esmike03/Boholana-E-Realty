@@ -51,6 +51,15 @@ urlpatterns = [
     path('my-reservations/reservation/<int:pk>/cancel/', reservation_views.reservation_cancel, name='reservation_cancel'),
     path('my-reservations/appointment/<int:pk>/cancel/', reservation_views.appointment_cancel, name='appointment_cancel'),
     
+    # ✅ Client chat inbox
+    path('my-messages/', reservation_views.client_chat_inbox, name='client_chat_inbox'),
+
+    # Chat
+    path('chat/<int:property_pk>/', reservation_views.chat_view, name='chat'),
+    path('chat/toggle-availability/', reservation_views.toggle_chat_availability, name='toggle_chat_availability'),
+    path('chat/messages/<int:property_pk>/', reservation_views.get_chat_messages, name='get_chat_messages'),
+
+    path('chat/unread-count/', reservation_views.client_unread_count, name='client_unread_count'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # ✅ Error handlers OUTSIDE urlpatterns list

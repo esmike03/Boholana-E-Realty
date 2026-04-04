@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 from .models import CustomUser, UserActivityLog, UserPreference, Notification
+from .models import ContactMessage
 
 
 class UserPreferenceInline(admin.StackedInline):
@@ -166,3 +167,14 @@ class NotificationAdmin(admin.ModelAdmin):
             color, color, obj.get_priority_display()
         )
     priority_badge.short_description = 'Priority'
+    
+
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = (
+        'name', 'email', 'phone',
+        'property', 'is_read', 'created_at'
+    )
+    list_filter = ('is_read',)
+    search_fields = ('name', 'email', 'phone', 'message')
+    readonly_fields = ('created_at',)

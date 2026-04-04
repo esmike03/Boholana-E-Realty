@@ -671,3 +671,36 @@ def property_detail_view(request, pk):
         'has_active_reservation': has_active_reservation,
         'has_active_appointment': has_active_appointment,  # ✅
     })
+    
+def contact_view(request):
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        email = request.POST.get('email', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        message = request.POST.get('message', '').strip()
+        property_id = request.POST.get('property_id') or None
+
+        if not name or not message:
+            messages.error(request, 'Name and message are required.')
+            return redirect('contact')
+
+        from apps.accounts.models import ContactMessage
+        property_obj = None
+        if property_id:
+            property_obj = Property.objects.filter(pk=property_id).first()
+
+        ContactMessage.objects.create(
+            name=name,
+            email=email,
+            phone=phone,
+            message=message,
+            property=property_obj,
+        )
+
+        messages.success(
+            request,
+            'Your message has been sent! We will contact you shortly.'
+        )
+        return redirect('contact')
+
+    return render(request, 'public/contact.html')

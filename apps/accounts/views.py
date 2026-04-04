@@ -726,4 +726,58 @@ def global_search(request):
         'total_results': total_results,
     })
     
+@login_required
+def inquiry_list(request):
+    if request.user.role not in ['broker', 'admin', 'staff'] \
+            and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission.')
+        return redirect('dashboard')
+
+    from apps.accounts.models import ContactMessage
+    inquiries = ContactMessage.objects.all().order_by('-created_at')
+
+    # Filter
+    search = request.GET.get('search', '')
+    is_read = request.GET.get('is_read', '')
+
+    if search:
+        inquiries = inquiries.filter(
+            Q(name__icontains=search) |
+            Q(email__icontains=search) |
+            Q(phone__icontains=search) |
+            Q(message__icontains=search)
+        )
+    if is_read == 'read':
+        inquiries = inquiries.filter(is_read=True)
+    elif is_read == 'unread':
+        inquiries = inquiries.filter(is_read=False)
+
+    return render(request, 'accounts/inquiry_list.html', {
+        'inquiries': inquiries,
+        'total': inquiries.count(),
+        'unread': inquiries.filter(is_read=False).count(),
+        'search': search,
+        'is_read': is_read,
+    })
+
+
+@login_required
+def inquiry_detail(request, pk):
+    if request.user.role not in ['broker', 'admin', 'staff'] \
+            and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission.')
+        return redirect('dashboard')
+
+    from apps.accounts.models import ContactMessage
+    inquiry = get_object_or_404(ContactMessage, pk=pk)
+
+    # Mark as read
+    if not inquiry.is_read:
+        inquiry.is_read = True
+        inquiry.replied_by = request.user
+        inquiry.save()
+
+    return render(request, 'accounts/inquiry_detail.html', {
+        'inquiry': inquiry,
+    })
     

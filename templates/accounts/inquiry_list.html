@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}Inquiries — Boholana E-Realty{% endblock %}
+{% block page_title %}Contact Inquiries{% endblock %}
+{% block page_subtitle %}Messages sent through the contact form{% endblock %}
+
+{% block content %}
+
+<!-- Stats -->
+<div class="grid grid-cols-2 gap-4 mb-6">
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div class="flex items-center gap-4">
+            <div class="bg-blue-100 rounded-xl p-3">
+                <i class="fas fa-envelope text-blue-600"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-bold text-gray-800">{{ total }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">Total Inquiries</p>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div class="flex items-center gap-4">
+            <div class="bg-red-100 rounded-xl p-3">
+                <i class="fas fa-envelope-open text-red-500"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-bold text-gray-800">{{ unread }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">Unread</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-5">
+    <form method="GET" class="flex gap-3 flex-wrap">
+        <div class="relative flex-1 min-w-48">
+            <input type="text" name="search"
+                   value="{{ search }}"
+                   placeholder="Search by name, email, phone..."
+                   class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+        </div>
+        <select name="is_read"
+                onchange="this.form.submit()"
+                class="border border-gray-200 rounded-xl px-4 py-2 text-sm focus:outline-none">
+            <option value="">All</option>
+            <option value="unread" {% if is_read == 'unread' %}selected{% endif %}>Unread</option>
+            <option value="read" {% if is_read == 'read' %}selected{% endif %}>Read</option>
+        </select>
+        <button type="submit"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm transition">
+            Search
+        </button>
+        {% if search or is_read %}
+        <a href="{% url 'accounts:inquiries' %}"
+           class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm transition">
+            Clear
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Table -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100">
+        <h3 class="font-semibold text-gray-800 text-sm">All Inquiries</h3>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-xs text-gray-400 border-b border-gray-50 bg-gray-50">
+                    <th class="px-6 py-3 text-left font-medium">Sender</th>
+                    <th class="px-6 py-3 text-left font-medium">Contact</th>
+                    <th class="px-6 py-3 text-left font-medium">Property</th>
+                    <th class="px-6 py-3 text-left font-medium">Message</th>
+                    <th class="px-6 py-3 text-left font-medium">Status</th>
+                    <th class="px-6 py-3 text-left font-medium">Date</th>
+                    <th class="px-6 py-3 text-left font-medium">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                {% for inquiry in inquiries %}
+                <tr class="hover:bg-gray-50 transition
+                    {% if not inquiry.is_read %}bg-blue-50/20{% endif %}">
+
+                    <!-- Sender -->
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                                <span class="text-white text-xs font-bold">
+                                    {{ inquiry.name|slice:":1"|upper }}
+                                </span>
+                            </div>
+                            <p class="font-medium text-gray-800 text-sm">
+                                {{ inquiry.name }}
+                                {% if not inquiry.is_read %}
+                                <span class="ml-1 inline-block w-2 h-2 bg-blue-500 rounded-full"></span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </td>
+
+                    <!-- Contact -->
+                    <td class="px-6 py-4">
+                        <p class="text-xs text-gray-500">{{ inquiry.email|default:"—" }}</p>
+                        <p class="text-xs text-gray-400 mt-0.5">{{ inquiry.phone|default:"—" }}</p>
+                    </td>
+
+                    <!-- Property -->
+                    <td class="px-6 py-4">
+                        {% if inquiry.property %}
+                        <a href="{% url 'listings:detail' inquiry.property.pk %}"
+                           class="text-xs text-blue-500 hover:underline">
+                            {{ inquiry.property.title|truncatechars:25 }}
+                        </a>
+                        {% else %}
+                        <span class="text-xs text-gray-400">General Inquiry</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Message Preview -->
+                    <td class="px-6 py-4">
+                        <p class="text-xs text-gray-500 max-w-xs truncate">
+                            {{ inquiry.message|truncatechars:50 }}
+                        </p>
+                    </td>
+
+                    <!-- Status -->
+                    <td class="px-6 py-4">
+                        {% if inquiry.is_read %}
+                        <span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
+                            Read
+                        </span>
+                        {% else %}
+                        <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">
+                            Unread
+                        </span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Date -->
+                    <td class="px-6 py-4 text-xs text-gray-400">
+                        {{ inquiry.created_at|date:"M d, Y" }}<br>
+                        {{ inquiry.created_at|date:"h:i A" }}
+                    </td>
+
+                    <!-- Action -->
+                    <td class="px-6 py-4">
+                        <a href="{% url 'accounts:inquiry_detail' inquiry.pk %}"
+                           class="bg-blue-100 hover:bg-blue-200 text-blue-600 px-3 py-1.5 rounded-xl text-xs transition">
+                            View
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="px-6 py-12 text-center text-gray-400">
+                        <i class="fas fa-envelope text-3xl mb-3 block"></i>
+                        No inquiries yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

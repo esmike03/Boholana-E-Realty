@@ -28,4 +28,8 @@ urlpatterns = [
 
     # Search
     path('search/', views.global_search, name='search'),
+    
+    # Inquiries
+    path('inquiries/', views.inquiry_list, name='inquiries'),
+    path('inquiries/<int:pk>/', views.inquiry_detail, name='inquiry_detail'),
 ]

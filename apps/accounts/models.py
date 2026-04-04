@@ -252,3 +252,29 @@ class Notification(models.Model):
             self.is_read = True
             self.read_at = timezone.now()
             self.save()
+            
+class ContactMessage(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.CharField(max_length=100, blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    message = models.TextField()
+    property = models.ForeignKey(
+        'listings.Property',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='inquiries'
+    )
+    is_read = models.BooleanField(default=False)
+    replied_by = models.ForeignKey(
+        'CustomUser',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='replied_inquiries'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} — {self.created_at.strftime('%b %d, %Y')}"
