@@ -1,5 +1,6 @@
 # Python
 venv/
+env/
 *.pyc
 *.pyo
 __pycache__/
@@ -12,6 +13,7 @@ build/
 local_settings.py
 db.sqlite3
 media/
+staticfiles/
 
 # Environment variables
 .env
