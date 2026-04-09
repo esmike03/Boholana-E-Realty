@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q, Count
 from .models import Property, PropertyImage, PropertyTag, PropertyStatusLog
+from apps.accounts.email_notifications import email_new_inquiry
 from apps.accounts.notify import (
     notify_listing_submitted,
     notify_listing_approved,
@@ -96,6 +97,12 @@ def property_detail_view(request, pk):
 def contact_view(request):
     if request.method == 'POST':
         messages.success(request, 'Your inquiry has been sent! We will contact you shortly.')
+        contact_msg = ContactMessage.objects.create(...)
+
+        # ✅ Send email notifications
+        email_new_inquiry(contact_msg)
+
+        messages.success(request, 'Your message has been sent!')
         return redirect('contact')
     return render(request, 'public/contact.html')
 
@@ -704,3 +711,4 @@ def contact_view(request):
         return redirect('contact')
 
     return render(request, 'public/contact.html')
+

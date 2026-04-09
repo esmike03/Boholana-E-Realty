@@ -1,0 +1,59 @@
+{% extends 'emails/base_email.html' %}
+{% block email_content %}
+
+{% if reservation.status == 'approved' %}
+<div class="label">Reservation Approved</div>
+<h1>Your reservation has been approved! 🎉</h1>
+<p>Great news! Your reservation for <strong>{{ reservation.property.title }}</strong> has been approved.</p>
+{% elif reservation.status == 'rejected' %}
+<div class="label">Reservation Update</div>
+<h1>Your reservation was not approved</h1>
+<p>Unfortunately your reservation for <strong>{{ reservation.property.title }}</strong> was not approved at this time.</p>
+{% elif reservation.status == 'cancelled' %}
+<div class="label">Reservation Cancelled</div>
+<h1>Your reservation has been cancelled</h1>
+<p>Your reservation for <strong>{{ reservation.property.title }}</strong> has been cancelled.</p>
+{% elif reservation.status == 'completed' %}
+<div class="label">Reservation Completed</div>
+<h1>Reservation Completed</h1>
+<p>Your reservation for <strong>{{ reservation.property.title }}</strong> has been marked as completed.</p>
+{% endif %}
+
+<div class="info-box">
+    <div class="info-row">
+        <span class="info-label">Property</span>
+        <span class="info-value">{{ reservation.property.title }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Location</span>
+        <span class="info-value">
+            {{ reservation.property.city }}, {{ reservation.property.province }}
+        </span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Reservation Date</span>
+        <span class="info-value">{{ reservation.reservation_date }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Status</span>
+        <span class="info-value">
+            <span class="status-badge status-{{ reservation.status }}">
+                {{ reservation.get_status_display }}
+            </span>
+        </span>
+    </div>
+</div>
+
+{% if reservation.status == 'approved' %}
+<p>Please contact our office to proceed with the next steps.</p>
+<a href="http://127.0.0.1:8000/my-reservations/" class="btn btn-gold">
+    View My Reservations →
+</a>
+{% else %}
+<p>You can browse other available properties on our website.</p>
+<a href="http://127.0.0.1:8000/properties/" class="btn">
+    Browse Properties →
+</a>
+{% endif %}
+
+{% endblock %}

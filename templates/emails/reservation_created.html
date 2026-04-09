@@ -1,0 +1,43 @@
+{% extends 'emails/base_email.html' %}
+{% block email_content %}
+
+<div class="label">Reservation Submitted</div>
+<h1>Your reservation is pending review</h1>
+<p>Hi {{ reservation.client.get_full_name }}, your reservation has been submitted successfully and is now pending approval.</p>
+
+<div class="info-box">
+    <div class="info-row">
+        <span class="info-label">Property</span>
+        <span class="info-value">{{ reservation.property.title }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Location</span>
+        <span class="info-value">{{ reservation.property.city }}, {{ reservation.property.province }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Reservation Date</span>
+        <span class="info-value">{{ reservation.reservation_date }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Reservation Fee</span>
+        <span class="info-value">₱{{ reservation.reservation_fee|floatformat:2 }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Payment Method</span>
+        <span class="info-value">{{ reservation.get_payment_method_display }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Status</span>
+        <span class="info-value">
+            <span class="status-badge status-pending">Pending</span>
+        </span>
+    </div>
+</div>
+
+<p>Our team will review your reservation and notify you of any updates.</p>
+
+<a href="http://127.0.0.1:8000/my-reservations/" class="btn">
+    View My Reservations →
+</a>
+
+{% endblock %}

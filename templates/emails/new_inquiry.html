@@ -1,0 +1,54 @@
+{% extends 'emails/base_email.html' %}
+{% block email_content %}
+
+<div class="label">New Inquiry</div>
+<h1>New Contact Inquiry</h1>
+<p>Someone submitted an inquiry through the contact form.</p>
+
+<div class="info-box">
+    <div class="info-row">
+        <span class="info-label">Name</span>
+        <span class="info-value">{{ inquiry.name }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Email</span>
+        <span class="info-value">{{ inquiry.email|default:"Not provided" }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Phone</span>
+        <span class="info-value">{{ inquiry.phone|default:"Not provided" }}</span>
+    </div>
+    {% if inquiry.property %}
+    <div class="info-row">
+        <span class="info-label">Property</span>
+        <span class="info-value">{{ inquiry.property.title }}</span>
+    </div>
+    {% endif %}
+    {% if inquiry.property_type %}
+    <div class="info-row">
+        <span class="info-label">Property Type</span>
+        <span class="info-value">{{ inquiry.get_property_type_display }}</span>
+    </div>
+    {% endif %}
+    {% if inquiry.city %}
+    <div class="info-row">
+        <span class="info-label">City of Interest</span>
+        <span class="info-value">{{ inquiry.city }}</span>
+    </div>
+    {% endif %}
+    <div class="info-row">
+        <span class="info-label">Date</span>
+        <span class="info-value">{{ inquiry.created_at|date:"M d, Y h:i A" }}</span>
+    </div>
+</div>
+
+<div class="info-box">
+    <div class="label">Message</div>
+    <p style="margin-top:8px; color:#374151;">{{ inquiry.message }}</p>
+</div>
+
+<a href="http://127.0.0.1:8000/auth/inquiries/" class="btn">
+    View Inquiry →
+</a>
+
+{% endblock %}

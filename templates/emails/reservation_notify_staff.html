@@ -1,0 +1,35 @@
+{% extends 'emails/base_email.html' %}
+{% block email_content %}
+
+<div class="label">New Reservation</div>
+<h1>New Reservation Request</h1>
+<p>A client has submitted a reservation that requires your review.</p>
+
+<div class="info-box">
+    <div class="info-row">
+        <span class="info-label">Client</span>
+        <span class="info-value">{{ reservation.client.get_full_name }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Client Email</span>
+        <span class="info-value">{{ reservation.client.email }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Property</span>
+        <span class="info-value">{{ reservation.property.title }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Reservation Date</span>
+        <span class="info-value">{{ reservation.reservation_date }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Fee</span>
+        <span class="info-value">₱{{ reservation.reservation_fee|floatformat:2 }}</span>
+    </div>
+</div>
+
+<a href="http://127.0.0.1:8000/manage/reservations/{{ reservation.pk }}/" class="btn">
+    Review Reservation →
+</a>
+
+{% endblock %}

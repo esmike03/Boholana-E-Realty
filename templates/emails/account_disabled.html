@@ -1,0 +1,20 @@
+{% extends 'emails/base_email.html' %}
+{% block email_content %}
+
+<div class="label">Account Update</div>
+<h1>Your account has been disabled</h1>
+<p>Hi {{ user.get_full_name|default:user.username }}, your account at Boholana E-Realty has been disabled.</p>
+
+{% if user.disabled_reason %}
+<div class="info-box">
+    <div class="label">Reason</div>
+    <p style="margin-top:8px; color:#374151;">{{ user.disabled_reason }}</p>
+</div>
+{% endif %}
+
+<p>If you believe this is a mistake, please contact our office directly.</p>
+<p style="color:#9ca3af; font-size:12px;">
+    Phone: +63 912 345 6789 | Email: info@boholana-erealty.com
+</p>
+
+{% endblock %}

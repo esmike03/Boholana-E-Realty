@@ -9,8 +9,10 @@ from apps.reservations.models import Reservation
 from apps.sales.models import Sale
 from apps.documents.models import Document
 from .models import CustomUser, UserActivityLog, UserPreference, Notification
-
-
+from allauth.socialaccount.models import SocialAccount
+# from apps.accounts.email_notifications import email_account_created
+from apps.accounts.email_notifications import email_role_assigned
+from apps.accounts.email_notifications import email_account_disabled
 
 # ─────────────────────────────────────────
 # Auth Views
@@ -411,6 +413,8 @@ def user_create_view(request):
             ip_address=get_client_ip(request),
             performed_by=request.user
         )
+        from apps.accounts.email_notifications import email_account_created
+        email_account_created(user, created_by=request.user)
 
         messages.success(request, f'Account for {user.get_full_name()} created successfully.')
         return redirect('accounts:users')
@@ -499,7 +503,7 @@ def user_disable_view(request, pk):
                 ip_address=get_client_ip(request),
                 performed_by=request.user
             )
-
+            email_account_disabled(user)
             messages.success(request, f'{user.get_full_name()} account has been disabled.')
 
         elif action == 'enable':
@@ -549,7 +553,7 @@ def assign_role_view(request, pk):
             ip_address=get_client_ip(request),
             performed_by=request.user
         )
-
+        email_role_assigned(user, user.get_role_display())
         messages.success(request, f'Role updated to {user.get_role_display()} for {user.get_full_name()}.')
         return redirect('accounts:user_detail', pk=user.pk)
 
@@ -780,4 +784,54 @@ def inquiry_detail(request, pk):
     return render(request, 'accounts/inquiry_detail.html', {
         'inquiry': inquiry,
     })
+
+
+
+def google_callback(request):
+    """
+    Called after successful Google OAuth login.
+    Assigns client role if new user, then redirects appropriately.
+    """
+    user = request.user
+
+    if not user.is_authenticated:
+        return redirect('accounts:login')
+
+    # Check if this is a Google social account
+    is_google = SocialAccount.objects.filter(
+        user=user, provider='google'
+    ).exists()
+
+    if is_google:
+        # Set social provider info
+        if not user.social_provider or user.social_provider == 'none':
+            user.social_provider = 'google'
+
+            # Auto-fill name from Google if not set
+            social = SocialAccount.objects.get(user=user, provider='google')
+            extra_data = social.extra_data
+
+            if not user.first_name:
+                user.first_name = extra_data.get('given_name', '')
+            if not user.last_name:
+                user.last_name = extra_data.get('family_name', '')
+            if not user.profile_picture and extra_data.get('picture'):
+                user.social_uid = extra_data.get('sub', '')
+
+            # Assign client role if no role set
+            if not user.role or user.role == '':
+                user.role = 'client'
+
+            user.is_verified = True
+            user.save()
+
+    # Redirect based on role
+    if user.role == 'client':
+        return redirect('home')
+    elif user.role in ['admin', 'broker', 'staff', 'sale_assistant', 'property_owner']:
+        return redirect('dashboard')
+    else:
+        user.role = 'client'
+        user.save()
+        return redirect('home')
     

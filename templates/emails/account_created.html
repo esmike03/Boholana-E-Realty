@@ -1,0 +1,29 @@
+{% extends 'emails/base_email.html' %}
+{% block email_content %}
+
+<div class="label">Welcome</div>
+<h1>Your account has been created</h1>
+<p>Hi {{ user.get_full_name|default:user.username }}, your account at Boholana E-Realty has been created successfully.</p>
+
+<div class="info-box">
+    <div class="info-row">
+        <span class="info-label">Username</span>
+        <span class="info-value">{{ user.username }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Email</span>
+        <span class="info-value">{{ user.email }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Role</span>
+        <span class="info-value">{{ user.get_role_display }}</span>
+    </div>
+</div>
+
+<p>You can now log in to your account using your credentials.</p>
+
+<a href="http://127.0.0.1:8000/auth/" class="btn btn-gold">
+    Login Now →
+</a>
+
+{% endblock %}

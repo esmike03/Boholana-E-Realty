@@ -1,9 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from apps.accounts.email_notifications import email_new_chat_message
 from django.utils import timezone
 from django.db.models import Q
 from django.http import JsonResponse
+from apps.accounts.email_notifications import (
+    email_reservation_created,
+    email_reservation_status_changed,
+)
 from .models import (
     Reservation, ReservationStatusLog,
     Appointment, PropertyPreferenceForm,
@@ -155,7 +160,7 @@ def reservation_create(request, property_pk):
             new_status='pending',
             remarks='Reservation created.'
         )
-
+        email_reservation_created(reservation)
         notify_reservation_created(reservation)
         messages.success(request, 'Reservation submitted successfully!')
         return redirect('my_reservations')
@@ -202,7 +207,7 @@ def reservation_update_status(request, pk):
 
         # ✅ Notify INSIDE POST block BEFORE redirect
         notify_reservation_status(reservation, user)
-
+        email_reservation_status_changed(reservation)
         messages.success(request, f'Reservation status updated to {new_status}.')
         return redirect('reservations:detail', pk=reservation.pk)
 
@@ -504,13 +509,13 @@ def chat_view(request, property_pk):
     if request.method == 'POST':
         message_text = request.POST.get('message', '').strip()
         if message_text:
-            ChatMessage.objects.create(
+            chat_msg = ChatMessage.objects.create(
                 sender=request.user,
                 receiver=receiver,
                 property=property,
                 message=message_text,
             )
-
+            email_new_chat_message(chat_msg)
         # ✅ Redirect based on role
         if request.user.role == 'client':
             return redirect('reservations:chat', property_pk=property_pk)

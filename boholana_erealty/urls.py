@@ -60,6 +60,15 @@ urlpatterns = [
     path('chat/messages/<int:property_pk>/', reservation_views.get_chat_messages, name='get_chat_messages'),
 
     path('chat/unread-count/', reservation_views.client_unread_count, name='client_unread_count'),
+    
+     # ✅ Allauth URLs
+    path('accounts/', include('allauth.urls')),
+
+    # Public Side
+    path('', listing_views.home_view, name='home'),
+    
+    # Auth
+    path('auth/', include('apps.accounts.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # ✅ Error handlers OUTSIDE urlpatterns list

@@ -32,4 +32,8 @@ urlpatterns = [
     # Inquiries
     path('inquiries/', views.inquiry_list, name='inquiries'),
     path('inquiries/<int:pk>/', views.inquiry_detail, name='inquiry_detail'),
+    
+    # Google OAuth callback
+    path('google/callback/', views.google_callback, name='google_callback'),
+    
 ]

@@ -1,0 +1,21 @@
+{% extends 'emails/base_email.html' %}
+{% block email_content %}
+
+<div class="label">Account Update</div>
+<h1>Your role has been updated</h1>
+<p>Hi {{ user.get_full_name|default:user.username }}, your role at Boholana E-Realty has been updated.</p>
+
+<div class="info-box">
+    <div class="info-row">
+        <span class="info-label">New Role</span>
+        <span class="info-value">{{ new_role }}</span>
+    </div>
+</div>
+
+<p>You can now log in and access your updated permissions.</p>
+
+<a href="http://127.0.0.1:8000/auth/" class="btn">
+    Login →
+</a>
+
+{% endblock %}

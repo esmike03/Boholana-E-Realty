@@ -1,0 +1,46 @@
+{% extends 'emails/base_email.html' %}
+{% block email_content %}
+
+<div class="label">New Message</div>
+<h1>You have a new message</h1>
+<p>
+    <strong>{{ sender.get_full_name|default:sender.username }}</strong>
+    sent you a message regarding
+    <strong>{{ message.property.title }}</strong>.
+</p>
+
+<div class="info-box">
+    <div class="label">Message</div>
+    <p style="margin-top:8px; color:#374151; font-style:italic;">
+        "{{ message.message }}"
+    </p>
+</div>
+
+<div class="info-box">
+    <div class="info-row">
+        <span class="info-label">From</span>
+        <span class="info-value">
+            {{ sender.get_full_name|default:sender.username }}
+        </span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Property</span>
+        <span class="info-value">{{ message.property.title }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Sent At</span>
+        <span class="info-value">{{ message.created_at|date:"M d, Y h:i A" }}</span>
+    </div>
+</div>
+
+{% if receiver.role == 'client' %}
+<a href="http://127.0.0.1:8000/chat/{{ message.property.pk }}/" class="btn">
+    Reply to Message →
+</a>
+{% else %}
+<a href="http://127.0.0.1:8000/manage/reservations/chat/{{ message.property.pk }}/?client_id={{ sender.pk }}" class="btn">
+    Reply to Message →
+</a>
+{% endif %}
+
+{% endblock %}
