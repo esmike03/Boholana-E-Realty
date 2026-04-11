@@ -18,10 +18,10 @@
         <span class="info-label">Phone</span>
         <span class="info-value">{{ inquiry.phone|default:"Not provided" }}</span>
     </div>
-    {% if inquiry.property %}
+    {% if inquiry.preferred_contact %}
     <div class="info-row">
-        <span class="info-label">Property</span>
-        <span class="info-value">{{ inquiry.property.title }}</span>
+        <span class="info-label">Preferred Contact</span>
+        <span class="info-value">{{ inquiry.get_preferred_contact_display }}</span>
     </div>
     {% endif %}
     {% if inquiry.property_type %}
@@ -30,24 +30,39 @@
         <span class="info-value">{{ inquiry.get_property_type_display }}</span>
     </div>
     {% endif %}
+    {% if inquiry.listing_type %}
+    <div class="info-row">
+        <span class="info-label">Listing Type</span>
+        <span class="info-value">{{ inquiry.get_listing_type_display }}</span>
+    </div>
+    {% endif %}
     {% if inquiry.city %}
     <div class="info-row">
         <span class="info-label">City of Interest</span>
         <span class="info-value">{{ inquiry.city }}</span>
     </div>
     {% endif %}
+    {% if inquiry.property %}
     <div class="info-row">
-        <span class="info-label">Date</span>
-        <span class="info-value">{{ inquiry.created_at|date:"M d, Y h:i A" }}</span>
+        <span class="info-label">Specific Property</span>
+        <span class="info-value">{{ inquiry.property.title }}</span>
+    </div>
+    {% endif %}
+    <div class="info-row">
+        <span class="info-label">Date Submitted</span>
+        <span class="info-value">
+            {{ inquiry.created_at|date:"M d, Y h:i A" }}
+        </span>
     </div>
 </div>
 
-<div class="info-box">
+<div class="info-box" style="margin-top:16px;">
     <div class="label">Message</div>
     <p style="margin-top:8px; color:#374151;">{{ inquiry.message }}</p>
 </div>
 
-<a href="http://127.0.0.1:8000/auth/inquiries/" class="btn">
+<a href="http://127.0.0.1:8000/auth/inquiries/{{ inquiry.pk }}/"
+   class="btn" style="margin-top:16px;">
     View Inquiry →
 </a>
 

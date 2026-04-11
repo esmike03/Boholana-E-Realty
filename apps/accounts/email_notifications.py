@@ -4,11 +4,8 @@ from django.conf import settings
 
 
 def send_email(subject, recipient_email, template, context):
-    """
-    Central email sender.
-    Falls back silently if email is not configured.
-    """
     if not recipient_email:
+        print(f"send_email skipped: no recipient for '{subject}'")
         return
 
     try:
@@ -19,10 +16,11 @@ def send_email(subject, recipient_email, template, context):
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[recipient_email],
             html_message=html_message,
-            fail_silently=True,
+            fail_silently=False,  # ✅ Changed to False so we see errors
         )
+        print(f"Email sent to {recipient_email}: {subject}")
     except Exception as e:
-        print(f"Email error: {e}")
+        print(f"Email error sending to {recipient_email}: {e}")
 
 
 # ─────────────────────────────────────────
@@ -30,16 +28,17 @@ def send_email(subject, recipient_email, template, context):
 # ─────────────────────────────────────────
 
 def email_new_inquiry(inquiry):
-    """Notify admin/broker about new inquiry"""
+    """Notify admin/broker about new inquiry + confirmation to sender"""
     from apps.accounts.models import CustomUser
 
-    # Email to admin/broker
-    staff = CustomUser.objects.filter(
+    # ✅ Email ALL brokers and admins, not just the first one
+    staff_list = CustomUser.objects.filter(
         role__in=['broker', 'admin'],
-        is_active=True
-    ).first()
+        is_active=True,
+        email__isnull=False
+    ).exclude(email='')
 
-    if staff:
+    for staff in staff_list:
         send_email(
             subject=f'New Inquiry from {inquiry.name} — Boholana E-Realty',
             recipient_email=staff.email,
@@ -47,7 +46,7 @@ def email_new_inquiry(inquiry):
             context={'inquiry': inquiry, 'staff': staff}
         )
 
-    # Confirmation email to sender
+    # ✅ Confirmation email to sender if they provided email
     if inquiry.email:
         send_email(
             subject='We received your inquiry — Boholana E-Realty',
@@ -55,6 +54,8 @@ def email_new_inquiry(inquiry):
             template='emails/inquiry_confirmation.html',
             context={'inquiry': inquiry}
         )
+    else:
+        print(f"No email provided by {inquiry.name} — skipping confirmation email.")
 
 
 # ─────────────────────────────────────────

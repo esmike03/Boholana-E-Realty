@@ -740,28 +740,32 @@ def inquiry_list(request):
     from apps.accounts.models import ContactMessage
     inquiries = ContactMessage.objects.all().order_by('-created_at')
 
-    # Filter
     search = request.GET.get('search', '')
     is_read = request.GET.get('is_read', '')
+    property_type = request.GET.get('property_type', '')  # ✅ new filter
 
     if search:
         inquiries = inquiries.filter(
             Q(name__icontains=search) |
             Q(email__icontains=search) |
             Q(phone__icontains=search) |
-            Q(message__icontains=search)
+            Q(message__icontains=search) |
+            Q(city__icontains=search)
         )
     if is_read == 'read':
         inquiries = inquiries.filter(is_read=True)
     elif is_read == 'unread':
         inquiries = inquiries.filter(is_read=False)
+    if property_type:  # ✅
+        inquiries = inquiries.filter(property_type=property_type)
 
     return render(request, 'accounts/inquiry_list.html', {
         'inquiries': inquiries,
-        'total': inquiries.count(),
-        'unread': inquiries.filter(is_read=False).count(),
+        'total': ContactMessage.objects.count(),
+        'unread': ContactMessage.objects.filter(is_read=False).count(),
         'search': search,
         'is_read': is_read,
+        'property_type': property_type,
     })
 
 

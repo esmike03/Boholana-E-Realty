@@ -173,8 +173,13 @@ class NotificationAdmin(admin.ModelAdmin):
 class ContactMessageAdmin(admin.ModelAdmin):
     list_display = (
         'name', 'email', 'phone',
+        'property_type', 'listing_type',
+        'city', 'preferred_contact',
         'property', 'is_read', 'created_at'
     )
-    list_filter = ('is_read',)
-    search_fields = ('name', 'email', 'phone', 'message')
+    list_filter = (
+        'is_read', 'property_type',
+        'listing_type', 'preferred_contact'
+    )
+    search_fields = ('name', 'email', 'phone', 'message', 'city')
     readonly_fields = ('created_at',)

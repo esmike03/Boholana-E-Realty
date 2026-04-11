@@ -254,16 +254,63 @@ class Notification(models.Model):
             self.save()
             
 class ContactMessage(models.Model):
+
+    PROPERTY_TYPE_CHOICES = (
+        ('house', 'House'),
+        ('lot', 'Lot'),
+        ('condo', 'Condominium'),
+        ('apartment', 'Apartment'),
+        ('commercial', 'Commercial'),
+        ('any', 'Any Type'),
+    )
+
+    LISTING_TYPE_CHOICES = (
+        ('for_sale', 'For Sale'),
+        ('for_rent', 'For Rent'),
+        ('any', 'Any'),
+    )
+
+    PREFERRED_CONTACT_CHOICES = (
+        ('email', 'Email'),
+        ('phone', 'Phone / Viber'),
+        ('whatsapp', 'WhatsApp'),
+        ('any', 'Any'),
+    )
+
+    # Basic Info
     name = models.CharField(max_length=100)
     email = models.CharField(max_length=100, blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     message = models.TextField()
+
+    # ✅ New Fields
+    property_type = models.CharField(
+        max_length=20,
+        choices=PROPERTY_TYPE_CHOICES,
+        blank=True, null=True
+    )
+    listing_type = models.CharField(
+        max_length=20,
+        choices=LISTING_TYPE_CHOICES,
+        blank=True, null=True
+    )
+    preferred_contact = models.CharField(
+        max_length=20,
+        choices=PREFERRED_CONTACT_CHOICES,
+        blank=True, null=True,
+        default='any'
+    )
+    city = models.CharField(max_length=100, blank=True, null=True)
+
+    # Relation
     property = models.ForeignKey(
         'listings.Property',
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='inquiries'
     )
+
+    # Status
     is_read = models.BooleanField(default=False)
     replied_by = models.ForeignKey(
         'CustomUser',

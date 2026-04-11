@@ -96,14 +96,49 @@ def property_detail_view(request, pk):
 
 def contact_view(request):
     if request.method == 'POST':
-        messages.success(request, 'Your inquiry has been sent! We will contact you shortly.')
-        contact_msg = ContactMessage.objects.create(...)
+        name = request.POST.get('name', '').strip()
+        email = request.POST.get('email', '').strip() or None
+        phone = request.POST.get('phone', '').strip() or None
+        message = request.POST.get('message', '').strip()
+        city = request.POST.get('city', '').strip() or None
+        property_id = request.POST.get('property_id') or None
+
+        # ✅ Properly handle optional select fields
+        property_type = request.POST.get('property_type', '').strip() or None
+        listing_type = request.POST.get('listing_type', '').strip() or None
+        preferred_contact = request.POST.get('preferred_contact', '').strip() or None
+
+        if not name or not message:
+            messages.error(request, 'Name and message are required.')
+            return redirect('contact')
+
+        from apps.accounts.models import ContactMessage
+        property_obj = None
+        if property_id:
+            property_obj = Property.objects.filter(pk=property_id).first()
+
+        inquiry = ContactMessage.objects.create(
+            name=name,
+            email=email,
+            phone=phone,
+            message=message,
+            property_type=property_type,
+            listing_type=listing_type,
+            preferred_contact=preferred_contact,
+            city=city,
+            property=property_obj,
+        )
 
         # ✅ Send email notifications
-        email_new_inquiry(contact_msg)
+        from apps.accounts.email_notifications import email_new_inquiry
+        email_new_inquiry(inquiry)
 
-        messages.success(request, 'Your message has been sent!')
+        messages.success(
+            request,
+            'Your message has been sent! We will contact you shortly.'
+        )
         return redirect('contact')
+
     return render(request, 'public/contact.html')
 
 
@@ -682,10 +717,16 @@ def property_detail_view(request, pk):
 def contact_view(request):
     if request.method == 'POST':
         name = request.POST.get('name', '').strip()
-        email = request.POST.get('email', '').strip()
-        phone = request.POST.get('phone', '').strip()
+        email = request.POST.get('email', '').strip() or None
+        phone = request.POST.get('phone', '').strip() or None
         message = request.POST.get('message', '').strip()
+        city = request.POST.get('city', '').strip() or None
         property_id = request.POST.get('property_id') or None
+
+        # ✅ Properly handle optional select fields
+        property_type = request.POST.get('property_type', '').strip() or None
+        listing_type = request.POST.get('listing_type', '').strip() or None
+        preferred_contact = request.POST.get('preferred_contact', '').strip() or None
 
         if not name or not message:
             messages.error(request, 'Name and message are required.')
@@ -696,13 +737,21 @@ def contact_view(request):
         if property_id:
             property_obj = Property.objects.filter(pk=property_id).first()
 
-        ContactMessage.objects.create(
+        inquiry = ContactMessage.objects.create(
             name=name,
             email=email,
             phone=phone,
             message=message,
+            property_type=property_type,
+            listing_type=listing_type,
+            preferred_contact=preferred_contact,
+            city=city,
             property=property_obj,
         )
+
+        # ✅ Send email notifications
+        from apps.accounts.email_notifications import email_new_inquiry
+        email_new_inquiry(inquiry)
 
         messages.success(
             request,
@@ -711,4 +760,3 @@ def contact_view(request):
         return redirect('contact')
 
     return render(request, 'public/contact.html')
-
