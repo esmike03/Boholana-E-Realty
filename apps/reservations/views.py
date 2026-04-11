@@ -5,6 +5,7 @@ from apps.accounts.email_notifications import email_new_chat_message
 from django.utils import timezone
 from django.db.models import Q
 from django.http import JsonResponse
+from .utils import send_reservation_sms
 from apps.accounts.email_notifications import (
     email_reservation_created,
     email_reservation_status_changed,
@@ -208,6 +209,7 @@ def reservation_update_status(request, pk):
         # ✅ Notify INSIDE POST block BEFORE redirect
         notify_reservation_status(reservation, user)
         email_reservation_status_changed(reservation)
+        send_reservation_sms(reservation, new_status) 
         messages.success(request, f'Reservation status updated to {new_status}.')
         return redirect('reservations:detail', pk=reservation.pk)
 
