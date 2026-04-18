@@ -3,113 +3,102 @@
 <aside class="fixed top-0 left-0 h-full w-64 z-50 flex flex-col shadow-2xl"
        style="background: linear-gradient(180deg, #0f2942 0%, #1a4a7a 100%)">
 
-    <!-- Brand -->
     <div class="px-6 py-6 border-b border-white/10">
         <div class="flex flex-col gap-1">
             <img src="/media/logonb.png" alt="Boholano e-Reality"
                  class="h-8 w-auto object-contain mb-1"/>
-            <p class="text-white/40 text-[10px] uppercase tracking-tighter font-bold">
+            <p class="text-white/70 text-[10px] uppercase tracking-tighter font-bold">
                 Property Management System
             </p>
         </div>
     </div>
 
-    <!-- Quick Search -->
     <div class="px-4 py-4">
         <form action="{% url 'accounts:search' %}" method="GET">
             <div class="relative group">
-                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-white/30 text-xs group-focus-within:text-yellow-400 transition-colors"></i>
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-white/50 text-xs group-focus-within:text-yellow-400 transition-colors"></i>
                 <input type="text" name="q" placeholder="Quick search..."
-                    class="w-full bg-white/5 text-white placeholder-white/30 text-xs rounded-lg pl-9 pr-3 py-2.5 border border-white/10 focus:outline-none focus:bg-white/10 focus:border-yellow-400/50 transition-all">
+                    class="w-full bg-white/10 text-white placeholder-white/60 text-xs rounded-lg pl-9 pr-3 py-2.5 border border-white/20 focus:outline-none focus:bg-white/15 focus:border-yellow-400 transition-all">
             </div>
         </form>
     </div>
 
-    <!-- Navigation -->
     <nav class="flex-1 overflow-y-auto custom-scrollbar">
 
-        <!-- ── Main Menu ── -->
         <div class="px-6 mb-2 mt-2">
-            <p class="text-white/30 text-[10px] font-bold uppercase tracking-widest">
+            <p class="text-white/60 text-[10px] font-black uppercase tracking-widest">
                 Main
             </p>
         </div>
 
-        <!-- Dashboard — all company roles -->
         <a href="{% url 'dashboard' %}"
            class="flex items-center gap-3 px-6 py-3 text-sm transition-all border-l-4
            {% if request.resolver_match.url_name == 'dashboard' %}
                text-white bg-white/10 border-yellow-400
            {% else %}
-               text-white/60 hover:text-white hover:bg-white/5 border-transparent
+               text-white/70 hover:text-white hover:bg-white/5 border-transparent
            {% endif %}">
             <i class="fas fa-tachometer-alt w-5 text-center"></i>
             <span>Dashboard</span>
         </a>
 
-        <!-- Notifications — all company roles -->
         <a href="{% url 'accounts:notifications' %}"
            class="flex items-center gap-3 px-6 py-3 text-sm transition-all border-l-4
            {% if 'notifications' in request.path %}
                text-white bg-white/10 border-yellow-400
            {% else %}
-               text-white/60 hover:text-white hover:bg-white/5 border-transparent
+               text-white/70 hover:text-white hover:bg-white/5 border-transparent
            {% endif %}">
             <i class="fas fa-bell w-5 text-center"></i>
             <span>Notifications</span>
             <span id="sidebar-notif-count"
-                  class="ml-auto bg-red-500 text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">
+                  class="ml-auto bg-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">
                 0
             </span>
         </a>
 
-        <!-- Chat Inbox — broker, admin, sale_assistant -->
         {% if user.role in 'broker,admin,sale_assistant'|split:',' or user.is_superuser %}
         <a href="{% url 'reservations:chat_inbox' %}"
            class="flex items-center gap-3 px-6 py-3 text-sm transition-all border-l-4
            {% if 'chat' in request.path and 'manage' in request.path %}
                text-white bg-white/10 border-yellow-400
            {% else %}
-               text-white/60 hover:text-white hover:bg-white/5 border-transparent
+               text-white/70 hover:text-white hover:bg-white/5 border-transparent
            {% endif %}">
             <i class="fas fa-comments w-5 text-center"></i>
             <span>Chat Inbox</span>
             <span id="sidebar-chat-count"
-                  class="ml-auto bg-red-500 text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">
+                  class="ml-auto bg-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">
                 0
             </span>
         </a>
         {% endif %}
 
-        <!-- ── Property Section ── -->
-        <!-- admin, broker, staff, property_owner -->
         {% if user.role in 'admin,broker,staff,property_owner'|split:',' or user.is_superuser %}
         <div class="px-6 mt-6 mb-2">
-            <p class="text-white/30 text-[10px] font-bold uppercase tracking-widest">
+            <p class="text-white/60 text-[10px] font-black uppercase tracking-widest">
                 Property
             </p>
         </div>
 
-        <!-- Listings — admin, broker, staff, property_owner -->
         <a href="{% url 'listings:list' %}"
            class="flex items-center gap-3 px-6 py-3 text-sm transition-all border-l-4
            {% if 'listings' in request.path and 'tags' not in request.path %}
                text-white bg-white/10 border-yellow-400
            {% else %}
-               text-white/60 hover:text-white hover:bg-white/5 border-transparent
+               text-white/70 hover:text-white hover:bg-white/5 border-transparent
            {% endif %}">
             <i class="fas fa-home w-5 text-center"></i>
             <span>Listings</span>
         </a>
 
-        <!-- Tags — broker, admin, staff only -->
         {% if user.role in 'broker,admin,staff'|split:',' or user.is_superuser %}
         <a href="{% url 'listings:tags' %}"
            class="flex items-center gap-3 px-6 py-3 text-sm transition-all border-l-4
            {% if 'tags' in request.path %}
                text-white bg-white/10 border-yellow-400
            {% else %}
-               text-white/60 hover:text-white hover:bg-white/5 border-transparent
+               text-white/70 hover:text-white hover:bg-white/5 border-transparent
            {% endif %}">
             <i class="fas fa-tags w-5 text-center"></i>
             <span>Tags</span>
@@ -117,152 +106,116 @@
         {% endif %}
         {% endif %}
 
-        <!-- ── Reservation Section ── -->
-        <!-- Appointments — broker, admin, staff, sale_assistant, property_owner -->
         {% if user.role in 'broker,admin,staff,sale_assistant,property_owner'|split:',' or user.is_superuser %}
         <div class="px-6 mt-6 mb-2">
-            <p class="text-white/30 text-[10px] font-bold uppercase tracking-widest">
+            <p class="text-white/60 text-[10px] font-black uppercase tracking-widest">
                 Reservations
             </p>
         </div>
 
-        <!-- Reservations List — broker, admin, staff, sale_assistant ONLY -->
-        <!-- Property owners do NOT manage reservation list per hierarchy -->
         {% if user.role in 'broker,admin,staff,sale_assistant'|split:',' or user.is_superuser %}
         <a href="{% url 'reservations:list' %}"
            class="flex items-center gap-3 px-6 py-3 text-sm transition-all border-l-4
            {% if 'reservations' in request.path and 'appointments' not in request.path and 'chat' not in request.path %}
                text-white bg-white/10 border-yellow-400
            {% else %}
-               text-white/60 hover:text-white hover:bg-white/5 border-transparent
+               text-white/70 hover:text-white hover:bg-white/5 border-transparent
            {% endif %}">
             <i class="fas fa-calendar-check w-5 text-center"></i>
             <span>Reservations</span>
         </a>
         {% endif %}
 
-        <!-- Appointments — broker, admin, staff, sale_assistant, property_owner -->
         <a href="{% url 'reservations:appointments' %}"
            class="flex items-center gap-3 px-6 py-3 text-sm transition-all border-l-4
            {% if 'appointments' in request.path %}
                text-white bg-white/10 border-yellow-400
            {% else %}
-               text-white/60 hover:text-white hover:bg-white/5 border-transparent
+               text-white/70 hover:text-white hover:bg-white/5 border-transparent
            {% endif %}">
             <i class="fas fa-calendar-alt w-5 text-center"></i>
             <span>Appointments</span>
         </a>
         {% endif %}
 
-        <!-- Inquiries — admin, broker, staff -->
         {% if user.role in 'admin,broker,staff'|split:',' or user.is_superuser %}
         <a href="{% url 'accounts:inquiries' %}"
            class="flex items-center gap-3 px-6 py-3 text-sm transition-all border-l-4
            {% if 'inquiries' in request.path %}
                text-white bg-white/10 border-yellow-400
            {% else %}
-               text-white/60 hover:text-white hover:bg-white/5 border-transparent
+               text-white/70 hover:text-white hover:bg-white/5 border-transparent
            {% endif %}">
             <i class="fas fa-envelope w-5 text-center"></i>
             <span>Inquiries</span>
         </a>
         {% endif %}
 
-        <!-- ── Transactions Section ── -->
         {% if user.role in 'admin,broker,staff,sale_assistant,property_owner'|split:',' or user.is_superuser %}
         <div class="px-6 mt-6 mb-2">
-            <p class="text-white/30 text-[10px] font-bold uppercase tracking-widest">
+            <p class="text-white/60 text-[10px] font-black uppercase tracking-widest">
                 Transactions
             </p>
         </div>
 
-        <!-- Sales — admin, broker, staff, sale_assistant, property_owner -->
         <a href="{% url 'sales:list' %}"
            class="flex items-center gap-3 px-6 py-3 text-sm transition-all border-l-4
            {% if 'sales' in request.path and 'disbursement' not in request.path %}
                text-white bg-white/10 border-yellow-400
            {% else %}
-               text-white/60 hover:text-white hover:bg-white/5 border-transparent
+               text-white/70 hover:text-white hover:bg-white/5 border-transparent
            {% endif %}">
             <i class="fas fa-handshake w-5 text-center"></i>
             <span>Sales</span>
         </a>
         {% endif %}
 
-        <!-- Disbursements — broker, admin, sale_assistant only -->
         {% if user.role in 'broker,admin,sale_assistant'|split:',' or user.is_superuser %}
         <a href="{% url 'sales:disbursements' %}"
            class="flex items-center gap-3 px-6 py-3 text-sm transition-all border-l-4
            {% if 'disbursements' in request.path %}
                text-white bg-white/10 border-yellow-400
            {% else %}
-               text-white/60 hover:text-white hover:bg-white/5 border-transparent
+               text-white/70 hover:text-white hover:bg-white/5 border-transparent
            {% endif %}">
             <i class="fas fa-money-bill-wave w-5 text-center"></i>
             <span>Disbursements</span>
         </a>
         {% endif %}
 
-        <!-- ── Management Section ── -->
-        {% if user.role in 'admin,broker,staff,property_owner,sale_assistant'|split:',' or user.is_superuser %}
         <div class="px-6 mt-6 mb-2">
-            <p class="text-white/30 text-[10px] font-bold uppercase tracking-widest">
+            <p class="text-white/60 text-[10px] font-black uppercase tracking-widest">
                 Management
             </p>
         </div>
 
-        <!-- Documents — admin, broker, staff, property_owner, sale_assistant -->
         <a href="{% url 'documents:list' %}"
            class="flex items-center gap-3 px-6 py-3 text-sm transition-all border-l-4
            {% if 'documents' in request.path %}
                text-white bg-white/10 border-yellow-400
            {% else %}
-               text-white/60 hover:text-white hover:bg-white/5 border-transparent
+               text-white/70 hover:text-white hover:bg-white/5 border-transparent
            {% endif %}">
             <i class="fas fa-file-alt w-5 text-center"></i>
             <span>Documents</span>
         </a>
-        {% endif %}
 
-        <!-- Reports — admin, broker, property_owner, sale_assistant -->
         {% if user.role in 'admin,broker,property_owner,sale_assistant'|split:',' or user.is_superuser %}
         <a href="{% url 'reports:list' %}"
            class="flex items-center gap-3 px-6 py-3 text-sm transition-all border-l-4
            {% if 'reports' in request.path %}
                text-white bg-white/10 border-yellow-400
            {% else %}
-               text-white/60 hover:text-white hover:bg-white/5 border-transparent
+               text-white/70 hover:text-white hover:bg-white/5 border-transparent
            {% endif %}">
             <i class="fas fa-chart-bar w-5 text-center"></i>
             <span>Reports</span>
         </a>
         {% endif %}
 
-        <!-- ── Admin Control ── -->
-        <!-- Only admin and broker manage users -->
-        {% if user.role in 'admin,broker'|split:',' or user.is_superuser %}
-        <div class="px-6 mt-6 mb-2">
-            <p class="text-white/30 text-[10px] font-bold uppercase tracking-widest">
-                Admin Control
-            </p>
-        </div>
-
-        <a href="{% url 'accounts:users' %}"
-           class="flex items-center gap-3 px-6 py-3 text-sm transition-all border-l-4
-           {% if 'users' in request.path %}
-               text-white bg-white/10 border-yellow-400
-           {% else %}
-               text-white/60 hover:text-white hover:bg-white/5 border-transparent
-           {% endif %}">
-            <i class="fas fa-users w-5 text-center"></i>
-            <span>User Management</span>
-        </a>
-        {% endif %}
-
     </nav>
 
-    <!-- User Info & Logout -->
-    <div class="mt-auto border-t border-white/10 bg-black/10">
+    <div class="mt-auto border-t border-white/10 bg-black/20">
         <div class="px-6 py-4">
             <div class="flex items-center gap-3 mb-4">
                 <div class="bg-yellow-400 rounded-lg w-10 h-10 flex items-center justify-center shadow-lg shadow-yellow-400/20 flex-shrink-0">
@@ -270,7 +223,7 @@
                         <img src="{{ user.profile_picture.url }}"
                              class="w-10 h-10 rounded-lg object-cover">
                     {% else %}
-                        <span class="text-[#0f2942] text-sm font-bold">
+                        <span class="text-slate-900 text-sm font-bold">
                             {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
                         </span>
                     {% endif %}
@@ -279,7 +232,7 @@
                     <p class="text-white text-xs font-bold truncate">
                         {{ user.get_full_name|default:user.username }}
                     </p>
-                    <p class="text-yellow-400 text-[10px] font-medium uppercase">
+                    <p class="text-yellow-400 text-[10px] font-bold uppercase">
                         {{ user.get_role_display }}
                     </p>
                 </div>
@@ -287,26 +240,16 @@
 
             <div class="flex flex-col gap-1">
                 <a href="{% url 'accounts:profile' %}"
-                   class="flex items-center gap-3 py-2 text-xs text-white/60 hover:text-white transition-colors">
+                   class="flex items-center gap-3 py-2 text-xs text-white/70 hover:text-white transition-colors">
                     <i class="fas fa-user-circle w-4"></i>
                     My Profile
                 </a>
                 <a href="{% url 'accounts:logout' %}"
-                   class="flex items-center gap-3 py-2 text-xs text-white/60 hover:text-red-400 transition-colors">
+                   class="flex items-center gap-3 py-2 text-xs text-white/70 hover:text-red-400 transition-colors">
                     <i class="fas fa-sign-out-alt w-4"></i>
                     Logout
                 </a>
             </div>
         </div>
     </div>
-
 </aside>
-
-<style>
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(255,255,255,0.1);
-        border-radius: 10px;
-    }
-</style>
