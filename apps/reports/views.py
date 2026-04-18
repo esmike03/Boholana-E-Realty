@@ -442,6 +442,10 @@ def generate_excel_report(report, data):
 def report_list(request):
     user = request.user
 
+    allowed = ['admin', 'broker', 'staff']
+    if request.user.role not in allowed and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission.')
+        return redirect('documents:list')
     # Role-based access
     allowed_roles = ['broker', 'admin', 'staff', 'sale_assistant', 'property_owner']
     if user.role not in allowed_roles and not user.is_superuser:
@@ -469,8 +473,8 @@ def report_list(request):
 def report_create(request):
     user = request.user
 
-    allowed_roles = ['broker', 'admin', 'staff', 'sale_assistant', 'property_owner']
-    if user.role not in allowed_roles and not user.is_superuser:
+    allowed = ['admin', 'broker', 'property_owner', 'sale_assistant']
+    if user.role not in allowed and not user.is_superuser:
         messages.error(request, 'You do not have permission.')
         return redirect('dashboard')
 
@@ -483,17 +487,31 @@ def report_create(request):
         date_to = request.POST.get('date_to') or None
 
         # Restrict sale_assistant to their own reports
-        if user.role == 'sale_assistant' and report_type not in [
-            'commission_report', 'sales_summary'
-        ]:
-            messages.error(request, 'You can only generate commission and sales reports.')
-            return redirect('reports:create')
-
-        if user.role == 'property_owner' and report_type not in [
-            'property_inventory', 'sales_summary'
-        ]:
-            messages.error(request, 'You can only generate property reports.')
-            return redirect('reports:create')
+        if user.role == 'admin':
+            available_types = [
+                ('active_properties', 'Active Properties'),
+                ('sales_summary', 'Sales Report'),
+                ('total_listings', 'Total Listings Overview'),
+                ('reservation_summary', 'Total Inquiries / Reservations'),
+            ]
+        elif user.role == 'broker':
+            available_types = Report.REPORT_TYPE_CHOICES  # all types
+        elif user.role == 'property_owner':
+            available_types = [
+                ('sales_summary', 'Sales Report'),
+                ('property_inventory', 'Total Listings Overview'),
+                ('reservation_summary', 'Total Inquiries'),
+            ]
+        elif user.role == 'sale_assistant':
+            available_types = [
+                ('active_properties', 'Active Properties'),
+                ('commission_report', 'Commission Report'),
+                ('sales_summary', 'Sales Report'),
+                ('reservation_summary', 'Total Inquiries'),
+                ('total_listings', 'Total Listings Overview'),
+            ]
+        else:
+            available_types = []                                                        
 
         report = Report.objects.create(
             report_type=report_type,

@@ -156,6 +156,11 @@ def get_client_ip(request):
 @login_required
 def listing_list(request):
     user = request.user
+    allowed = ['admin', 'broker', 'staff', 'property_owner', 'sale_assistant']
+    if user.role not in allowed and not user.is_superuser:
+        messages.error(request, 'You do not have permission.')
+        return redirect('home')
+    
     properties = Property.objects.select_related('owner', 'broker')
 
     # Role-based filtering
@@ -197,6 +202,11 @@ def listing_list(request):
 
 @login_required
 def listing_create(request):
+    user = request.user
+    allowed = ['admin', 'broker', 'staff', 'property_owner', 'sale_assistant']
+    if user.role not in allowed and not user.is_superuser:
+        messages.error(request, 'You do not have permission.')
+        return redirect('home')
     if request.user.role not in ['broker', 'staff', 'property_owner', 'admin'] \
             and not request.user.is_superuser:
         messages.error(request, 'You do not have permission to add listings.')
@@ -308,6 +318,17 @@ def listing_detail(request, pk):
 
 @login_required
 def listing_update(request, pk):
+    user = request.user
+    allowed = ['broker', 'admin', 'staff', 'property_owner']
+    if request.user.role not in allowed and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission.')
+        return redirect('listings:list')
+
+    # Property owners can only edit their own
+    if request.user.role == 'property_owner' and property.owner != request.user:
+        messages.error(request, 'You can only edit your own properties.')
+        return redirect('listings:list')
+    
     property = get_object_or_404(Property, pk=pk)
 
     # Permission check
@@ -382,6 +403,10 @@ def listing_update(request, pk):
 
 @login_required
 def listing_approve(request, pk):
+    allowed = ['broker', 'admin', 'staff']
+    if request.user.role not in allowed and not request.user.is_superuser:
+        messages.error(request, 'Only brokers and staff can approve listings.')
+        return redirect('listings:list')
     if request.user.role not in ['broker', 'admin'] and not request.user.is_superuser:
         messages.error(request, 'Only brokers can approve listings.')
         return redirect('listings:list')
@@ -554,12 +579,16 @@ def favorites_view(request):
         'properties': favorite_properties,
     })
     
-    # ─────────────────────────────────────────
+# ─────────────────────────────────────────
 # Tags Management
 # ─────────────────────────────────────────
 
 @login_required
 def tag_list(request):
+    allowed = ['broker', 'admin', 'staff']
+    if request.user.role not in allowed and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission.')
+        return redirect('listings:list')
     if request.user.role not in ['broker', 'admin', 'staff'] \
             and not request.user.is_superuser:
         messages.error(request, 'You do not have permission.')

@@ -81,6 +81,11 @@ def sale_list(request):
 
 @login_required
 def sale_create(request):
+    
+    allowed = ['broker', 'admin', 'staff']
+    if request.user.role not in allowed and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission.')
+        return redirect('sales:list')
     if request.user.role not in ['broker', 'staff', 'admin'] \
             and not request.user.is_superuser:
         messages.error(request, 'You do not have permission.')
@@ -212,6 +217,10 @@ def sale_detail(request, pk):
 
 @login_required
 def sale_verify(request, pk):
+    allowed = ['broker', 'admin', 'staff']
+    if request.user.role not in allowed and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission.')
+        return redirect('sales:list')
     if request.user.role not in ['broker', 'staff', 'admin'] \
             and not request.user.is_superuser:
         messages.error(request, 'You do not have permission.')
@@ -323,14 +332,19 @@ def disbursement_list(request):
     user = request.user
 
     if user.role == 'sale_assistant':
+        # Sale assistants see their own disbursements (view + calculate)
         disbursements = Disbursement.objects.filter(recipient=user)
     elif user.role == 'property_owner':
         disbursements = Disbursement.objects.filter(
             recipient=user,
             disbursement_type='owner_proceeds'
         )
-    else:
+    elif user.role in ['broker', 'admin']:
         disbursements = Disbursement.objects.all()
+    else:
+        # staff, client — no access to disbursements
+        messages.error(request, 'You do not have permission.')
+        return redirect('dashboard')
 
     disbursements = disbursements.select_related('sale', 'recipient')
 
@@ -357,6 +371,10 @@ def disbursement_list(request):
 
 @login_required
 def disbursement_approve(request, pk):
+    if request.user.role not in ['broker', 'admin'] \
+            and not request.user.is_superuser:
+        messages.error(request, 'Only brokers can approve disbursements.')
+        return redirect('sales:disbursements')
     if request.user.role not in ['broker', 'admin'] \
             and not request.user.is_superuser:
         messages.error(request, 'Only brokers can approve disbursements.')

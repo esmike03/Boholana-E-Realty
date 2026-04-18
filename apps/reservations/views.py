@@ -174,6 +174,11 @@ def reservation_create(request, property_pk):
 
 @login_required
 def reservation_update_status(request, pk):
+    
+    allowed = ['broker', 'admin', 'staff', 'sale_assistant']
+    if request.user.role not in allowed and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission.')
+        return redirect('reservations:list')
     reservation = get_object_or_404(Reservation, pk=pk)
     user = request.user
 
@@ -386,6 +391,11 @@ def appointment_create(request, property_pk):
 
 @login_required
 def appointment_update(request, pk):
+    allowed = ['broker', 'admin', 'staff', 'sale_assistant', 'property_owner']
+    if request.user.role not in allowed and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission.')
+        return redirect('reservations:appointments')
+
     appointment = get_object_or_404(Appointment, pk=pk)
     user = request.user
 
@@ -424,6 +434,12 @@ def appointment_update(request, pk):
 
 @login_required
 def block_dates(request, property_pk):
+    
+    allowed = ['broker', 'admin', 'staff', 'sale_assistant', 'property_owner']
+    if request.user.role not in allowed and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission.')
+        return redirect('reservations:appointments')
+
     property = get_object_or_404(Property, pk=property_pk)
 
     if request.user != property.owner and \
@@ -536,6 +552,10 @@ def chat_view(request, property_pk):
 
 @login_required
 def toggle_chat_availability(request):
+    allowed = ['broker', 'admin', 'sale_assistant']
+    if request.user.role not in allowed and not request.user.is_superuser:
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+    
     availability, _ = ChatAvailability.objects.get_or_create(
         user=request.user
     )

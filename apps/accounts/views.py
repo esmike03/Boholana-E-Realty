@@ -137,77 +137,118 @@ def dashboard_view(request):
     user = request.user
 
     if user.role == 'client':
+        messages.warning(
+            request,
+            'Client accounts do not have dashboard access.'
+        )
         return redirect('home')
 
-    context = {}
+    context = {'user': user}
 
-    if user.role in ['broker', 'admin'] or user.is_superuser:
-        context = {
+    if user.role == 'admin':
+        from apps.accounts.models import ContactMessage
+        from apps.listings.models import Property
+        from apps.sales.models import Sale
+        from apps.documents.models import Document
+        context.update({
+            'total_users': CustomUser.objects.count(),
             'total_properties': Property.objects.count(),
-            'available_properties': Property.objects.filter(listing_status='approved').count(),
-            'pending_properties': Property.objects.filter(listing_status='pending_approval').count(),
-            'sold_properties': Property.objects.filter(listing_status='sold').count(),
-            'total_reservations': Reservation.objects.count(),
-            'pending_reservations': Reservation.objects.filter(status='pending').count(),
             'total_sales': Sale.objects.count(),
-            'active_sales': Sale.objects.filter(status='approved').count(),
-            'pending_documents': Document.objects.filter(status='pending_approval').count(),
-            'total_users': CustomUser.objects.exclude(role='client').count(),
-            'recent_reservations': Reservation.objects.select_related(
-                'property', 'client'
-            ).order_by('-created_at')[:5],
-            'recent_sales': Sale.objects.select_related(
-                'property', 'client'
-            ).order_by('-created_at')[:5],
-        }
+            'pending_documents': Document.objects.filter(
+                status='pending_approval'
+            ).count(),
+            'total_inquiries': ContactMessage.objects.count(),
+            'unread_inquiries': ContactMessage.objects.filter(
+                is_read=False
+            ).count(),
+        })
+
+    elif user.role == 'broker':
+        from apps.listings.models import Property
+        from apps.sales.models import Sale, Disbursement
+        from apps.reservations.models import Reservation
+        from apps.accounts.models import ContactMessage
+        context.update({
+            'pending_listings': Property.objects.filter(
+                listing_status='pending_approval'
+            ).count(),
+            'active_listings': Property.objects.filter(
+                listing_status='approved'
+            ).count(),
+            'pending_sales': Sale.objects.filter(
+                status='pending_verification'
+            ).count(),
+            'pending_disbursements': Disbursement.objects.filter(
+                status='in_review'
+            ).count(),
+            'pending_reservations': Reservation.objects.filter(
+                status='pending'
+            ).count(),
+            'unread_inquiries': ContactMessage.objects.filter(
+                is_read=False
+            ).count(),
+        })
+
+    elif user.role == 'property_owner':
+        from apps.listings.models import Property
+        from apps.sales.models import Sale
+        from apps.reservations.models import Reservation, Appointment
+        from apps.documents.models import Document
+        context.update({
+            'my_listings': Property.objects.filter(owner=user).count(),
+            'pending_listings': Property.objects.filter(
+                owner=user, listing_status='pending_approval'
+            ).count(),
+            'approved_listings': Property.objects.filter(
+                owner=user, listing_status='approved'
+            ).count(),
+            'my_sales': Sale.objects.filter(
+                property__owner=user
+            ).count(),
+            'pending_appointments': Appointment.objects.filter(
+                property__owner=user, status='pending'
+            ).count(),
+            'my_documents': Document.objects.filter(
+                Q(uploaded_by=user) | Q(property__owner=user)
+            ).count(),
+        })
 
     elif user.role == 'staff':
-        context = {
-            'total_properties': Property.objects.count(),
-            'available_properties': Property.objects.filter(listing_status='approved').count(),
-            'pending_properties': Property.objects.filter(listing_status='pending_approval').count(),
-            'total_reservations': Reservation.objects.count(),
-            'pending_reservations': Reservation.objects.filter(status='pending').count(),
-            'pending_documents': Document.objects.filter(status='pending_approval').count(),
-            'recent_reservations': Reservation.objects.select_related(
-                'property', 'client'
-            ).order_by('-created_at')[:5],
-        }
+        from apps.listings.models import Property
+        from apps.sales.models import Sale
+        from apps.documents.models import Document
+        context.update({
+            'pending_listings': Property.objects.filter(
+                listing_status='pending_approval'
+            ).count(),
+            'flagged_listings': Property.objects.filter(
+                listing_status='flagged'
+            ).count(),
+            'pending_sales': Sale.objects.filter(
+                status='pending_verification'
+            ).count(),
+            'pending_documents': Document.objects.filter(
+                status='pending_approval'
+            ).count(),
+        })
 
     elif user.role == 'sale_assistant':
-        context = {
-            'total_sales': Sale.objects.filter(sale_assistant=user).count(),
-            'active_sales': Sale.objects.filter(
-                sale_assistant=user, status='approved'
+        from apps.sales.models import Sale, Disbursement
+        from apps.reservations.models import Reservation, Appointment
+        context.update({
+            'my_sales': Sale.objects.filter(
+                sale_assistant=user
             ).count(),
-            'total_reservations': Reservation.objects.filter(handled_by=user).count(),
             'pending_reservations': Reservation.objects.filter(
                 handled_by=user, status='pending'
             ).count(),
-            'recent_sales': Sale.objects.filter(
-                sale_assistant=user
-            ).select_related('property', 'client').order_by('-created_at')[:5],
-            'recent_reservations': Reservation.objects.filter(
-                handled_by=user
-            ).select_related('property', 'client').order_by('-created_at')[:5],
-        }
-
-    elif user.role == 'property_owner':
-        context = {
-            'total_properties': Property.objects.filter(owner=user).count(),
-            'available_properties': Property.objects.filter(
-                owner=user, listing_status='approved'
+            'pending_appointments': Appointment.objects.filter(
+                handled_by=user, status='pending'
             ).count(),
-            'pending_properties': Property.objects.filter(
-                owner=user, listing_status='pending_approval'
+            'my_disbursements': Disbursement.objects.filter(
+                recipient=user, status='pending'
             ).count(),
-            'sold_properties': Property.objects.filter(
-                owner=user, listing_status='sold'
-            ).count(),
-            'recent_sales': Sale.objects.filter(
-                property__owner=user
-            ).select_related('property', 'client').order_by('-created_at')[:5],
-        }
+        })
 
     return render(request, 'accounts/dashboard.html', context)
 

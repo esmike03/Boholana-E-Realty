@@ -42,16 +42,32 @@ def log_action(document, user, action, description=''):
 def document_list(request):
     user = request.user
 
-    if user.role == 'property_owner':
-        documents = Document.objects.filter(uploaded_by=user)
-    elif user.role == 'client':
+    if request.user.role not in ['broker', 'admin'] \
+            and not request.user.is_superuser:
+        messages.error(request, 'Only brokers can approve disbursements.')
+        return redirect('sales:disbursements')
+    allowed = [
+        'admin', 'broker', 'staff',
+        'property_owner', 'sale_assistant', 'client'
+    ]
+    if user.role not in allowed and not user.is_superuser:
+        messages.error(request, 'You do not have permission.')
+        return redirect('dashboard')
+
+    # Filter by role
+    if user.role == 'client':
         documents = Document.objects.filter(
-            uploaded_by=user,
-            is_confidential=False
+            uploaded_by=user
+        )
+    elif user.role == 'property_owner':
+        documents = Document.objects.filter(
+            Q(uploaded_by=user) |
+            Q(property__owner=user)
         )
     elif user.role == 'sale_assistant':
         documents = Document.objects.filter(
-            is_confidential=False
+            Q(sale__sale_assistant=user) |
+            Q(uploaded_by=user)
         )
     else:
         documents = Document.objects.all()
@@ -97,6 +113,12 @@ def document_list(request):
 
 @login_required
 def document_upload(request):
+    
+    allowed = ['admin', 'broker', 'staff', 'property_owner']
+    if request.user.role not in allowed and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to upload documents.')
+        return redirect('documents:list')
+    
     if request.method == 'POST':
         title = request.POST.get('title')
         document_type = request.POST.get('document_type')
@@ -205,6 +227,12 @@ def document_detail(request, pk):
 
 @login_required
 def document_approve(request, pk):
+    
+    allowed = ['admin', 'broker', 'staff']
+    if request.user.role not in allowed and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission.')
+        return redirect('documents:list')
+    
     if request.user.role not in ['broker', 'admin'] \
             and not request.user.is_superuser:
         messages.error(request, 'Only brokers can approve documents.')
