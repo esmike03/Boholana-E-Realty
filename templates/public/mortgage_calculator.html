@@ -1,228 +1,513 @@
 {% extends 'public_base.html' %}
 {% block title %}Mortgage Calculator — Boholana E-Realty{% endblock %}
+
 {% block content %}
 
 <!-- Header -->
 <section class="bg-white border-b border-gray-100 py-10 px-6">
-  <div class="max-w-7xl mx-auto">
-    <div class="inline-flex items-center gap-2 text-yellow-600 text-xs font-semibold tracking-widest uppercase mb-3">
-    
-      Planning Tools
+    <div class="max-w-7xl mx-auto">
+        <div class="inline-flex items-center gap-2 text-yellow-600 text-xs font-semibold tracking-widest uppercase mb-3">
+         
+            Tools
+        </div>
+        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">
+            Mortgage Calculator
+        </h1>
+        <p class="text-gray-400 text-sm mt-1">
+            Estimate your monthly payments for any property in Bohol
+        </p>
     </div>
-    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Mortgage Calculator</h1>
-    <p class="text-gray-400 text-sm mt-1">Estimate your monthly payments for a property in Bohol</p>
-  </div>
 </section>
 
 <section class="bg-gray-50 py-12 px-6 min-h-screen">
-  <div class="max-w-5xl mx-auto">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="max-w-5xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-      <!-- Calculator Inputs -->
-      <div class="bg-white border border-gray-100 p-6">
-        <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-1">Adjust Values</p>
-        <h2 class="text-lg font-bold text-gray-900 tracking-tight mb-6">Calculator</h2>
+            <!-- ── Calculator Inputs ── -->
+            <div class="bg-white border border-gray-100 p-8">
+                <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-6">
+                    Loan Parameters
+                </p>
 
-        <!-- Property Price -->
-        <div class="mb-6">
-          <div class="flex items-center justify-between mb-2">
-            <label class="text-xs font-medium text-gray-500">Property Price</label>
-            <span id="price-display" class="text-sm font-bold text-gray-900">₱1,500,000</span>
-          </div>
-          <input type="range" id="property-price" min="500000" max="20000000" step="100000" value="1500000"
-            class="w-full h-1 bg-gray-200 appearance-none cursor-pointer accent-yellow-500"/>
-          <div class="flex justify-between text-[10px] text-gray-300 mt-1.5">
-            <span>₱500K</span><span>₱20M</span>
-          </div>
+                <!-- Property Price -->
+                <div class="mb-7">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-sm font-medium text-gray-700">
+                            Property Price
+                        </label>
+                        <span id="price-display"
+                              class="text-gray-900 font-bold text-sm">
+                            ₱1,500,000
+                        </span>
+                    </div>
+                    <input type="range" id="price-slider"
+                           min="500000" max="20000000" step="50000"
+                           value="1500000"
+                           class="w-full h-1.5 bg-gray-200 appearance-none cursor-pointer accent-yellow-500">
+                    <div class="flex justify-between text-xs text-gray-400 mt-1.5">
+                        <span>₱500K</span>
+                        <span>₱20M</span>
+                    </div>
+                    <!-- Manual Input -->
+                    <input type="number" id="price-input"
+                           placeholder="Or type exact amount"
+                           min="0"
+                           class="mt-3 w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-gray-50">
+                </div>
+
+                <!-- Down Payment -->
+                <div class="mb-7">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-sm font-medium text-gray-700">
+                            Down Payment
+                        </label>
+                        <div class="text-right">
+                            <span id="down-pct-display"
+                                  class="text-gray-900 font-bold text-sm">
+                                20%
+                            </span>
+                            <span class="text-xs text-gray-400 ml-1">
+                                (<span id="down-amount-display">₱300,000</span>)
+                            </span>
+                        </div>
+                    </div>
+                    <input type="range" id="down-slider"
+                           min="0" max="90" step="5" value="20"
+                           class="w-full h-1.5 bg-gray-200 appearance-none cursor-pointer accent-yellow-500">
+                    <div class="flex justify-between text-xs text-gray-400 mt-1.5">
+                        <span>0%</span>
+                        <span>90%</span>
+                    </div>
+                    <!-- Manual down payment input -->
+                    <div class="grid grid-cols-2 gap-3 mt-3">
+                        <input type="number" id="down-pct-input"
+                               placeholder="Down % (e.g. 20)"
+                               min="0" max="100"
+                               class="border border-gray-200 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-gray-50">
+                        <input type="number" id="down-amount-input"
+                               placeholder="Down amount (₱)"
+                               min="0"
+                               class="border border-gray-200 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-gray-50">
+                    </div>
+                </div>
+
+                <!-- Loan Term -->
+                <div class="mb-7">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-sm font-medium text-gray-700">
+                            Loan Term
+                        </label>
+                        <div class="text-right">
+                            <span id="term-year-display"
+                                  class="text-gray-900 font-bold text-sm">
+                                20 years
+                            </span>
+                            <span class="text-xs text-gray-400 ml-1">
+                                (<span id="term-month-display">240 months</span>)
+                            </span>
+                        </div>
+                    </div>
+                    <input type="range" id="term-year-slider"
+                           min="1" max="30" step="1" value="20"
+                           class="w-full h-1.5 bg-gray-200 appearance-none cursor-pointer accent-yellow-500">
+                    <div class="flex justify-between text-xs text-gray-400 mt-1.5">
+                        <span>1 yr</span>
+                        <span>30 yrs</span>
+                    </div>
+                    <!-- Manual term inputs -->
+                    <div class="grid grid-cols-2 gap-3 mt-3">
+                        <div>
+                            <input type="number" id="term-year-input"
+                                   placeholder="Years (e.g. 20)"
+                                   min="1" max="30"
+                                   class="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-gray-50">
+                            <p class="text-xs text-gray-400 mt-1">In years</p>
+                        </div>
+                        <div>
+                            <input type="number" id="term-month-input"
+                                   placeholder="Months (e.g. 240)"
+                                   min="1" max="360"
+                                   class="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-gray-50">
+                            <p class="text-xs text-gray-400 mt-1">In months</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interest Rate -->
+                <div class="mb-7">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-sm font-medium text-gray-700">
+                            Annual Interest Rate
+                        </label>
+                        <span id="rate-display"
+                              class="text-gray-900 font-bold text-sm">
+                            6.5%
+                        </span>
+                    </div>
+                    <input type="range" id="rate-slider"
+                           min="1" max="20" step="0.25" value="6.5"
+                           class="w-full h-1.5 bg-gray-200 appearance-none cursor-pointer accent-yellow-500">
+                    <div class="flex justify-between text-xs text-gray-400 mt-1.5">
+                        <span>1%</span>
+                        <span>20%</span>
+                    </div>
+                    <input type="number" id="rate-input"
+                           placeholder="Or type rate (e.g. 6.5)"
+                           min="0" max="100" step="0.1"
+                           class="mt-3 w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-gray-50">
+                </div>
+
+                <!-- Reset -->
+                <button onclick="resetCalculator()"
+                        class="w-full border border-gray-200 hover:border-gray-900 text-gray-500 hover:text-gray-900 py-2.5 text-sm font-medium transition-colors">
+                    <i class="fas fa-redo text-xs mr-2"></i> Reset to Defaults
+                </button>
+            </div>
+
+            <!-- ── Results ── -->
+            <div class="flex flex-col gap-5">
+
+                <!-- Monthly Payment — Hero -->
+                <div class="bg-gray-900 p-8 text-center">
+                    <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-500 mb-3">
+                        Estimated Monthly Payment
+                    </p>
+                    <p id="monthly-payment"
+                       class="text-5xl font-bold text-yellow-400 mb-2">
+                        ₱0
+                    </p>
+                    <p class="text-xs text-gray-500">per month for
+                        <span id="result-term-text">20 years</span>
+                    </p>
+                </div>
+
+                <!-- Breakdown -->
+                <div class="bg-white border border-gray-100 p-6">
+                    <p class="text-[10px] font-semibold tracking-widest uppercase text-gray-400 mb-4">
+                        Loan Breakdown
+                    </p>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between py-2 border-b border-gray-50">
+                            <span class="text-sm text-gray-500">Property Price</span>
+                            <span id="r-price" class="font-semibold text-gray-800 text-sm">₱0</span>
+                        </div>
+                        <div class="flex items-center justify-between py-2 border-b border-gray-50">
+                            <span class="text-sm text-gray-500">Down Payment</span>
+                            <span id="r-down" class="font-semibold text-green-600 text-sm">-₱0</span>
+                        </div>
+                        <div class="flex items-center justify-between py-2 border-b border-gray-50">
+                            <span class="text-sm font-medium text-gray-700">Loan Amount</span>
+                            <span id="r-loan" class="font-bold text-blue-700 text-sm">₱0</span>
+                        </div>
+                        <div class="flex items-center justify-between py-2 border-b border-gray-50">
+                            <span class="text-sm text-gray-500">Interest Rate</span>
+                            <span id="r-rate" class="font-semibold text-gray-800 text-sm">6.5% / year</span>
+                        </div>
+                        <div class="flex items-center justify-between py-2 border-b border-gray-50">
+                            <span class="text-sm text-gray-500">Loan Term</span>
+                            <span id="r-term" class="font-semibold text-gray-800 text-sm">20 yrs (240 months)</span>
+                        </div>
+                        <div class="flex items-center justify-between py-2 border-b border-gray-50">
+                            <span class="text-sm text-gray-500">Total Interest</span>
+                            <span id="r-interest" class="font-semibold text-orange-500 text-sm">₱0</span>
+                        </div>
+                        <div class="flex items-center justify-between py-2">
+                            <span class="text-sm font-bold text-gray-700">Total Payment</span>
+                            <span id="r-total" class="font-bold text-gray-900 text-sm">₱0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Composition Bar -->
+                <div class="bg-white border border-gray-100 p-6">
+                    <p class="text-[10px] font-semibold tracking-widest uppercase text-gray-400 mb-4">
+                        Payment Composition
+                    </p>
+                    <div class="h-5 rounded-sm overflow-hidden flex mb-3">
+                        <div id="bar-down"
+                             class="bg-green-500 h-full transition-all duration-500"
+                             style="width:20%">
+                        </div>
+                        <div id="bar-principal"
+                             class="bg-blue-600 h-full transition-all duration-500"
+                             style="width:40%">
+                        </div>
+                        <div id="bar-interest"
+                             class="bg-orange-400 h-full transition-all duration-500"
+                             style="width:40%">
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-4 text-xs text-gray-500">
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-3 h-3 bg-green-500 rounded-sm"></div>
+                            Down Payment (<span id="leg-down">20%</span>)
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-3 h-3 bg-blue-600 rounded-sm"></div>
+                            Principal (<span id="leg-principal">0%</span>)
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-3 h-3 bg-orange-400 rounded-sm"></div>
+                            Interest (<span id="leg-interest">0%</span>)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Amortization Toggle -->
+                <div class="bg-white border border-gray-100 p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <p class="text-[10px] font-semibold tracking-widest uppercase text-gray-400">
+                            Amortization Schedule
+                        </p>
+                        <button onclick="toggleAmortization()"
+                                id="amort-toggle-btn"
+                                class="text-xs text-yellow-600 hover:text-yellow-700 font-medium">
+                            Show <i class="fas fa-chevron-down ml-1"></i>
+                        </button>
+                    </div>
+                    <div id="amortization-table" class="hidden">
+                        <div class="overflow-x-auto max-h-64 overflow-y-auto">
+                            <table class="w-full text-xs">
+                                <thead class="sticky top-0 bg-white">
+                                    <tr class="text-gray-400 border-b border-gray-100">
+                                        <th class="py-2 text-left">Month</th>
+                                        <th class="py-2 text-right">Payment</th>
+                                        <th class="py-2 text-right">Principal</th>
+                                        <th class="py-2 text-right">Interest</th>
+                                        <th class="py-2 text-right">Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="amort-body" class="divide-y divide-gray-50">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CTA -->
+                <a href="{% url 'properties' %}"
+                   class="block w-full text-center py-3 text-sm font-medium text-white transition-colors bg-gray-900 hover:bg-yellow-600">
+                    <i class="fas fa-home mr-2"></i> Browse Properties
+                </a>
+
+            </div>
         </div>
-
-        <!-- Down Payment -->
-        <div class="mb-6">
-          <div class="flex items-center justify-between mb-2">
-            <label class="text-xs font-medium text-gray-500">Down Payment</label>
-            <span id="down-display" class="text-sm font-bold text-gray-900">20% — ₱300,000</span>
-          </div>
-          <input type="range" id="down-payment" min="5" max="50" step="5" value="20"
-            class="w-full h-1 bg-gray-200 appearance-none cursor-pointer accent-yellow-500"/>
-          <div class="flex justify-between text-[10px] text-gray-300 mt-1.5">
-            <span>5%</span><span>50%</span>
-          </div>
-        </div>
-
-        <!-- Interest Rate -->
-        <div class="mb-6">
-          <div class="flex items-center justify-between mb-2">
-            <label class="text-xs font-medium text-gray-500">Annual Interest Rate</label>
-            <span id="rate-display" class="text-sm font-bold text-gray-900">6.5%</span>
-          </div>
-          <input type="range" id="interest-rate" min="1" max="20" step="0.5" value="6.5"
-            class="w-full h-1 bg-gray-200 appearance-none cursor-pointer accent-yellow-500"/>
-          <div class="flex justify-between text-[10px] text-gray-300 mt-1.5">
-            <span>1%</span><span>20%</span>
-          </div>
-        </div>
-
-        <!-- Loan Term -->
-        <div class="mb-6">
-          <div class="flex items-center justify-between mb-2">
-            <label class="text-xs font-medium text-gray-500">Loan Term</label>
-            <span id="term-display" class="text-sm font-bold text-gray-900">20 years</span>
-          </div>
-          <input type="range" id="loan-term" min="1" max="30" step="1" value="20"
-            class="w-full h-1 bg-gray-200 appearance-none cursor-pointer accent-yellow-500"/>
-          <div class="flex justify-between text-[10px] text-gray-300 mt-1.5">
-            <span>1 yr</span><span>30 yrs</span>
-          </div>
-        </div>
-
-        <!-- Manual Input -->
-        <div class="pt-5 border-t border-gray-100">
-          <p class="text-[10px] font-semibold tracking-widest uppercase text-gray-400 mb-3">Or enter exact values</p>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="text-xs text-gray-500 mb-1.5 block">Price (₱)</label>
-              <input type="number" id="price-input" placeholder="1500000"
-                class="w-full border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-white"/>
-            </div>
-            <div>
-              <label class="text-xs text-gray-500 mb-1.5 block">Rate (%)</label>
-              <input type="number" id="rate-input" placeholder="6.5" step="0.1"
-                class="w-full border border-gray-200 px-3 py-2 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-white"/>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Results -->
-      <div class="flex flex-col gap-4">
-
-        <!-- Monthly Payment Hero -->
-        <div class="bg-gray-900 p-8 text-center">
-          <p class="text-[10px] font-semibold tracking-widest uppercase text-gray-500 mb-3">Monthly Payment</p>
-          <p id="monthly-payment" class="text-5xl font-bold text-yellow-400 mb-2">₱0</p>
-          <p class="text-xs text-gray-600">Estimated amortization per month</p>
-        </div>
-
-        <!-- Breakdown -->
-        <div class="bg-white border border-gray-100 p-6">
-          <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-4">Loan Breakdown</p>
-          <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-400">Property Price</span>
-              <span id="result-price" class="text-sm font-semibold text-gray-900">₱0</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-400">Down Payment</span>
-              <span id="result-down" class="text-sm font-semibold text-green-600">- ₱0</span>
-            </div>
-            <div class="flex items-center justify-between border-t border-gray-100 pt-3">
-              <span class="text-sm font-medium text-gray-700">Loan Amount</span>
-              <span id="result-loan" class="text-sm font-bold text-gray-900">₱0</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-400">Total Interest</span>
-              <span id="result-interest" class="text-sm font-semibold text-yellow-600">₱0</span>
-            </div>
-            <div class="flex items-center justify-between border-t border-gray-100 pt-3">
-              <span class="text-sm font-medium text-gray-700">Total Payment</span>
-              <span id="result-total" class="text-sm font-bold text-gray-900">₱0</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Composition Bar -->
-        <div class="bg-white border border-gray-100 p-6">
-          <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-4">Payment Composition</p>
-          <div class="h-3 overflow-hidden flex mb-3 bg-gray-100">
-            <div id="bar-principal" class="bg-gray-900 h-full transition-all duration-500" style="width:50%"></div>
-            <div id="bar-interest"  class="bg-yellow-400 h-full transition-all duration-500" style="width:50%"></div>
-          </div>
-          <div class="flex gap-5 text-xs text-gray-400">
-            <div class="flex items-center gap-1.5">
-              <div class="w-2.5 h-2.5 bg-gray-900"></div> Principal
-            </div>
-            <div class="flex items-center gap-1.5">
-              <div class="w-2.5 h-2.5 bg-yellow-400"></div> Interest
-            </div>
-          </div>
-        </div>
-
-        <!-- CTA -->
-        <a href="{% url 'properties' %}"
-          class="block w-full text-center bg-gray-900 hover:bg-yellow-600 text-white py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2">
-          <i class="fas fa-home text-xs"></i> Browse Properties
-        </a>
-
-      </div>
     </div>
-  </div>
 </section>
 
 <script>
-  function formatNum(num) {
-    return '₱' + Math.round(num).toLocaleString('en-PH');
-  }
+// ── State ──
+let state = {
+    price: 1500000,
+    downPct: 20,
+    termYears: 20,
+    rate: 6.5,
+};
 
-  function calculateMortgage() {
-    const price  = parseFloat(document.getElementById('property-price').value);
-    const downPct = parseFloat(document.getElementById('down-payment').value);
-    const rate   = parseFloat(document.getElementById('interest-rate').value);
-    const years  = parseFloat(document.getElementById('loan-term').value);
+// ── Formatters ──
+function fmt(n) {
+    return '₱' + Math.round(n).toLocaleString('en-PH');
+}
+function fmtDec(n) {
+    return '₱' + parseFloat(n).toLocaleString('en-PH', {
+        minimumFractionDigits: 2, maximumFractionDigits: 2
+    });
+}
+function pct(n, total) {
+    return total ? ((n / total) * 100).toFixed(1) : 0;
+}
 
-    const down = price * (downPct / 100);
-    const loan = price - down;
-    const monthlyRate  = (rate / 100) / 12;
-    const numPayments  = years * 12;
+// ── Core Calculation ──
+function calculate() {
+    const price    = state.price;
+    const downAmt  = price * (state.downPct / 100);
+    const loan     = price - downAmt;
+    const months   = state.termYears * 12;
+    const mr       = (state.rate / 100) / 12;
 
     let monthly = 0;
-    if (monthlyRate === 0) {
-      monthly = loan / numPayments;
+    if (mr === 0) {
+        monthly = loan / months;
     } else {
-      monthly = loan * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
-                (Math.pow(1 + monthlyRate, numPayments) - 1);
+        monthly = loan * (mr * Math.pow(1 + mr, months)) /
+                  (Math.pow(1 + mr, months) - 1);
     }
 
-    const totalPayment  = monthly * numPayments;
+    const totalPayment = monthly * months;
     const totalInterest = totalPayment - loan;
 
-    document.getElementById('price-display').textContent    = formatNum(price);
-    document.getElementById('down-display').textContent     = downPct + '% — ' + formatNum(down);
-    document.getElementById('rate-display').textContent     = rate + '%';
-    document.getElementById('term-display').textContent     = years + ' year' + (years > 1 ? 's' : '');
-    document.getElementById('monthly-payment').textContent  = formatNum(monthly);
-    document.getElementById('result-price').textContent     = formatNum(price);
-    document.getElementById('result-down').textContent      = '- ' + formatNum(down);
-    document.getElementById('result-loan').textContent      = formatNum(loan);
-    document.getElementById('result-interest').textContent  = formatNum(totalInterest);
-    document.getElementById('result-total').textContent     = formatNum(totalPayment);
+    return {
+        price, downAmt, loan, months,
+        monthly, totalPayment, totalInterest
+    };
+}
 
-    const principalPct = (loan / totalPayment) * 100;
-    const interestPct  = (totalInterest / totalPayment) * 100;
-    document.getElementById('bar-principal').style.width = principalPct + '%';
-    document.getElementById('bar-interest').style.width  = interestPct  + '%';
-  }
+// ── Update UI ──
+function updateUI() {
+    const c = calculate();
 
-  ['property-price','down-payment','interest-rate','loan-term'].forEach(id => {
-    document.getElementById(id).addEventListener('input', calculateMortgage);
-  });
+    // Sliders & displays
+    document.getElementById('price-slider').value = state.price;
+    document.getElementById('price-display').textContent = fmt(state.price);
 
-  document.getElementById('price-input').addEventListener('input', function () {
-    const val = parseFloat(this.value);
-    if (val && val >= 500000 && val <= 20000000) {
-      document.getElementById('property-price').value = val;
-      calculateMortgage();
+    document.getElementById('down-slider').value = state.downPct;
+    document.getElementById('down-pct-display').textContent = state.downPct + '%';
+    document.getElementById('down-amount-display').textContent = fmt(c.downAmt);
+
+    document.getElementById('term-year-slider').value = state.termYears;
+    document.getElementById('term-year-display').textContent = state.termYears + ' year' + (state.termYears > 1 ? 's' : '');
+    document.getElementById('term-month-display').textContent = c.months + ' months';
+
+    document.getElementById('rate-slider').value = state.rate;
+    document.getElementById('rate-display').textContent = state.rate + '%';
+
+    // Results
+    document.getElementById('monthly-payment').textContent = fmtDec(c.monthly);
+    document.getElementById('result-term-text').textContent =
+        state.termYears + ' year' + (state.termYears > 1 ? 's' : '');
+
+    document.getElementById('r-price').textContent    = fmtDec(c.price);
+    document.getElementById('r-down').textContent     = '-' + fmtDec(c.downAmt);
+    document.getElementById('r-loan').textContent     = fmtDec(c.loan);
+    document.getElementById('r-rate').textContent     = state.rate + '% / year';
+    document.getElementById('r-term').textContent     =
+        state.termYears + ' yrs (' + c.months + ' months)';
+    document.getElementById('r-interest').textContent = fmtDec(c.totalInterest);
+    document.getElementById('r-total').textContent    = fmtDec(c.totalPayment);
+
+    // Composition bar
+    const total = c.price + c.totalInterest;
+    const downPct   = pct(c.downAmt, total);
+    const princPct  = pct(c.loan, total);
+    const intPct    = pct(c.totalInterest, total);
+
+    document.getElementById('bar-down').style.width      = downPct + '%';
+    document.getElementById('bar-principal').style.width = princPct + '%';
+    document.getElementById('bar-interest').style.width  = intPct + '%';
+    document.getElementById('leg-down').textContent      = downPct + '%';
+    document.getElementById('leg-principal').textContent = princPct + '%';
+    document.getElementById('leg-interest').textContent  = intPct + '%';
+
+    // Regenerate amortization if visible
+    if (!document.getElementById('amortization-table').classList.contains('hidden')) {
+        generateAmortization(c);
     }
-  });
+}
 
-  document.getElementById('rate-input').addEventListener('input', function () {
-    const val = parseFloat(this.value);
-    if (val && val >= 1 && val <= 20) {
-      document.getElementById('interest-rate').value = val;
-      calculateMortgage();
+// ── Amortization ──
+function generateAmortization(c) {
+    const body = document.getElementById('amort-body');
+    body.innerHTML = '';
+    const mr = (state.rate / 100) / 12;
+    let balance = c.loan;
+    const maxRows = Math.min(c.months, 360);
+
+    for (let m = 1; m <= maxRows; m++) {
+        const interest  = balance * mr;
+        const principal = c.monthly - interest;
+        balance         = Math.max(balance - principal, 0);
+
+        const tr = document.createElement('tr');
+        tr.className = m % 2 === 0 ? 'bg-gray-50/50' : '';
+        tr.innerHTML = `
+            <td class="py-1.5 text-gray-500">${m}</td>
+            <td class="py-1.5 text-right text-gray-700">${fmtDec(c.monthly)}</td>
+            <td class="py-1.5 text-right text-blue-600">${fmtDec(principal)}</td>
+            <td class="py-1.5 text-right text-orange-500">${fmtDec(interest)}</td>
+            <td class="py-1.5 text-right text-gray-700">${fmtDec(balance)}</td>
+        `;
+        body.appendChild(tr);
     }
-  });
+}
 
-  calculateMortgage();
+function toggleAmortization() {
+    const table = document.getElementById('amortization-table');
+    const btn   = document.getElementById('amort-toggle-btn');
+    if (table.classList.contains('hidden')) {
+        table.classList.remove('hidden');
+        btn.innerHTML = 'Hide <i class="fas fa-chevron-up ml-1"></i>';
+        generateAmortization(calculate());
+    } else {
+        table.classList.add('hidden');
+        btn.innerHTML = 'Show <i class="fas fa-chevron-down ml-1"></i>';
+    }
+}
+
+function resetCalculator() {
+    state = { price: 1500000, downPct: 20, termYears: 20, rate: 6.5 };
+    document.getElementById('price-input').value      = '';
+    document.getElementById('down-pct-input').value   = '';
+    document.getElementById('down-amount-input').value = '';
+    document.getElementById('term-year-input').value  = '';
+    document.getElementById('term-month-input').value = '';
+    document.getElementById('rate-input').value       = '';
+    updateUI();
+}
+
+// ── Slider Listeners ──
+document.getElementById('price-slider').addEventListener('input', function() {
+    state.price = parseFloat(this.value);
+    updateUI();
+});
+document.getElementById('down-slider').addEventListener('input', function() {
+    state.downPct = parseFloat(this.value);
+    updateUI();
+});
+document.getElementById('term-year-slider').addEventListener('input', function() {
+    state.termYears = parseFloat(this.value);
+    updateUI();
+});
+document.getElementById('rate-slider').addEventListener('input', function() {
+    state.rate = parseFloat(this.value);
+    updateUI();
+});
+
+// ── Manual Input Listeners ──
+document.getElementById('price-input').addEventListener('input', function() {
+    const v = parseFloat(this.value);
+    if (v > 0) {
+        state.price = v;
+        updateUI();
+    }
+});
+document.getElementById('down-pct-input').addEventListener('input', function() {
+    const v = parseFloat(this.value);
+    if (v >= 0 && v <= 100) {
+        state.downPct = v;
+        updateUI();
+    }
+});
+document.getElementById('down-amount-input').addEventListener('input', function() {
+    const v = parseFloat(this.value);
+    if (v >= 0 && state.price > 0) {
+        state.downPct = (v / state.price) * 100;
+        updateUI();
+    }
+});
+document.getElementById('term-year-input').addEventListener('input', function() {
+    const v = parseFloat(this.value);
+    if (v >= 1 && v <= 30) {
+        state.termYears = v;
+        updateUI();
+    }
+});
+document.getElementById('term-month-input').addEventListener('input', function() {
+    const v = parseFloat(this.value);
+    if (v >= 1 && v <= 360) {
+        state.termYears = v / 12;
+        updateUI();
+    }
+});
+document.getElementById('rate-input').addEventListener('input', function() {
+    const v = parseFloat(this.value);
+    if (v > 0) {
+        state.rate = v;
+        updateUI();
+    }
+});
+
+// ── Init ──
+updateUI();
 </script>
 
 {% endblock %}
