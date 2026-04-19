@@ -7,7 +7,8 @@ from django.http import JsonResponse
 from .models import Sale, PaymentSchedule, Disbursement, SaleTask
 from apps.listings.models import Property
 from apps.reservations.models import Reservation
-from apps.accounts.models import CustomUser
+from apps.accounts.models import CustomUse
+from decimal import Decimal
 from apps.accounts.notify import (
     notify_sale_created,
     notify_sale_approved,
