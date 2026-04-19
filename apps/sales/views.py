@@ -96,8 +96,8 @@ def sale_create(request):
         client_id = request.POST.get('client_id')
         sale_assistant_id = request.POST.get('sale_assistant_id')
         payment_scheme = request.POST.get('payment_scheme')
-        selling_price = request.POST.get('selling_price')
-        discount = request.POST.get('discount', 0)
+        selling_price = float(request.POST.get('selling_price') or 0)
+        discount = float(request.POST.get('discount') or 0)
         sale_date = request.POST.get('sale_date')
         notes = request.POST.get('notes', '')
         reservation_id = request.POST.get('reservation_id') or None
@@ -125,7 +125,7 @@ def sale_create(request):
             payment_scheme=payment_scheme,
             selling_price=selling_price,
             discount=discount,
-            net_price=float(selling_price) - float(discount),
+            net_price=selling_price - discount,   # both already floats now
             sale_date=sale_date,
             notes=notes,
             reservation=reservation,
@@ -244,9 +244,9 @@ def sale_verify(request, pk):
             messages.success(request, 'Sale approved successfully.')
 
         elif action == 'correct':
-            sale.selling_price = request.POST.get('selling_price', sale.selling_price)
-            sale.discount = request.POST.get('discount', sale.discount)
-            sale.net_price = float(sale.selling_price) - float(sale.discount)
+            sale.selling_price = float(request.POST.get('selling_price') or sale.selling_price)
+            sale.discount = float(request.POST.get('discount') or sale.discount)
+            sale.net_price = sale.selling_price - sale.discount  # now both floats
             sale.notes = request.POST.get('notes', sale.notes)
             sale.status = 'ready_for_approval'
             sale.save()
