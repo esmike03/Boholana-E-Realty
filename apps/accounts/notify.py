@@ -224,7 +224,7 @@ def notify_disbursement_approved(disbursement, approved_by):
     send_notification(
         recipient=disbursement.recipient,
         title='Disbursement Approved',
-        message=f'Your {disbursement.get_disbursement_type_display()} of ₱{disbursement.amount:,.2f} has been approved and is pending payment.',
+        message=f'Your {disbursement.get_disbursement_type_display()} of ₱{float(disbursement.amount):,.2f} has been approved and is pending payment.',
         notification_type='disbursement_pending',
         sender=approved_by,
         link=f'/manage/sales/disbursements/',
@@ -236,7 +236,7 @@ def notify_disbursement_completed(disbursement):
     send_notification(
         recipient=disbursement.recipient,
         title='Payment Completed',
-        message=f'Your {disbursement.get_disbursement_type_display()} of ₱{disbursement.amount:,.2f} has been completed.',
+        message=f'Your {disbursement.get_disbursement_type_display()} of ₱{float(disbursement.amount):,.2f} has been completed.',
         notification_type='disbursement_completed',
         link=f'/manage/sales/disbursements/',
         priority='medium',

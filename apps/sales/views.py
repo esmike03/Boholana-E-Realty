@@ -7,7 +7,7 @@ from django.http import JsonResponse
 from .models import Sale, PaymentSchedule, Disbursement, SaleTask
 from apps.listings.models import Property
 from apps.reservations.models import Reservation
-from apps.accounts.models import CustomUse
+from apps.accounts.models import CustomUser
 from decimal import Decimal
 from apps.accounts.notify import (
     notify_sale_created,
@@ -25,10 +25,10 @@ from apps.accounts.notify import (
 def calculate_commissions(sale):
     net_price = sale.net_price
     commissions = {
-        'sale_assistant': round(net_price * 0.025, 2),
-        'broker': round(net_price * 0.025, 2),
-        'company': round(net_price * 0.015, 2),
-        'owner': round(net_price * 0.935, 2),
+        'sale_assistant': round(net_price * Decimal('0.025'), 2),
+        'broker':         round(net_price * Decimal('0.025'), 2),
+        'company':        round(net_price * Decimal('0.015'), 2),
+        'owner':          round(net_price * Decimal('0.935'), 2),
     }
     return commissions
 
@@ -386,7 +386,7 @@ def disbursement_approve(request, pk):
     if request.method == 'POST':
         new_amount = request.POST.get('amount')
         if new_amount:
-            disbursement.amount = new_amount
+            disbursement.amount = float(new_amount) 
 
         disbursement.status = 'pending'
         disbursement.approved_by = request.user
