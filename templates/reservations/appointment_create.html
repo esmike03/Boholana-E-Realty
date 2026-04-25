@@ -1,47 +1,63 @@
-{% extends 'public_base.html' %}
-{% block title %}Schedule Appointment — Boholana E-Realty{% endblock %}
-
-{% block content %}
+{% extends 'public_base.html' %} {% load humanize %} {% block title %}Schedule
+Appointment — Boholana E-Realty{% endblock %} {% block extra_css %}
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+/>
+{% endblock %} {% block content %}
 
 <!-- Header -->
 <section class="bg-white border-b border-gray-100 py-10 px-6">
   <div class="max-w-7xl mx-auto">
-    <div class="inline-flex items-center gap-2 text-yellow-600 text-xs font-semibold tracking-widest uppercase mb-3">
-      <span class="block w-5 h-px bg-yellow-600"></span>
+    <div
+      class="inline-flex items-center gap-2 text-yellow-600 text-xs font-semibold tracking-widest uppercase mb-3"
+    >
+      
       Client Portal
     </div>
-    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Schedule a Visit</h1>
-    <p class="text-gray-400 text-sm mt-1">Book an appointment to view this property</p>
+    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">
+      Schedule a Visit
+    </h1>
+    <p class="text-gray-400 text-sm mt-1">
+      Book an appointment to view this property
+    </p>
   </div>
 </section>
 
 <section class="bg-gray-50 py-10 px-6 min-h-screen">
   <div class="max-w-2xl mx-auto">
     <div class="bg-white border border-gray-100">
-
       <!-- Property strip -->
       <div class="p-5 border-b border-gray-100 flex items-center gap-4">
-        <div class="w-12 h-12 bg-gray-900 flex items-center justify-center flex-shrink-0">
+        <div
+          class="w-12 h-12 bg-gray-900 flex items-center justify-center shrink-0"
+        >
           <i class="fas fa-home text-yellow-400 text-lg"></i>
         </div>
         <div class="flex-1 min-w-0">
-          <h3 class="font-semibold text-gray-900 text-sm leading-snug">{{ property.title }}</h3>
+          <h3 class="font-semibold text-gray-900 text-sm leading-snug">
+            {{ property.title }}
+          </h3>
           <p class="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
             <i class="fas fa-map-marker-alt text-yellow-500 text-[10px]"></i>
             {{ property.city }}, {{ property.province }}
           </p>
         </div>
-        <span class="text-base font-bold text-gray-900 flex-shrink-0">₱{{ property.price|floatformat:0 }}</span>
+        <span class="text-base font-bold text-gray-900 shrink-0"
+          >₱{{ property.price|floatformat:0|intcomma }}</span
+        >
       </div>
 
       <!-- Messages -->
       {% if messages %}
       <div class="px-6 pt-5">
         {% for message in messages %}
-        <div class="mb-3 p-3 text-sm flex items-center gap-2
-          {% if message.tags == 'error' %}bg-red-50 border border-red-200 text-red-600
-          {% else %}bg-green-50 border border-green-200 text-green-600{% endif %}">
-          <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% else %}check-circle{% endif %} text-xs"></i>
+        <div
+          class="mb-3 p-3 text-sm flex items-center gap-2 {% if message.tags == 'error' %}bg-red-50 border border-red-200 text-red-600 {% else %}bg-green-50 border border-green-200 text-green-600{% endif %}"
+        >
+          <i
+            class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% else %}check-circle{% endif %} text-xs"
+          ></i>
           {{ message }}
         </div>
         {% endfor %}
@@ -53,42 +69,92 @@
 
         <!-- Preferred Schedule -->
         <div>
-          <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-4">Preferred Schedule</p>
+          <p
+            class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-4"
+          >
+            Preferred Schedule
+          </p>
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-medium text-gray-500 mb-1.5">
                 Date <span class="text-red-400">*</span>
               </label>
-              <input type="date" name="preferred_date" required min="{{ today }}"
-                class="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-800 bg-white focus:outline-none focus:border-gray-900 transition-colors" />
+              <input
+                id="preferred-date"
+                type="date"
+                name="preferred_date"
+                required
+                min="{{ today|date:'Y-m-d' }}"
+                class="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-800 bg-white focus:outline-none focus:border-gray-900 transition-colors"
+              />
             </div>
             <div>
               <label class="block text-xs font-medium text-gray-500 mb-1.5">
                 Time <span class="text-red-400">*</span>
               </label>
-              <input type="time" name="preferred_time" required
-                class="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-800 bg-white focus:outline-none focus:border-gray-900 transition-colors" />
+              <input
+                type="time"
+                name="preferred_time"
+                required
+                class="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-800 bg-white focus:outline-none focus:border-gray-900 transition-colors"
+              />
             </div>
           </div>
           {% if blocked_dates %}
           <div class="flex items-center gap-2 mt-2.5">
             <i class="fas fa-exclamation-circle text-red-400 text-xs"></i>
-            <p class="text-xs text-red-400">Unavailable dates: {{ blocked_dates|join:", " }}</p>
+            <p class="text-xs text-red-400">
+              Unavailable dates: {{ blocked_dates|join:", " }}
+            </p>
+          </div>
+          {% endif %} {% if available_slots %}
+          <div class="mt-3 border border-gray-100 bg-gray-50 p-3">
+            <p
+              class="text-[10px] font-semibold tracking-widest uppercase text-gray-500 mb-2"
+            >
+              Available Slots
+            </p>
+            <div class="max-h-24 overflow-auto space-y-1">
+              {% for slot in available_slots %}
+              <p class="text-xs text-gray-500">
+                {{ slot.slot_date }}: {{ slot.start_time|time:"H:i" }} - {{
+                slot.end_time|time:"H:i" }}
+              </p>
+              {% endfor %}
+            </div>
+          </div>
+          {% else %}
+          <div class="flex items-center gap-2 mt-2.5">
+            <i class="fas fa-info-circle text-gray-400 text-xs"></i>
+            <p class="text-xs text-gray-400">
+              No available schedules for the selected date until slots are
+              configured.
+            </p>
           </div>
           {% endif %}
         </div>
 
         <!-- Property Preferences -->
         <div>
-          <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-1">Property Preferences</p>
-          <p class="text-xs text-gray-400 mb-4">Optional — help us better understand your needs</p>
+          <p
+            class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-1"
+          >
+            Property Preferences
+          </p>
+          <p class="text-xs text-gray-400 mb-4">
+            Optional — help us better understand your needs
+          </p>
 
           <div class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1.5">Preferred Type</label>
-                <select name="preferred_property_type"
-                  class="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-700 bg-white focus:outline-none focus:border-gray-900 transition-colors">
+                <label class="block text-xs font-medium text-gray-500 mb-1.5"
+                  >Preferred Type</label
+                >
+                <select
+                  name="preferred_property_type"
+                  class="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-700 bg-white focus:outline-none focus:border-gray-900 transition-colors"
+                >
                   <option value="">Any</option>
                   <option value="house">House</option>
                   <option value="lot">Lot</option>
@@ -98,65 +164,120 @@
                 </select>
               </div>
               <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1.5">Preferred Location</label>
-                <input type="text" name="preferred_location" placeholder="e.g. Tagbilaran City"
-                  class="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 bg-white focus:outline-none focus:border-gray-900 transition-colors" />
+                <label class="block text-xs font-medium text-gray-500 mb-1.5"
+                  >Preferred Location</label
+                >
+                <input
+                  type="text"
+                  name="preferred_location"
+                  placeholder="e.g. Tagbilaran City"
+                  class="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 bg-white focus:outline-none focus:border-gray-900 transition-colors"
+                />
               </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1.5">Min Budget (₱)</label>
-                <input type="number" name="min_budget"
-                  class="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 bg-white focus:outline-none focus:border-gray-900 transition-colors" />
+                <label class="block text-xs font-medium text-gray-500 mb-1.5"
+                  >Min Budget (₱)</label
+                >
+                <input
+                  type="number"
+                  name="min_budget"
+                  class="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 bg-white focus:outline-none focus:border-gray-900 transition-colors"
+                />
               </div>
               <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1.5">Max Budget (₱)</label>
-                <input type="number" name="max_budget"
-                  class="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 bg-white focus:outline-none focus:border-gray-900 transition-colors" />
+                <label class="block text-xs font-medium text-gray-500 mb-1.5"
+                  >Max Budget (₱)</label
+                >
+                <input
+                  type="number"
+                  name="max_budget"
+                  class="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 bg-white focus:outline-none focus:border-gray-900 transition-colors"
+                />
               </div>
             </div>
 
             <div>
-              <label class="block text-xs font-medium text-gray-500 mb-1.5">Desired Amenities</label>
-              <input type="text" name="desired_amenities" placeholder="Pool, Garden, Parking..."
-                class="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 bg-white focus:outline-none focus:border-gray-900 transition-colors" />
+              <label class="block text-xs font-medium text-gray-500 mb-1.5"
+                >Desired Amenities</label
+              >
+              <input
+                type="text"
+                name="desired_amenities"
+                placeholder="Pool, Garden, Parking..."
+                class="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 bg-white focus:outline-none focus:border-gray-900 transition-colors"
+              />
             </div>
 
             <div>
-              <label class="block text-xs font-medium text-gray-500 mb-1.5">Additional Notes</label>
-              <textarea name="notes" rows="3"
+              <label class="block text-xs font-medium text-gray-500 mb-1.5"
+                >Additional Notes</label
+              >
+              <textarea
+                name="notes"
+                rows="3"
                 placeholder="Any specific requests or questions..."
-                class="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 bg-white focus:outline-none focus:border-gray-900 transition-colors resize-none"></textarea>
+                class="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-300 bg-white focus:outline-none focus:border-gray-900 transition-colors resize-none"
+              ></textarea>
             </div>
           </div>
         </div>
 
         <!-- Actions -->
         <div class="flex gap-3 pt-1">
-          <button type="submit"
-            class="flex-1 bg-gray-900 hover:bg-yellow-600 text-white py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2">
+          <button
+            type="submit"
+            class="flex-1 bg-gray-900 hover:bg-yellow-600 text-white py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+          >
             <i class="fas fa-calendar-check text-xs"></i> Schedule Visit
           </button>
-          <a href="{% url 'property_detail' property.pk %}"
-            class="flex-1 border border-gray-200 hover:border-gray-900 text-gray-500 hover:text-gray-900 py-3 text-sm font-medium transition-colors text-center">
+          <a
+            href="{% url 'property_detail' property.pk %}"
+            class="flex-1 border border-gray-200 hover:border-gray-900 text-gray-500 hover:text-gray-900 py-3 text-sm font-medium transition-colors text-center"
+          >
             Cancel
           </a>
         </div>
       </form>
-
     </div>
   </div>
 </section>
+{% endblock %} {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+{{ blocked_dates|json_script:"blocked-dates-data" }}
 <script>
-    const form = document.querySelector('form');
-    const submitBtn = form.querySelector('button[type="submit"]');
+  document.addEventListener("DOMContentLoaded", function () {
+    const blockedDatesElement = document.getElementById("blocked-dates-data");
+    let blockedDates = [];
+    if (blockedDatesElement && blockedDatesElement.textContent) {
+      try {
+        blockedDates = JSON.parse(blockedDatesElement.textContent) || [];
+      } catch (e) {
+        blockedDates = [];
+      }
+    }
 
-    form.addEventListener('submit', function() {
-        // ✅ Disable immediately to prevent double submit
+    const dateInput = document.getElementById("preferred-date");
+    if (dateInput && typeof flatpickr !== "undefined") {
+      flatpickr(dateInput, {
+        minDate: "today",
+        dateFormat: "Y-m-d",
+        disable: blockedDates,
+      });
+    }
+
+    const form = document.querySelector("form");
+    const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+    if (form && submitBtn) {
+      form.addEventListener("submit", function () {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-xs mr-2"></i> Scheduling...';
-        submitBtn.classList.add('opacity-70', 'cursor-not-allowed');
-    });
+        submitBtn.innerHTML =
+          '<i class="fas fa-spinner fa-spin text-xs mr-2"></i> Scheduling...';
+        submitBtn.classList.add("opacity-70", "cursor-not-allowed");
+      });
+    }
+  });
 </script>
 {% endblock %}

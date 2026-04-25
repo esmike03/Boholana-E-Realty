@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load humanize %}
 {% block title %}Sale #{{ sale.id }} — Boholana E-Realty{% endblock %}
 {% block page_title %}Sale Details{% endblock %}
 {% block page_subtitle %}View full sale information{% endblock %}
@@ -62,15 +62,15 @@
             <div class="mt-5 grid grid-cols-3 gap-4">
                 <div class="bg-gray-50 rounded-xl p-4 text-center">
                     <p class="text-xs text-gray-400 mb-1">Selling Price</p>
-                    <p class="font-bold text-gray-800">₱{{ sale.selling_price|floatformat:2 }}</p>
+                    <p class="font-bold text-gray-800">₱{{ sale.selling_price|floatformat:2|intcomma }}</p>
                 </div>
                 <div class="bg-gray-50 rounded-xl p-4 text-center">
                     <p class="text-xs text-gray-400 mb-1">Discount</p>
-                    <p class="font-bold text-red-500">- ₱{{ sale.discount|floatformat:2 }}</p>
+                    <p class="font-bold text-red-500">- ₱{{ sale.discount|floatformat:2|intcomma }}</p>
                 </div>
                 <div class="bg-blue-50 rounded-xl p-4 text-center">
                     <p class="text-xs text-blue-400 mb-1">Net Price</p>
-                    <p class="font-bold text-blue-700 text-lg">₱{{ sale.net_price|floatformat:2 }}</p>
+                    <p class="font-bold text-blue-700 text-lg">₱{{ sale.net_price|floatformat:2|intcomma }}</p>
                 </div>
             </div>
 
@@ -95,7 +95,7 @@
                             {{ sale.sale_assistant.get_full_name|default:"Not assigned" }}
                         </p>
                     </div>
-                    <p class="font-bold text-green-700">₱{{ commissions.sale_assistant }}</p>
+                    <p class="font-bold text-green-700">₱{{ commissions.sale_assistant|floatformat:2|intcomma }}</p>
                 </div>
                 <div class="flex items-center justify-between p-3 bg-purple-50 rounded-xl">
                     <div>
@@ -104,14 +104,14 @@
                             {{ sale.broker.get_full_name|default:"Not assigned" }}
                         </p>
                     </div>
-                    <p class="font-bold text-purple-700">₱{{ commissions.broker }}</p>
+                    <p class="font-bold text-purple-700">₱{{ commissions.broker|floatformat:2|intcomma }}</p>
                 </div>
                 <div class="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
                     <div>
                         <p class="text-sm font-medium text-blue-800">Company (1.5%)</p>
                         <p class="text-xs text-blue-600">Boholana E-Realty</p>
                     </div>
-                    <p class="font-bold text-blue-700">₱{{ commissions.company }}</p>
+                    <p class="font-bold text-blue-700">₱{{ commissions.company|floatformat:2|intcomma }}</p>
                 </div>
                 <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-xl">
                     <div>
@@ -120,7 +120,7 @@
                             {{ sale.property.owner.get_full_name }}
                         </p>
                     </div>
-                    <p class="font-bold text-yellow-700">₱{{ commissions.owner }}</p>
+                    <p class="font-bold text-yellow-700">₱{{ commissions.owner|floatformat:2|intcomma }}</p>
                 </div>
             </div>
         </div>
@@ -143,8 +143,8 @@
                         {% for schedule in payment_schedules %}
                         <tr>
                             <td class="py-2 text-gray-600">{{ schedule.due_date }}</td>
-                            <td class="py-2 text-gray-700 font-medium">₱{{ schedule.amount_due|floatformat:2 }}</td>
-                            <td class="py-2 text-gray-700">₱{{ schedule.amount_paid|floatformat:2 }}</td>
+                            <td class="py-2 text-gray-700 font-medium">₱{{ schedule.amount_due|floatformat:2|intcomma }}</td>
+                            <td class="py-2 text-gray-700">₱{{ schedule.amount_paid|floatformat:2|intcomma }}</td>
                             <td class="py-2">
                                 <span class="px-2 py-0.5 rounded-full text-xs
                                     {% if schedule.status == 'paid' %}bg-green-100 text-green-700
@@ -241,7 +241,7 @@
                     </div>
                     <div class="text-right">
                         <p class="text-xs font-bold text-gray-700">
-                            ₱{{ disbursement.amount|floatformat:2 }}
+                            ₱{{ disbursement.amount|floatformat:2|intcomma }}
                         </p>
                         <span class="text-xs
                             {% if disbursement.status == 'completed' %}text-green-600
@@ -252,10 +252,12 @@
                     </div>
                 </div>
                 {% endfor %}
+                {% if user.role == 'broker' or user.role == 'sale_assistant' or user.role == 'property_owner' %}
                 <a href="{% url 'sales:disbursements' %}"
                    class="block text-center text-xs text-blue-500 hover:underline mt-2">
                     Manage Disbursements
                 </a>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -1,122 +1,133 @@
-{% extends 'base.html' %}
-
-{% block title %}Reservation #{{ reservation.id }}{% endblock %}
-{% block page_title %}Reservation Details{% endblock %}
-
-{% block content %}
+{% extends 'base.html' %} {% load humanize %} {% block title %}Reservation #{{
+reservation.id }}{% endblock %} {% block page_title %}Reservation Details{%
+endblock %} {% block content %}
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Main Info -->
+  <div class="lg:col-span-2 space-y-5">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="font-bold text-gray-800">
+          Reservation #{{ reservation.id }}
+        </h3>
+        <span
+          class="px-3 py-1 rounded-full text-xs font-semibold {% if reservation.status == 'approved' %}bg-green-100 text-green-700 {% elif reservation.status == 'pending' %}bg-yellow-100 text-yellow-700 {% elif reservation.status == 'cancelled' %}bg-red-100 text-red-700 {% elif reservation.status == 'completed' %}bg-blue-100 text-blue-700 {% else %}bg-gray-100 text-gray-600{% endif %}"
+        >
+          {{ reservation.get_status_display }}
+        </span>
+      </div>
 
-    <!-- Main Info -->
-    <div class="lg:col-span-2 space-y-5">
-
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <div class="flex items-center justify-between mb-5">
-                <h3 class="font-bold text-gray-800">Reservation #{{ reservation.id }}</h3>
-                <span class="px-3 py-1 rounded-full text-xs font-semibold
-                    {% if reservation.status == 'approved' %}bg-green-100 text-green-700
-                    {% elif reservation.status == 'pending' %}bg-yellow-100 text-yellow-700
-                    {% elif reservation.status == 'cancelled' %}bg-red-100 text-red-700
-                    {% elif reservation.status == 'completed' %}bg-blue-100 text-blue-700
-                    {% else %}bg-gray-100 text-gray-600{% endif %}">
-                    {{ reservation.get_status_display }}
-                </span>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                    <p class="text-xs text-gray-400 mb-1">Property</p>
-                    <p class="font-medium text-gray-700">{{ reservation.property.title }}</p>
-                    <p class="text-xs text-gray-400">{{ reservation.property.city }}</p>
-                </div>
-                <div>
-                    <p class="text-xs text-gray-400 mb-1">Client</p>
-                    <p class="font-medium text-gray-700">
-                        {{ reservation.client.get_full_name|default:reservation.client.username }}
-                    </p>
-                    <p class="text-xs text-gray-400">{{ reservation.client.email }}</p>
-                </div>
-                <div>
-                    <p class="text-xs text-gray-400 mb-1">Reservation Date</p>
-                    <p class="font-medium text-gray-700">{{ reservation.reservation_date }}</p>
-                </div>
-                <div>
-                    <p class="text-xs text-gray-400 mb-1">Reservation Fee</p>
-                    <p class="font-medium text-gray-700">₱{{ reservation.reservation_fee|floatformat:2 }}</p>
-                </div>
-                <div>
-                    <p class="text-xs text-gray-400 mb-1">Payment Method</p>
-                    <p class="font-medium text-gray-700">{{ reservation.get_payment_method_display }}</p>
-                </div>
-                <div>
-                    <p class="text-xs text-gray-400 mb-1">Handled By</p>
-                    <p class="font-medium text-gray-700">
-                        {% if reservation.handled_by %}
-                            {{ reservation.handled_by.get_full_name }}
-                        {% else %}
-                            <span class="text-gray-300">Not assigned</span>
-                        {% endif %}
-                    </p>
-                </div>
-            </div>
-
-            {% if reservation.notes %}
-            <div class="mt-4 p-3 bg-gray-50 rounded-xl">
-                <p class="text-xs text-gray-400 mb-1">Notes</p>
-                <p class="text-sm text-gray-600">{{ reservation.notes }}</p>
-            </div>
+      <div class="grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <p class="text-xs text-gray-400 mb-1">Property</p>
+          <p class="font-medium text-gray-700">
+            {{ reservation.property.title }}
+          </p>
+          <p class="text-xs text-gray-400">{{ reservation.property.city }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-400 mb-1">Client</p>
+          <p class="font-medium text-gray-700">
+            {{
+            reservation.client.get_full_name|default:reservation.client.username
+            }}
+          </p>
+          <p class="text-xs text-gray-400">{{ reservation.client.email }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-400 mb-1">Reservation Date</p>
+          <p class="font-medium text-gray-700">
+            {{ reservation.reservation_date }}
+          </p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-400 mb-1">Reservation Fee</p>
+          <p class="font-medium text-gray-700">
+            ₱{{ reservation.reservation_fee|floatformat:2|intcomma }}
+          </p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-400 mb-1">Payment Method</p>
+          <p class="font-medium text-gray-700">
+            {{ reservation.get_payment_method_display }}
+          </p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-400 mb-1">Handled By</p>
+          <p class="font-medium text-gray-700">
+            {% if reservation.handled_by %} {{
+            reservation.handled_by.get_full_name }} {% else %}
+            <span class="text-gray-300">Not assigned</span>
             {% endif %}
+          </p>
         </div>
+      </div>
 
-        <!-- Status Logs -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h4 class="font-semibold text-gray-800 text-sm mb-4">Status History</h4>
-            <div class="space-y-3">
-                {% for log in status_logs %}
-                <div class="flex items-start gap-3">
-                    <div class="bg-blue-100 rounded-full p-1.5 mt-0.5">
-                        <i class="fas fa-circle text-blue-500 text-xs"></i>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-700">
-                            <span class="font-medium">{{ log.old_status }}</span>
-                            → <span class="font-medium">{{ log.new_status }}</span>
-                        </p>
-                        {% if log.remarks %}
-                            <p class="text-xs text-gray-400">{{ log.remarks }}</p>
-                        {% endif %}
-                        <p class="text-xs text-gray-400">
-                            {{ log.changed_at|date:"M d, Y h:i A" }}
-                        </p>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
+      {% if reservation.notes %}
+      <div class="mt-4 p-3 bg-gray-50 rounded-xl">
+        <p class="text-xs text-gray-400 mb-1">Notes</p>
+        <p class="text-sm text-gray-600">{{ reservation.notes }}</p>
+      </div>
+      {% endif %}
     </div>
 
-    <!-- Actions -->
-    <div class="space-y-5">
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-            <h4 class="font-semibold text-gray-800 text-sm mb-4">Actions</h4>
-            <div class="space-y-2">
-                {% if user.role in 'broker,staff,sale_assistant,admin' or user.is_superuser %}
-                <a href="{% url 'reservations:update_status' reservation.pk %}"
-                   class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-semibold transition">
-                    <i class="fas fa-edit mr-2"></i>Update Status
-                </a>
-                {% endif %}
-                {% if user.role == 'client' and reservation.status == 'pending' %}
-                <a href="{% url 'reservations:cancel' reservation.pk %}"
-                   class="block w-full text-center bg-red-100 hover:bg-red-200 text-red-700 py-2.5 rounded-xl text-sm font-semibold transition">
-                    <i class="fas fa-times mr-2"></i>Cancel Reservation
-                </a>
-                {% endif %}
-                <a href="{% url 'reservations:list' %}"
-                   class="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold transition">
-                    <i class="fas fa-arrow-left mr-2"></i>Back to List
-                </a>
-            </div>
+    <!-- Status Logs -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <h4 class="font-semibold text-gray-800 text-sm mb-4">Status History</h4>
+      <div class="space-y-3">
+        {% for log in status_logs %}
+        <div class="flex items-start gap-3">
+          <div class="bg-blue-100 rounded-full p-1.5 mt-0.5">
+            <i class="fas fa-circle text-blue-500 text-xs"></i>
+          </div>
+          <div>
+            <p class="text-sm text-gray-700">
+              <span class="font-medium">{{ log.old_status }}</span>
+              → <span class="font-medium">{{ log.new_status }}</span>
+            </p>
+            {% if log.remarks %}
+            <p class="text-xs text-gray-400">{{ log.remarks }}</p>
+            {% endif %}
+            <p class="text-xs text-gray-400">
+              {{ log.changed_at|date:"M d, Y h:i A" }}
+            </p>
+          </div>
         </div>
+        {% endfor %}
+      </div>
     </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="space-y-5">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+      <h4 class="font-semibold text-gray-800 text-sm mb-4">Actions</h4>
+      <div class="space-y-2">
+        {% if user.role == 'broker' or user.role == 'staff' or user.role ==
+        'sale_assistant' or user.role == 'admin' or user.role ==
+        'property_owner' or user.is_superuser %}
+        <a
+          href="{% url 'reservations:update_status' reservation.pk %}"
+          class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-semibold transition"
+        >
+          <i class="fas fa-edit mr-2"></i>Update Status
+        </a>
+        {% endif %} {% if user.role == 'client' and reservation.status ==
+        'pending' %}
+        <a
+          href="{% url 'reservations:cancel' reservation.pk %}"
+          class="block w-full text-center bg-red-100 hover:bg-red-200 text-red-700 py-2.5 rounded-xl text-sm font-semibold transition"
+        >
+          <i class="fas fa-times mr-2"></i>Cancel Reservation
+        </a>
+        {% endif %}
+        <a
+          href="{% url 'reservations:list' %}"
+          class="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold transition"
+        >
+          <i class="fas fa-arrow-left mr-2"></i>Back to List
+        </a>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

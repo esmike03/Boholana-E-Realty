@@ -1,6 +1,6 @@
 {% extends 'emails/base_email.html' %}
 {% block email_content %}
-
+{% load humanize %}
 <div class="label">Account Update</div>
 <h1>Your account has been disabled</h1>
 <p>Hi {{ user.get_full_name|default:user.username }}, your account at Boholana E-Realty has been disabled.</p>

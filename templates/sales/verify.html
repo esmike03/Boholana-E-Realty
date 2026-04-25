@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Verify Sale #{{ sale.id }}{% endblock %}
 {% block page_title %}Verify Sale{% endblock %}
-
+{% load humanize %}
 {% block content %}
 <div class="max-w-2xl">
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -23,11 +23,11 @@
                 </div>
                 <div>
                     <p class="text-xs text-gray-400">Selling Price</p>
-                    <p class="font-medium">₱{{ sale.selling_price|floatformat:2 }}</p>
+                    <p class="font-medium">₱{{ sale.selling_price|floatformat:2|intcomma }}</p>
                 </div>
                 <div>
                     <p class="text-xs text-gray-400">Net Price</p>
-                    <p class="font-bold text-blue-600">₱{{ sale.net_price|floatformat:2 }}</p>
+                    <p class="font-bold text-blue-600">₱{{ sale.net_price|floatformat:2|intcomma }}</p>
                 </div>
             </div>
         </div>

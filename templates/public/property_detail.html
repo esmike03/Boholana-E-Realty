@@ -124,6 +124,9 @@
       <!-- ── RIGHT ── -->
       <div class="lg:col-span-1 flex flex-col gap-5">
 
+        <!-- Mortgage Calculator -->
+        {% include 'includes/mortgage_calculator.html' %}
+
         <!-- Contact Broker -->
         <div class="bg-white border border-gray-100 p-5">
           <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-4">Contact Broker</p>
@@ -149,8 +152,10 @@
             <input type="hidden" name="listing_type" value="for_sale" />
 
             <input type="text" name="name" placeholder="Your Name"
+              value="{% if user.is_authenticated %}{{ user.get_full_name }}{% endif %}"
               class="w-full border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-white" />
             <input type="text" name="phone" placeholder="Your Phone / Viber"
+              value="{% if user.is_authenticated and user.phone_number %}{{ user.phone_number }}{% endif %}"
               class="w-full border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-white" />
 
             <!-- ✅ Preferred contact -->
@@ -165,11 +170,12 @@
             <!-- ✅ City -->
             <input type="text" name="city"
                   placeholder="Your City"
+                  value="{% if user.is_authenticated and user.address %}{{ user.address }}{% endif %}"
                   class="w-full border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-white" />
 
             <textarea name="message" rows="3"
               placeholder="I'm interested in this property..."
-              class="w-full border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-white resize-none"></textarea>
+              class="w-full border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-white resize-none">{% if user.is_authenticated %}I'm interested in "{{ property.title }}". Please contact me with more details.{% endif %}</textarea>
 
             <button type="submit"
               class="w-full bg-gray-900 hover:bg-yellow-600 text-white py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2">
@@ -196,99 +202,37 @@
             </a>
             <a href="{% url 'reservations:chat' property.pk %}"
               class="w-full text-center border border-gray-200 hover:border-gray-900 text-gray-600 hover:text-gray-900 py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2">
-              <i class="fas fa-comments text-xs"></i> Chat with Broker
+              <i class="fas fa-comments text-xs"></i> Chat with Us
             </a>
 
             <!-- Quick Mortgage Calc -->
-            <!-- Quick Mortgage Calc -->
-            <div class="border border-gray-100 bg-gray-50 p-5 mt-1">
-                <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-4">
-                    Estimate Monthly Payment
-                </p>
-
-                <!-- Monthly Result -->
-                <div class="bg-gray-900 px-4 py-3 mb-4 flex items-center justify-between">
-                    <span class="text-xs text-gray-400">Monthly Payment</span>
-                    <span id="quick-monthly" class="text-lg font-bold text-yellow-400">₱0</span>
+            <div class="border border-gray-100 bg-gray-50 p-4 mt-1">
+              <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-3">Estimate Monthly Payment</p>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs text-gray-400">Monthly estimate</span>
+                <span id="quick-monthly" class="text-sm font-bold text-gray-900">₱0</span>
+              </div>
+              <div class="space-y-3">
+                <div>
+                  <div class="flex justify-between text-[10px] text-gray-400 mb-1">
+                    <span>Down Payment</span><span id="quick-down-pct">20%</span>
+                  </div>
+                  <input type="range" id="quick-down" min="5" max="50" step="5" value="20"
+                    class="w-full h-1 bg-gray-200 appearance-none cursor-pointer accent-yellow-500"/>
                 </div>
-
-                <div class="space-y-4">
-                    <!-- Down Payment -->
-                    <div>
-                        <div class="flex justify-between text-[10px] text-gray-500 mb-1.5">
-                            <span>Down Payment</span>
-                            <span>
-                                <span id="quick-down-pct">20</span>%
-                                (<span id="quick-down-amt">₱0</span>)
-                            </span>
-                        </div>
-                        <input type="range" id="quick-down"
-                              min="0" max="90" step="5" value="20"
-                              class="w-full h-1 bg-gray-200 appearance-none cursor-pointer accent-yellow-500">
-                        <!-- Manual % input -->
-                        <input type="number" id="quick-down-input"
-                              placeholder="Or type % (e.g. 20)"
-                              min="0" max="100"
-                              class="mt-2 w-full border border-gray-200 px-3 py-2 text-xs text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 bg-white transition-colors">
-                    </div>
-
-                    <!-- Loan Term -->
-                    <div>
-                        <div class="flex justify-between text-[10px] text-gray-500 mb-1.5">
-                            <span>Loan Term</span>
-                            <span>
-                                <span id="quick-term-yr">20</span> yrs
-                                (<span id="quick-term-mo">240</span> mo)
-                            </span>
-                        </div>
-                        <input type="range" id="quick-term"
-                              min="1" max="30" step="1" value="20"
-                              class="w-full h-1 bg-gray-200 appearance-none cursor-pointer accent-yellow-500">
-                        <!-- Manual month input -->
-                        <input type="number" id="quick-term-input"
-                              placeholder="Or type months (e.g. 240)"
-                              min="1" max="360"
-                              class="mt-2 w-full border border-gray-200 px-3 py-2 text-xs text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 bg-white transition-colors">
-                    </div>
-
-                    <!-- Interest Rate -->
-                    <div>
-                        <div class="flex justify-between text-[10px] text-gray-500 mb-1.5">
-                            <span>Interest Rate</span>
-                            <span id="quick-rate-display">6.5% / yr</span>
-                        </div>
-                        <input type="range" id="quick-rate"
-                              min="1" max="20" step="0.25" value="6.5"
-                              class="w-full h-1 bg-gray-200 appearance-none cursor-pointer accent-yellow-500">
-                        <input type="number" id="quick-rate-input"
-                              placeholder="Or type rate (e.g. 6.5)"
-                              min="0" max="100" step="0.1"
-                              class="mt-2 w-full border border-gray-200 px-3 py-2 text-xs text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 bg-white transition-colors">
-                    </div>
+                <div>
+                  <div class="flex justify-between text-[10px] text-gray-400 mb-1">
+                    <span>Loan Term</span><span id="quick-term-display">20 years</span>
+                  </div>
+                  <input type="range" id="quick-term" min="5" max="30" step="5" value="20"
+                    class="w-full h-1 bg-gray-200 appearance-none cursor-pointer accent-yellow-500"/>
                 </div>
-
-                <!-- Mini Breakdown -->
-                <div class="mt-4 pt-4 border-t border-gray-200 space-y-1.5 text-xs">
-                    <div class="flex justify-between text-gray-500">
-                        <span>Loan Amount</span>
-                        <span id="quick-loan" class="font-medium text-gray-700">₱0</span>
-                    </div>
-                    <div class="flex justify-between text-gray-500">
-                        <span>Total Interest</span>
-                        <span id="quick-interest" class="font-medium text-orange-500">₱0</span>
-                    </div>
-                    <div class="flex justify-between text-gray-500 font-medium">
-                        <span>Total Payment</span>
-                        <span id="quick-total" class="text-gray-900">₱0</span>
-                    </div>
-                </div>
-
-                <a href="{% url 'mortgage_calculator' %}"
-                  class="block text-center mt-4 text-[10px] font-semibold tracking-widest uppercase text-yellow-600 hover:text-yellow-700 transition-colors">
-                    Full Calculator →
-                </a>
+              </div>
+              <a href="{% url 'mortgage_calculator' %}"
+                class="block text-center mt-3 text-[10px] font-semibold tracking-widest uppercase text-yellow-600 hover:text-yellow-700 transition-colors">
+                Full Calculator →
+              </a>
             </div>
-
 
             <!-- Favorite -->
             <button onclick="toggleFavorite({{ property.pk }})" id="fav-btn"
@@ -316,84 +260,24 @@
 <script>
   const propPrice = {{ property.price }};
 
-  (function() {
-      const propPrice = {{ property.price }};
+  function quickCalc() {
+    const downPct = parseFloat(document.getElementById('quick-down').value);
+    const years   = parseFloat(document.getElementById('quick-term').value);
+    const rate    = 6.5;
+    const down    = propPrice * (downPct / 100);
+    const loan    = propPrice - down;
+    const mr      = (rate / 100) / 12;
+    const n       = years * 12;
+    const monthly = loan * (mr * Math.pow(1 + mr, n)) / (Math.pow(1 + mr, n) - 1);
+    document.getElementById('quick-monthly').textContent   = '₱' + Math.round(monthly).toLocaleString('en-PH');
+    document.getElementById('quick-down-pct').textContent  = downPct + '%';
+    document.getElementById('quick-term-display').textContent = years + ' years';
+  }
 
-      function fmt(n) {
-          return '₱' + Math.round(n).toLocaleString('en-PH');
-      }
-      function fmtDec(n) {
-          return '₱' + parseFloat(n).toLocaleString('en-PH', {
-              minimumFractionDigits: 0, maximumFractionDigits: 0
-          });
-      }
+  const qd = document.getElementById('quick-down');
+  const qt = document.getElementById('quick-term');
+  if (qd) { qd.addEventListener('input', quickCalc); qt.addEventListener('input', quickCalc); quickCalc(); }
 
-      let qState = { downPct: 20, termYears: 20, rate: 6.5 };
-
-      function quickCalc() {
-          const down    = propPrice * (qState.downPct / 100);
-          const loan    = propPrice - down;
-          const months  = Math.round(qState.termYears * 12);
-          const mr      = (qState.rate / 100) / 12;
-
-          let monthly = 0;
-          if (mr === 0) {
-              monthly = loan / months;
-          } else {
-              monthly = loan * (mr * Math.pow(1 + mr, months)) /
-                        (Math.pow(1 + mr, months) - 1);
-          }
-          const totalPay  = monthly * months;
-          const totalInt  = totalPay - loan;
-
-          // Update displays
-          document.getElementById('quick-monthly').textContent  = fmtDec(monthly);
-          document.getElementById('quick-down-pct').textContent = qState.downPct.toFixed(1);
-          document.getElementById('quick-down-amt').textContent = fmt(down);
-          document.getElementById('quick-term-yr').textContent  = qState.termYears % 1 === 0
-              ? qState.termYears : qState.termYears.toFixed(1);
-          document.getElementById('quick-term-mo').textContent  = months;
-          document.getElementById('quick-rate-display').textContent = qState.rate + '% / yr';
-          document.getElementById('quick-loan').textContent     = fmtDec(loan);
-          document.getElementById('quick-interest').textContent = fmtDec(totalInt);
-          document.getElementById('quick-total').textContent    = fmtDec(totalPay);
-
-          // Sync sliders
-          document.getElementById('quick-down').value = qState.downPct;
-          document.getElementById('quick-term').value = qState.termYears;
-          document.getElementById('quick-rate').value = qState.rate;
-      }
-
-      // Slider events
-      document.getElementById('quick-down').addEventListener('input', function() {
-          qState.downPct = parseFloat(this.value);
-          quickCalc();
-      });
-      document.getElementById('quick-term').addEventListener('input', function() {
-          qState.termYears = parseFloat(this.value);
-          quickCalc();
-      });
-      document.getElementById('quick-rate').addEventListener('input', function() {
-          qState.rate = parseFloat(this.value);
-          quickCalc();
-      });
-
-      // Manual input events
-      document.getElementById('quick-down-input').addEventListener('input', function() {
-          const v = parseFloat(this.value);
-          if (v >= 0 && v <= 100) { qState.downPct = v; quickCalc(); }
-      });
-      document.getElementById('quick-term-input').addEventListener('input', function() {
-          const v = parseFloat(this.value);
-          if (v >= 1 && v <= 360) { qState.termYears = v / 12; quickCalc(); }
-      });
-      document.getElementById('quick-rate-input').addEventListener('input', function() {
-          const v = parseFloat(this.value);
-          if (v > 0) { qState.rate = v; quickCalc(); }
-      });
-
-      quickCalc();
-  })();
   function toggleFavorite(propertyId) {
     fetch(`/manage/listings/${propertyId}/favorite/`, {
       method: 'POST',

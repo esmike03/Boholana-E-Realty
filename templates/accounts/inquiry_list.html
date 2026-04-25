@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load humanize %}
 {% block title %}Inquiries — Boholana E-Realty{% endblock %}
 {% block page_title %}Contact Inquiries{% endblock %}
 {% block page_subtitle %}Messages sent through the contact form{% endblock %}
@@ -48,6 +48,7 @@
             <option value="">All Types</option>
             <option value="house" {% if request.GET.property_type == 'house' %}selected{% endif %}>House</option>
             <option value="lot" {% if request.GET.property_type == 'lot' %}selected{% endif %}>Lot</option>
+            <option value="house_and_lot" {% if request.GET.property_type == 'house_and_lot' %}selected{% endif %}>House and Lot</option>
             <option value="condo" {% if request.GET.property_type == 'condo' %}selected{% endif %}>Condo</option>
             <option value="apartment" {% if request.GET.property_type == 'apartment' %}selected{% endif %}>Apartment</option>
             <option value="commercial" {% if request.GET.property_type == 'commercial' %}selected{% endif %}>Commercial</option>

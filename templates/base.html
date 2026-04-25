@@ -25,6 +25,7 @@
       }
     </style>
 
+    <link rel="stylesheet" href="{% static 'admin/css/navbar-bigger.css' %}">
     {% block extra_css %}{% endblock %}
   </head>
 
@@ -71,6 +72,15 @@ function loadNotifCount() {
                     badge.classList.add('hidden');
                 }
             }
+            const sidebarBadge = document.getElementById('sidebar-notif-count');
+            if (sidebarBadge) {
+                if (data.count > 0) {
+                    sidebarBadge.textContent = data.count > 99 ? '99+' : data.count;
+                    sidebarBadge.classList.remove('hidden');
+                } else {
+                    sidebarBadge.classList.add('hidden');
+                }
+            }
         })
         .catch(() => {});
 }
@@ -104,7 +114,7 @@ function loadRecentNotifications() {
     const list = document.getElementById('notif-list');
     if (!list) return;
 
-    fetch('/auth/notifications/?format=json')
+    fetch('{% url "accounts:notifications_json" %}')
         .then(res => res.json())
         .then(data => {
             if (data.notifications && data.notifications.length > 0) {
@@ -153,6 +163,77 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('user-dropdown')?.classList.add('hidden');
         }
     });
+</script>
+
+<script>
+// Global comma formatting for monetary/large number inputs
+(function() {
+    const moneyFields = [
+        'price', 'selling_price', 'discount', 'amount', 'reservation_fee',
+        'min_budget', 'max_budget', 'min_price', 'max_price',
+        'lot_area', 'floor_area', 'preferred_size'
+    ];
+    const moneyIds = ['downPayment', 'price-input'];
+
+    function addCommas(val) {
+        if (!val) return '';
+        let parts = val.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return parts.join('.');
+    }
+
+    function stripCommas(val) {
+        return val ? val.replace(/,/g, '') : '';
+    }
+
+    function setupField(input) {
+        // Convert to text so commas are allowed
+        input.setAttribute('type', 'text');
+        input.setAttribute('inputmode', 'decimal');
+
+        // Format existing value
+        if (input.value) {
+            input.value = addCommas(stripCommas(input.value));
+        }
+
+        // Format on input
+        input.addEventListener('input', function() {
+            let pos = this.selectionStart;
+            let oldLen = this.value.length;
+            let raw = stripCommas(this.value).replace(/[^0-9.]/g, '');
+            // Prevent multiple dots
+            let dotIndex = raw.indexOf('.');
+            if (dotIndex !== -1) {
+                raw = raw.substring(0, dotIndex + 1) + raw.substring(dotIndex + 1).replace(/\./g, '');
+            }
+            this.value = addCommas(raw);
+            let newLen = this.value.length;
+            pos = pos + (newLen - oldLen);
+            this.setSelectionRange(pos, pos);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Find by name
+        moneyFields.forEach(function(name) {
+            document.querySelectorAll('input[name="' + name + '"]').forEach(setupField);
+        });
+        // Find by id
+        moneyIds.forEach(function(id) {
+            let el = document.getElementById(id);
+            if (el) setupField(el);
+        });
+
+        // Strip commas before submit
+        document.querySelectorAll('form').forEach(function(form) {
+            form.addEventListener('submit', function() {
+                form.querySelectorAll('input[inputmode="decimal"]').forEach(function(input) {
+                    input.value = stripCommas(input.value);
+                });
+            });
+        });
+    });
+})();
 </script>
     
     {% block extra_js %}{% endblock %}

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load humanize %}
 {% block title %}My Profile — Boholana E-Realty{% endblock %}
 {% block page_title %}My Profile{% endblock %}
 {% block page_subtitle %}Manage your account information{% endblock %}
@@ -341,6 +341,10 @@
                             <option value="lot"
                                 {% if preference.preferred_property_type == 'lot' %}selected{% endif %}>
                                 Lot
+                            </option>
+                            <option value="house_and_lot"
+                                {% if preference.preferred_property_type == 'house_and_lot' %}selected{% endif %}>
+                                House and Lot
                             </option>
                             <option value="condo"
                                 {% if preference.preferred_property_type == 'condo' %}selected{% endif %}>

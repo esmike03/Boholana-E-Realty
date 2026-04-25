@@ -6,163 +6,252 @@
 
 {% block content %}
 
-<!-- Stats -->
-<div class="grid grid-cols-2 gap-4 mb-6">
-    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-        <div class="flex items-center gap-4">
-            <div class="bg-blue-100 rounded-xl p-3">
-                <i class="fas fa-comments text-blue-600"></i>
-            </div>
-            <div>
-                <p class="text-2xl font-bold text-gray-800">
-                    {{ conversations|length }}
-                </p>
-                <p class="text-xs text-gray-500 mt-0.5">Conversations</p>
-            </div>
+<div class="w-full max-w-3xl mx-auto flex flex-col md:flex-row bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden" style="height: 75vh; min-height: 320px; max-height: 88vh; min-width: 0; width: 100%;">
+
+  <!-- Left: Conversations List -->
+  <div class="min-w-[140px] md:w-[22%] max-w-xs flex-shrink-0 border-r border-gray-200 flex flex-col bg-white" style="min-width:120px; height: 100%;">
+    <!-- Inbox Header -->
+    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-comments text-yellow-500"></i>
+        <h3 class="font-bold text-gray-900 text-sm">Chats</h3>
+        {% if total_unread > 0 %}
+        <span class="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">{{ total_unread }}</span>
+        {% endif %}
+      </div>
+      <button onclick="toggleAvailability()" id="availability-btn"
+        class="text-[10px] px-2.5 py-1 rounded-full font-semibold transition">
+        ...
+      </button>
+    </div>
+
+    <!-- Conversation List -->
+    <div class="flex-1 overflow-y-auto" id="convo-list">
+      {% if conversations %}
+      {% for convo in conversations %}
+      <button onclick="openChat({{ convo.property.pk }}, {{ convo.other_user.pk }}, '{{ convo.other_user.get_full_name|default:convo.other_user.username|escapejs }}', '{{ convo.property.title|escapejs }}', this)"
+        data-convo-key="{{ convo.other_user.pk }}-{{ convo.property.pk }}"
+        class="convo-btn w-full flex items-center gap-3 px-5 py-3.5 hover:bg-gray-50 transition text-left border-b border-gray-50
+        {% if convo.unread_count > 0 %}bg-blue-50/40{% endif %}">
+        <!-- Avatar -->
+        <div class="relative flex-shrink-0">
+          <div class="w-11 h-11 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center overflow-hidden">
+            {% if convo.other_user.profile_picture %}
+            <img src="{{ convo.other_user.profile_picture.url }}" class="w-11 h-11 rounded-full object-cover">
+            {% else %}
+            <span class="text-white text-sm font-bold">{{ convo.other_user.first_name|first|upper }}{{ convo.other_user.last_name|first|upper }}</span>
+            {% endif %}
+          </div>
+          <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
         </div>
-    </div>
-    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-        <div class="flex items-center gap-4">
-            <div class="bg-red-100 rounded-xl p-3">
-                <i class="fas fa-envelope text-red-500"></i>
-            </div>
-            <div>
-                <p class="text-2xl font-bold text-gray-800">
-                    {{ total_unread }}
-                </p>
-                <p class="text-xs text-gray-500 mt-0.5">Unread Messages</p>
-            </div>
+        <!-- Content -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-1">
+            <p class="text-sm font-semibold text-gray-900 truncate">{{ convo.other_user.get_full_name|default:convo.other_user.username }}</p>
+            <span class="text-[10px] text-gray-400 flex-shrink-0">{{ convo.last_message.created_at|timesince|truncatewords:1 }}</span>
+          </div>
+          <p class="text-[11px] text-gray-400 truncate">{{ convo.property.title|truncatechars:30 }}</p>
+          <p class="text-[11px] truncate mt-0.5 {% if convo.unread_count > 0 %}font-semibold text-gray-800{% else %}text-gray-400{% endif %}">
+            {% if convo.last_message.sender == request.user %}<span class="text-gray-400 font-normal">You: </span>{% endif %}
+            {{ convo.last_message.message|truncatechars:40 }}
+          </p>
         </div>
+        {% if convo.unread_count > 0 %}
+        <span class="bg-yellow-500 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center font-bold flex-shrink-0">{{ convo.unread_count }}</span>
+        {% endif %}
+      </button>
+      {% endfor %}
+      {% else %}
+      <div class="p-10 text-center">
+        <i class="fas fa-comments text-3xl text-gray-200 mb-3 block"></i>
+        <p class="text-sm text-gray-400 font-medium">No conversations yet</p>
+        <p class="text-xs text-gray-300 mt-1">Messages from clients will appear here</p>
+      </div>
+      {% endif %}
     </div>
-</div>
+  </div>
 
-<!-- Toggle Availability -->
-<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-5 flex items-center justify-between">
-    <div>
-        <p class="text-sm font-semibold text-gray-700">Chat Availability</p>
-        <p class="text-xs text-gray-400 mt-0.5">
-            Toggle your availability status for clients
-        </p>
+  <!-- Right: Chat Area -->
+  <div class="flex-1 flex flex-col bg-gray-50 min-w-0" id="chat-area" style="min-width:0; min-height:0; height: 100%; flex-basis: 0;">
+    <style>
+    @media (max-width: 900px) {
+      .max-w-3xl { max-width: 98vw !important; }
+      .min-w-\[140px\] { min-width: 80px !important; }
+      .md\:w-\[22%\] { width: 30% !important; }
+    }
+    @media (max-width: 600px) {
+      .max-w-3xl { max-width: 100vw !important; border-radius: 0 !important; }
+      .min-w-\[140px\] { min-width: 60px !important; }
+      .md\:w-\[22%\] { width: 100% !important; border-right: none !important; border-bottom: 1px solid #e5e7eb !important; }
+      .flex-col.md\:flex-row { flex-direction: column !important; }
+    }
+    </style>
+    <!-- Empty State -->
+    <div id="chat-empty" class="flex-1 flex items-center justify-center">
+      <div class="text-center">
+        <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-comments text-3xl text-gray-300"></i>
+        </div>
+        <h3 class="text-lg font-bold text-gray-400 mb-1">Your Messages</h3>
+        <p class="text-sm text-gray-300">Select a conversation to start chatting</p>
+      </div>
     </div>
-    <button onclick="toggleAvailability()"
-            id="availability-btn"
-            class="px-4 py-2 rounded-xl text-sm font-semibold transition">
-        Loading...
-    </button>
-</div>
 
-<!-- Conversations List -->
-<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-100">
-        <h3 class="font-semibold text-gray-800 text-sm">All Conversations</h3>
-    </div>
-
-    {% if conversations %}
-    <div class="divide-y divide-gray-50">
-        {% for convo in conversations %}
-        <a href="{% url 'reservations:chat' convo.property.pk %}?client_id={{ convo.other_user.pk }}"
-           class="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition
-           {% if convo.unread_count > 0 %}bg-blue-50/30{% endif %}">
-
-            <!-- Avatar -->
-            <div class="relative flex-shrink-0">
-                <div class="w-11 h-11 rounded-full p-2 bg-blue-500 flex items-center justify-center">
-                    {% if convo.other_user.profile_picture %}
-                        <img src="{{ convo.other_user.profile_picture.url }}"
-                             class="w-11 h-11 rounded-full object-cover">
-                    {% else %}
-                        <span class="text-white text-sm font-bold">
-                            {{ convo.other_user.get_initials }}
-                        </span>
-                    {% endif %}
-                </div>
-                {% if convo.unread_count > 0 %}
-                <span class="absolute top-0 right bg-red-500 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center font-bold">
-                    {{ convo.unread_count }}
-                </span>
-                {% endif %}
-            </div>
-
-            <!-- Content -->
-            <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between gap-2">
-                    <p class="font-semibold text-gray-800 text-sm truncate">
-                        {{ convo.other_user.get_full_name|default:convo.other_user.username }}
-                    </p>
-                    <p class="text-xs text-gray-400 flex-shrink-0">
-                        {{ convo.last_message.created_at|timesince }} ago
-                    </p>
-                </div>
-                <p class="text-xs text-gray-500 mt-0.5 truncate">
-                    <span class="text-gray-400">
-                        Re: {{ convo.property.title|truncatechars:25 }}
-                    </span>
-                </p>
-                <p class="text-xs text-gray-400 mt-0.5 truncate
-                    {% if convo.unread_count > 0 %}font-semibold text-gray-700{% endif %}">
-                    {% if convo.last_message.sender == request.user %}
-                        <span class="text-gray-400">You: </span>
-                    {% endif %}
-                    {{ convo.last_message.message|truncatechars:50 }}
-                </p>
-            </div>
-
-            <!-- Arrow -->
-            <i class="fas fa-chevron-right text-gray-300 text-xs flex-shrink-0"></i>
-
+    <!-- Active Chat (hidden initially) -->
+    <div id="chat-active" class="hidden flex-1 flex flex-col min-h-0">
+      <!-- Chat Header -->
+      <div class="px-6 py-3.5 bg-white border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
+            <span id="chat-avatar" class="text-white text-sm font-bold"></span>
+          </div>
+          <div>
+            <p id="chat-name" class="text-sm font-bold text-gray-900"></p>
+            <p id="chat-property" class="text-[11px] text-gray-400"></p>
+          </div>
+        </div>
+        <a id="chat-fullpage-link" href="#" class="text-xs text-gray-400 hover:text-yellow-600 transition" title="Open full page">
+          <i class="fas fa-expand-alt"></i>
         </a>
-        {% endfor %}
-    </div>
+      </div>
 
-    {% else %}
-    <div class="px-6 py-16 text-center">
-        <div class="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-comments text-gray-400 text-2xl"></i>
-        </div>
-        <h3 class="font-semibold text-gray-700 mb-1">No conversations yet</h3>
-        <p class="text-gray-400 text-sm">
-            Messages from clients will appear here.
-        </p>
+      <!-- Messages -->
+      <div id="chat-messages" class="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-3" style="scroll-behavior: smooth; min-height: 60px;"></div>
+
+      <!-- Quick Replies -->
+      <div class="px-6 py-2 border-t border-gray-100 bg-white flex gap-2 overflow-x-auto flex-shrink-0">
+        <button onclick="fillMsg('I will check on that for you.')" class="text-[11px] border border-gray-200 hover:border-yellow-500 hover:text-yellow-600 text-gray-500 px-3 py-1.5 rounded-full whitespace-nowrap transition">I'll check</button>
+        <button onclick="fillMsg('Can you provide more details?')" class="text-[11px] border border-gray-200 hover:border-yellow-500 hover:text-yellow-600 text-gray-500 px-3 py-1.5 rounded-full whitespace-nowrap transition">More details</button>
+        <button onclick="fillMsg('Let me schedule a viewing for you.')" class="text-[11px] border border-gray-200 hover:border-yellow-500 hover:text-yellow-600 text-gray-500 px-3 py-1.5 rounded-full whitespace-nowrap transition">Schedule viewing</button>
+        <button onclick="fillMsg('The property is still available.')" class="text-[11px] border border-gray-200 hover:border-yellow-500 hover:text-yellow-600 text-gray-500 px-3 py-1.5 rounded-full whitespace-nowrap transition">Still available</button>
+      </div>
+
+      <!-- Input -->
+      <div class="px-3 py-2 bg-white border-t border-gray-200 flex-shrink-0">
+        <form onsubmit="sendMessage(event)" class="flex gap-2">
+          <input type="text" id="msg-input" placeholder="Type a message..."
+            class="flex-1 border border-gray-200 rounded-full px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition" autocomplete="off">
+          <button type="submit"
+            class="w-9 h-9 rounded-full bg-yellow-500 hover:bg-yellow-600 text-white flex items-center justify-center transition-colors flex-shrink-0">
+            <i class="fas fa-paper-plane text-sm"></i>
+          </button>
+        </form>
+      </div>
     </div>
-    {% endif %}
+  </div>
 </div>
 
 <script>
-// Load availability status on page load
-function loadAvailability() {
-    fetch('{% url "reservations:toggle_availability" %}', {
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(res => res.json())
-    .then(data => updateAvailabilityBtn(data.is_available))
-    .catch(() => {});
-}
+(function() {
+  const CSRF = '{{ csrf_token }}';
+  let current = null;
+  let pollTimer = null;
 
-function updateAvailabilityBtn(isAvailable) {
-    const btn = document.getElementById('availability-btn');
-    if (isAvailable) {
-        btn.textContent = '● Online';
-        btn.className = 'px-4 py-2 rounded-xl text-sm font-semibold transition bg-green-100 text-green-700 hover:bg-green-200';
-    } else {
-        btn.textContent = '● Offline';
-        btn.className = 'px-4 py-2 rounded-xl text-sm font-semibold transition bg-gray-100 text-gray-600 hover:bg-gray-200';
-    }
-}
-
-function toggleAvailability() {
+  // Availability
+  function loadAvailability() {
+    fetch('{% url "reservations:toggle_availability" %}', { headers: {'X-Requested-With': 'XMLHttpRequest'} })
+      .then(r => r.json())
+      .then(d => updateAvailBtn(d.is_available))
+      .catch(() => {});
+  }
+  function updateAvailBtn(on) {
+    const b = document.getElementById('availability-btn');
+    b.textContent = on ? '● Online' : '● Offline';
+    b.className = 'text-[10px] px-2.5 py-1 rounded-full font-semibold transition ' +
+      (on ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500');
+  }
+  window.toggleAvailability = function() {
     fetch('{% url "reservations:toggle_availability" %}', {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}',
-            'Content-Type': 'application/json',
+      method: 'POST', headers: {'X-CSRFToken': CSRF, 'Content-Type': 'application/json'}
+    }).then(r => r.json()).then(d => updateAvailBtn(d.is_available)).catch(() => {});
+  };
+
+  // Open chat
+  window.openChat = function(propertyPk, userPk, name, propTitle, btn) {
+    current = { propertyPk, userPk, name, propTitle };
+
+    // Highlight selected
+    document.querySelectorAll('.convo-btn').forEach(b => b.classList.remove('bg-yellow-50', 'border-l-4', 'border-l-yellow-500'));
+    if (btn) { btn.classList.add('bg-yellow-50', 'border-l-4', 'border-l-yellow-500'); }
+
+    // Update header
+    const initials = name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+    document.getElementById('chat-avatar').textContent = initials;
+    document.getElementById('chat-name').textContent = name;
+    document.getElementById('chat-property').textContent = propTitle;
+    document.getElementById('chat-fullpage-link').href =
+      '/manage/reservations/chat/' + propertyPk + '/?client_id=' + userPk;
+
+    // Show chat
+    document.getElementById('chat-empty').classList.add('hidden');
+    document.getElementById('chat-active').classList.remove('hidden');
+    document.getElementById('chat-active').classList.add('flex');
+
+    loadMessages();
+    startPoll();
+  };
+
+  function loadMessages() {
+    if (!current) return;
+    fetch('/manage/reservations/chat/' + current.propertyPk + '/messages/?user_id=' + current.userPk)
+      .then(r => r.json())
+      .then(data => {
+        const c = document.getElementById('chat-messages');
+        if (!data.messages || data.messages.length === 0) {
+          c.innerHTML = '<div class="flex-1 flex items-center justify-center"><p class="text-sm text-gray-300">No messages yet. Start the conversation!</p></div>';
+          return;
         }
-    })
-    .then(res => res.json())
-    .then(data => updateAvailabilityBtn(data.is_available))
-    .catch(() => {});
-}
+        let html = '';
+        let lastDate = '';
+        data.messages.forEach(m => {
+          if (m.is_mine) {
+            html += `<div class="flex justify-end"><div class="max-w-[65%]">
+              <div class="bg-yellow-500 text-white text-sm px-4 py-2.5 rounded-2xl rounded-br-sm">${esc(m.message)}</div>
+              <p class="text-[10px] text-gray-400 mt-1 text-right">${m.created_at}</p>
+            </div></div>`;
+          } else {
+            html += `<div class="flex justify-start"><div class="max-w-[65%]">
+              <div class="bg-white text-gray-800 text-sm px-4 py-2.5 rounded-2xl rounded-bl-sm border border-gray-100 shadow-sm">${esc(m.message)}</div>
+              <p class="text-[10px] text-gray-400 mt-1">${m.created_at}</p>
+            </div></div>`;
+          }
+        });
+        c.innerHTML = html;
+        c.scrollTop = c.scrollHeight;
 
-document.addEventListener('DOMContentLoaded', loadAvailability);
+        // Mark read
+        fetch('/chat/widget/mark-read/' + current.propertyPk + '/' + current.userPk + '/', {
+          method: 'POST', headers: {'X-CSRFToken': CSRF}
+        }).catch(() => {});
+      })
+      .catch(() => {});
+  }
+
+  window.sendMessage = function(e) {
+    e.preventDefault();
+    const inp = document.getElementById('msg-input');
+    const text = inp.value.trim();
+    if (!text || !current) return;
+    inp.value = '';
+    fetch('/chat/widget/send/' + current.propertyPk + '/', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': CSRF},
+      body: 'receiver_pk=' + current.userPk + '&message=' + encodeURIComponent(text)
+    }).then(() => loadMessages()).catch(() => {});
+  };
+
+  window.fillMsg = function(text) {
+    const inp = document.getElementById('msg-input');
+    inp.value = text; inp.focus();
+  };
+
+  function startPoll() { stopPoll(); pollTimer = setInterval(() => { if (current) loadMessages(); }, 5000); }
+  function stopPoll() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+
+  function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  document.addEventListener('DOMContentLoaded', loadAvailability);
+})();
 </script>
 
 {% endblock %}

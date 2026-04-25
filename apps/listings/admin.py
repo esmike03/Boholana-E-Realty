@@ -34,21 +34,70 @@ class PropertyStatusLogInline(admin.TabularInline):
 
 @admin.register(Property)
 class PropertyAdmin(admin.ModelAdmin):
+    actions = ['autogenerate_featured']
+
+    def autogenerate_featured(self, request, queryset):
+        """
+        Set the latest 6 approved properties as featured, un-feature the rest.
+        Only available to admin and broker.
+        """
+        if not (request.user.is_superuser or getattr(request.user, 'role', None) in ['admin', 'broker']):
+            self.message_user(request, "You do not have permission to auto-generate featured properties.", level='error')
+            return
+        # Un-feature all properties
+        Property.objects.filter(is_featured=True).update(is_featured=False)
+        # Feature the latest 6 approved properties
+        featured = Property.objects.filter(listing_status='approved').order_by('-created_at')[:6]
+        count = featured.update(is_featured=True)
+        self.message_user(request, f"{count} properties set as featured.")
+    autogenerate_featured.short_description = "Auto-generate featured properties (latest 6 approved)"
     list_display = (
         'image_preview', 'title', 'property_type',
         'city', 'price_display', 'status_badge',
-        'owner', 'created_at'
+        'is_featured', 'owner', 'broker', 'sale_assistant', 'created_at'
     )
     list_display_links = ('title',)
     list_filter = (
         'property_type', 'listing_type',
-        'listing_status', 'city'
+        'listing_status', 'is_featured', 'city', 'broker', 'sale_assistant'
     )
-    search_fields = ('title', 'address', 'city')
+    # list_editable for is_featured will be set dynamically
+    def get_list_editable(self, request):
+        if request.user.is_superuser or getattr(request.user, 'role', None) in ['admin', 'broker']:
+            return ('is_featured',)
+        return ()
+
+    def get_readonly_fields(self, request, obj=None):
+        ro = list(super().get_readonly_fields(request, obj))
+        if not (request.user.is_superuser or getattr(request.user, 'role', None) in ['admin', 'broker']):
+            ro.append('is_featured')
+        return ro
+
+    def get_fields(self, request, obj=None):
+        fields = list(super().get_fields(request, obj))
+        # Ensure is_featured is present
+        if 'is_featured' not in fields:
+            fields.append('is_featured')
+        return fields
+
+    def get_list_display(self, request):
+        return self.list_display
+
+    def get_changelist_instance(self, request):
+        # Patch list_editable dynamically
+        self.list_editable = self.get_list_editable(request)
+        return super().get_changelist_instance(request)
+    search_fields = ('title', 'address', 'city', 'broker__username', 'sale_assistant__username')
     inlines = [PropertyImageInline, PropertyStatusLogInline]
     readonly_fields = (
         'created_at', 'updated_at',
         'approved_at', 'flagged_at'
+    )
+    fields = (
+        'title', 'description', 'property_type', 'listing_type', 'listing_status',
+        'owner', 'broker', 'sale_assistant', 'price', 'address', 'city', 'province',
+        'approved_by', 'approved_at', 'flagged_by', 'flagged_at', 'rejected_reason',
+        'is_featured', 'tags', 'favorited_by', 'created_at', 'updated_at'
     )
     list_per_page = 20
     filter_horizontal = ('tags', 'favorited_by')

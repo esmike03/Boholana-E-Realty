@@ -12,4 +12,11 @@ urlpatterns = [
     path('<int:pk>/reject/', views.document_reject, name='reject'),
     path('search/', views.document_search, name='search'),
     path('checklist/<int:sale_pk>/', views.document_checklist, name='checklist'),
+    
+    # Listing Document Tracking
+    path('listing/<int:property_pk>/', views.listing_documents, name='listing_documents'),
+    
+    # Client Document Tracking
+    path('my-documents/', views.client_documents, name='client_documents'),
+    path('my-documents/upload/', views.client_document_upload, name='client_upload'),
 ]

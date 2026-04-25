@@ -7,8 +7,8 @@ class Report(models.Model):
     REPORT_TYPE_CHOICES = (
         ('sales_summary', 'Sales Summary Report'),
         ('sales_by_property', 'Sales by Property Report'),
-        ('sales_by_agent', 'Sales by Agent/Sale Assistant Report'),
-        ('sales_turnaround', 'Sales Turnaround Report'),
+        # ('sales_by_agent', 'Sales by Agent/Sale Assistant Report'),  # Removed for merged report
+        ('monthly_sales', 'Monthly Sales Report'),
         ('reservation_summary', 'Reservation Summary Report'),
         ('property_inventory', 'Property Inventory Report'),
         ('property_status', 'Property Status Report'),
@@ -16,7 +16,9 @@ class Report(models.Model):
         ('commission_report', 'Commission Report'),
         ('payment_collection', 'Payment Collection Report'),
         ('document_status', 'Document Status Report'),
+        ('listing_documents', 'Listing Documents Report'),
         ('total_listings', 'Total Listings Overview'),
+        ('total_inquiries', 'Total Inquiries Report'),
         ('user_summary', 'User Summary Report'),
         ('custom', 'Custom Report'),
     )

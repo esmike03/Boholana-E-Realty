@@ -1,6 +1,6 @@
 {% extends 'emails/base_email.html' %}
 {% block email_content %}
-
+{% load humanize %}
 <div class="label">Reservation Submitted</div>
 <h1>Your reservation is pending review</h1>
 <p>Hi {{ reservation.client.get_full_name }}, your reservation has been submitted successfully and is now pending approval.</p>
@@ -20,7 +20,7 @@
     </div>
     <div class="info-row">
         <span class="info-label">Reservation Fee</span>
-        <span class="info-value">₱{{ reservation.reservation_fee|floatformat:2 }}</span>
+        <span class="info-value">₱{{ reservation.reservation_fee|floatformat:2|intcomma }}</span>
     </div>
     <div class="info-row">
         <span class="info-label">Payment Method</span>

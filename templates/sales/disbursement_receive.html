@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load humanize %}
 {% block title %}Confirm Receipt{% endblock %}
 {% block page_title %}Confirm Payment Receipt{% endblock %}
 
@@ -21,7 +22,7 @@
         <div class="p-4 bg-blue-50 rounded-xl mb-5 text-center">
             <p class="text-xs text-blue-400 mb-1">Amount to Receive</p>
             <p class="text-3xl font-bold text-blue-700">
-                ₱{{ disbursement.amount|floatformat:2 }}
+                ₱{{ disbursement.amount|floatformat:2|intcomma }}
             </p>
             <p class="text-xs text-blue-400 mt-1">
                 Sale #{{ disbursement.sale.id }} — {{ disbursement.sale.property.title }}
@@ -30,7 +31,7 @@
 
         <p class="text-sm text-gray-500 mb-5">
             By clicking confirm, you acknowledge that you have received the payment
-            of ₱{{ disbursement.amount|floatformat:2 }} for this transaction.
+            of ₱{{ disbursement.amount|floatformat:2|intcomma }} for this transaction.
         </p>
 
         <form method="POST" class="space-y-3">

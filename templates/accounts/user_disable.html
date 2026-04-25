@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load humanize %}
 {% block title %}
     {% if viewed_user.is_disabled %}Enable{% else %}Disable{% endif %}
     Account — Boholana E-Realty

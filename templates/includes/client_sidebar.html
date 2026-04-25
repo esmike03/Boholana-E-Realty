@@ -1,0 +1,153 @@
+{% if user.is_authenticated and user.role == 'client' %}
+<!-- Client Sidebar -->
+<aside id="client-sidebar"
+  class="fixed top-0 left-0 h-full w-64 z-[60] flex flex-col transform -translate-x-full md:translate-x-0 transition-transform duration-300"
+  style="background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)">
+
+  <!-- Brand -->
+  <div class="px-6 py-5 border-b border-white/10">
+    <a href="{% url 'home' %}" class="flex items-center gap-3">
+      <img src="/media/logo.png" class="h-8 brightness-0 invert opacity-90"/>
+      <div>
+        <p class="text-white text-sm font-bold tracking-tight">Boholana E-Realty</p>
+        <p class="text-white/40 text-[10px]">Client Portal</p>
+      </div>
+    </a>
+  </div>
+
+  <!-- User Info -->
+  <div class="px-6 py-4 border-b border-white/10">
+    <div class="flex items-center gap-3">
+      {% if user.profile_picture %}
+        <img src="{{ user.profile_picture.url }}" class="w-9 h-9 rounded-full object-cover border-2 border-yellow-400"/>
+      {% else %}
+        <div class="bg-yellow-500 rounded-full w-9 h-9 flex items-center justify-center">
+          <span class="text-white text-sm font-semibold">
+            {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+          </span>
+        </div>
+      {% endif %}
+      <div>
+        <p class="text-white text-xs font-semibold">{{ user.get_full_name|default:user.username }}</p>
+        <span class="text-yellow-400 text-[10px] font-medium uppercase tracking-wider">Client</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="flex-1 overflow-y-auto py-4">
+    <!-- Browse -->
+    <div class="px-6 mb-2">
+      <p class="text-white/30 text-[10px] font-semibold uppercase tracking-widest">Browse</p>
+    </div>
+    <a href="{% url 'home' %}"
+       class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all
+       {% if request.resolver_match.url_name == 'home' %}text-white bg-white/15 border-l-4 border-yellow-400
+       {% else %}text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent{% endif %}">
+      <i class="fas fa-home w-4"></i> Home
+    </a>
+    <a href="{% url 'properties' %}"
+       class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all
+       {% if request.resolver_match.url_name == 'properties' %}text-white bg-white/15 border-l-4 border-yellow-400
+       {% else %}text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent{% endif %}">
+      <i class="fas fa-building w-4"></i> Properties
+    </a>
+    <a href="{% url 'mortgage_calculator' %}"
+       class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all
+       {% if request.resolver_match.url_name == 'mortgage_calculator' %}text-white bg-white/15 border-l-4 border-yellow-400
+       {% else %}text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent{% endif %}">
+      <i class="fas fa-calculator w-4"></i> Calculator
+    </a>
+
+    <!-- My Activity -->
+    <div class="px-6 mt-5 mb-2">
+      <p class="text-white/30 text-[10px] font-semibold uppercase tracking-widest">My Activity</p>
+    </div>
+    <a href="{% url 'favorites' %}"
+       class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all
+       {% if request.resolver_match.url_name == 'favorites' %}text-white bg-white/15 border-l-4 border-yellow-400
+       {% else %}text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent{% endif %}">
+      <i class="fas fa-heart w-4 text-red-400"></i> Favorites
+    </a>
+    <a href="{% url 'my_reservations' %}"
+       class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all
+       {% if request.resolver_match.url_name == 'my_reservations' %}text-white bg-white/15 border-l-4 border-yellow-400
+       {% else %}text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent{% endif %}">
+      <i class="fas fa-bookmark w-4"></i> My Reservations
+    </a>
+    <a href="{% url 'client_chat_inbox' %}"
+       class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all
+       {% if request.resolver_match.url_name == 'client_chat_inbox' %}text-white bg-white/15 border-l-4 border-yellow-400
+       {% else %}text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent{% endif %}">
+      <i class="fas fa-comments w-4"></i> Messages
+      <span id="sidebar-unread-badge"
+            class="hidden ml-auto bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">0</span>
+    </a>
+
+    <!-- Account -->
+    <div class="px-6 mt-5 mb-2">
+      <p class="text-white/30 text-[10px] font-semibold uppercase tracking-widest">Account</p>
+    </div>
+    <a href="{% url 'accounts:client_account' %}"
+       class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all
+       {% if request.resolver_match.url_name == 'client_account' %}text-white bg-white/15 border-l-4 border-yellow-400
+       {% else %}text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent{% endif %}">
+      <i class="fas fa-user-circle w-4"></i> My Account
+    </a>
+    <a href="{% url 'contact' %}"
+       class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all
+       {% if request.resolver_match.url_name == 'contact' %}text-white bg-white/15 border-l-4 border-yellow-400
+       {% else %}text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent{% endif %}">
+      <i class="fas fa-envelope w-4"></i> Contact Us
+    </a>
+  </nav>
+
+  <!-- Logout -->
+  <div class="px-6 py-4 border-t border-white/10">
+    <a href="{% url 'accounts:logout' %}"
+       class="flex items-center gap-3 text-sm text-red-400 hover:text-red-300 transition">
+      <i class="fas fa-sign-out-alt w-4"></i> Sign Out
+    </a>
+  </div>
+</aside>
+
+<!-- Sidebar overlay for mobile -->
+<div id="sidebar-overlay"
+     class="fixed inset-0 bg-black/50 z-[55] hidden md:hidden"
+     onclick="toggleClientSidebar()"></div>
+
+<!-- Sidebar toggle button (mobile) -->
+<button id="sidebar-toggle-btn"
+        onclick="toggleClientSidebar()"
+        class="fixed bottom-6 left-6 z-[70] md:hidden bg-gray-900 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-yellow-600 transition">
+  <i class="fas fa-bars"></i>
+</button>
+
+<script>
+function toggleClientSidebar() {
+  const sidebar = document.getElementById('client-sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  sidebar.classList.toggle('-translate-x-full');
+  overlay.classList.toggle('hidden');
+}
+
+// Update unread badge in sidebar
+{% if user.is_authenticated and user.role == 'client' %}
+function updateSidebarBadge() {
+  fetch('/chat/unread-count/')
+    .then(r => r.json())
+    .then(data => {
+      const badge = document.getElementById('sidebar-unread-badge');
+      if (badge && data.unread_count > 0) {
+        badge.textContent = data.unread_count;
+        badge.classList.remove('hidden');
+      } else if (badge) {
+        badge.classList.add('hidden');
+      }
+    }).catch(() => {});
+}
+updateSidebarBadge();
+setInterval(updateSidebarBadge, 30000);
+{% endif %}
+</script>
+{% endif %}

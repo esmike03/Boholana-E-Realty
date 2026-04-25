@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block title %}Schedule Appointment — Boholana E-Realty{% endblock %}
+{% block page_title %}Schedule Appointment{% endblock %}
+{% block page_subtitle %}Book a property visit on behalf of a client{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+
+        <div class="flex items-center gap-4 mb-6">
+            <div class="bg-purple-100 rounded-xl p-3">
+                <i class="fas fa-calendar text-purple-600 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="font-semibold text-gray-800">New Appointment</h3>
+                <p class="text-gray-400 text-sm">Fill in the visit details below</p>
+            </div>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-4 p-3 rounded-lg text-sm
+                    {% if message.tags == 'error' %}bg-red-50 text-red-600 border border-red-200
+                    {% elif message.tags == 'warning' %}bg-yellow-50 text-yellow-700 border border-yellow-200
+                    {% else %}bg-green-50 text-green-600 border border-green-200{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" class="space-y-5">
+            {% csrf_token %}
+
+            <!-- Property -->
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                    Property <span class="text-red-500">*</span>
+                </label>
+                <select name="property_id" required id="property-select"
+                        onchange="updatePropertyInfo(this)"
+                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    <option value="">— Select a property —</option>
+                    {% for property in properties %}
+                        <option value="{{ property.pk }}"
+                                data-city="{{ property.city }}"
+                                data-price="₱{{ property.price|floatformat:0 }}">
+                            {{ property.title }} — {{ property.city }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <div id="property-info" class="hidden mt-2 px-3 py-2 bg-gray-50 rounded-lg text-xs text-gray-500 flex items-center gap-2">
+                    <i class="fas fa-map-marker-alt text-yellow-500"></i>
+                    <span id="property-city"></span>
+                    <span class="text-gray-300 mx-1">·</span>
+                    <span id="property-price" class="font-semibold text-gray-700"></span>
+                </div>
+            </div>
+
+            <!-- Client -->
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                    Client <span class="text-red-500">*</span>
+                </label>
+                <select name="client_id" required
+                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    <option value="">— Select a client —</option>
+                    {% for client in clients %}
+                        <option value="{{ client.pk }}">
+                            {{ client.get_full_name|default:client.username }}
+                            {% if client.email %}({{ client.email }}){% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Status -->
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1.5">
+                    Initial Status
+                </label>
+                <select name="status"
+                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    {% for value, label in status_choices %}
+                        {% if value == 'pending' or value == 'confirmed' %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <p class="text-xs text-gray-400 mt-1.5">
+                    Set to <em>Confirmed</em> if the client has already agreed to the schedule.
+                </p>
+            </div>
+
+            <!-- Preferred Schedule -->
+            <div>
+                <p class="text-xs font-medium text-gray-600 mb-2">
+                    Preferred Schedule <span class="text-red-500">*</span>
+                </p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Date</label>
+                        <input type="date" name="preferred_date" required
+                               min="{{ today|date:'Y-m-d' }}"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Time</label>
+                        <input type="time" name="preferred_time" required
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confirmed Schedule (optional) -->
+            <div id="confirmed-section">
+                <p class="text-xs font-medium text-gray-600 mb-2">
+                    Confirmed Schedule
+                    <span class="text-gray-400 font-normal">(optional — leave blank to confirm later)</span>
+                </p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Confirmed Date</label>
+                        <input type="date" name="confirmed_date"
+                               min="{{ today|date:'Y-m-d' }}"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Confirmed Time</label>
+                        <input type="time" name="confirmed_time"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1.5">Notes</label>
+                <textarea name="notes" rows="3"
+                          placeholder="Meeting instructions, directions, or any other notes..."
+                          class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none"></textarea>
+            </div>
+
+            <!-- Info notice -->
+            <div class="flex items-start gap-3 p-4 bg-purple-50 rounded-xl border border-purple-100">
+                <i class="fas fa-info-circle text-purple-500 text-xs mt-0.5 flex-shrink-0"></i>
+                <p class="text-xs text-purple-700 leading-relaxed">
+                    You will be set as the handler for this appointment.
+                    The client will be notified once the appointment is confirmed.
+                </p>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="submit"
+                        class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-calendar mr-2"></i>Schedule Appointment
+                </button>
+                <a href="{% url 'reservations:appointments' %}"
+                   class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold transition text-center">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function updatePropertyInfo(sel) {
+    const opt = sel.options[sel.selectedIndex];
+    const info = document.getElementById('property-info');
+    if (opt.value) {
+        document.getElementById('property-city').textContent = opt.dataset.city;
+        document.getElementById('property-price').textContent = opt.dataset.price;
+        info.classList.remove('hidden');
+    } else {
+        info.classList.add('hidden');
+    }
+}
+</script>
+{% endblock %}

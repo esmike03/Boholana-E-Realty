@@ -11,6 +11,8 @@ urlpatterns = [
 
     # Profile
     path('profile/', views.profile_view, name='profile'),
+    path('manage/', views.client_account_view, name='client_account'),
+    path('owner/manage/', views.property_owner_account_view, name='property_owner_account'),
 
     # User Management
     path('users/', views.users_list_view, name='users'),
@@ -32,8 +34,8 @@ urlpatterns = [
     # Inquiries
     path('inquiries/', views.inquiry_list, name='inquiries'),
     path('inquiries/<int:pk>/', views.inquiry_detail, name='inquiry_detail'),
-    
-    # Google OAuth callback
-    path('google/callback/', views.google_callback, name='google_callback'),
-    
+
+    # Featured property
+    path('featured/add/', views.add_to_featured, name='add_to_featured'),
+
 ]

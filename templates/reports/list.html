@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load humanize %}
 {% block title %}Reports — Boholana E-Realty{% endblock %}
 {% block page_title %}Generate Reports{% endblock %}
 {% block page_subtitle %}Create and manage system reports{% endblock %}
@@ -74,7 +74,7 @@
                         </span>
                     </td>
                     <td class="px-6 py-4 text-gray-600 text-sm">
-                        {{ report.generated_by.get_full_name|default:report.generated_by.username }}
+                        {% if report.generated_by %}{{ report.generated_by.get_full_name|default:report.generated_by.username }}{% else %}—{% endif %}
                     </td>
                     <td class="px-6 py-4">
                         <span class="px-2 py-1 rounded-full text-xs font-medium

@@ -1,0 +1,71 @@
+{% extends 'emails/base_email.html' %}
+{% load humanize %}
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; color: #333;">
+
+  <!-- Header -->
+  <div style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 30px 20px; text-align: center;">
+    <h1 style="margin: 0; font-size: 24px; font-weight: bold;">Reservation Inquiry</h1>
+    <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">New inquiry from a client</p>
+  </div>
+
+  <!-- Content -->
+  <div style="padding: 30px 20px; background: #ffffff; border-left: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">
+
+    <!-- Staff Greeting -->
+    <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+      Hello {{ staff.get_full_name|default:staff.username }},
+    </p>
+
+    <!-- Inquiry Details -->
+    <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+      <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px;">Inquiry Details</h3>
+
+      <div style="margin-bottom: 15px;">
+        <strong style="color: #374151;">From:</strong>
+        <span style="margin-left: 10px;">{{ sender.get_full_name|default:sender.username }} ({{ sender.email }})</span>
+      </div>
+
+      <div style="margin-bottom: 15px;">
+        <strong style="color: #374151;">Subject:</strong>
+        <span style="margin-left: 10px;">{{ subject }}</span>
+      </div>
+
+      <div style="margin-bottom: 15px;">
+        <strong style="color: #374151;">Property:</strong>
+        <span style="margin-left: 10px;">{{ reservation.property.title }}</span>
+      </div>
+
+      <div style="margin-bottom: 15px;">
+        <strong style="color: #374151;">Reservation Status:</strong>
+        <span style="margin-left: 10px; padding: 2px 8px; background: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px;">
+          {{ reservation.get_status_display }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Message -->
+    <div style="background: #ffffff; border: 1px solid #e5e7eb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+      <h4 style="margin: 0 0 15px 0; color: #1f2937; font-size: 16px;">Message:</h4>
+      <p style="font-size: 16px; line-height: 1.6; margin: 0; white-space: pre-line;">{{ message }}</p>
+    </div>
+
+    <!-- Action Button -->
+    <div style="text-align: center; margin-bottom: 20px;">
+      <a href="{{ protocol }}://{{ domain }}{% url 'reservations:detail' reservation.pk %}"
+         style="display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+        View Reservation Details
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div style="background: #f9fafb; padding: 20px; text-align: center; border-left: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb;">
+    <p style="margin: 0; font-size: 14px; color: #6b7280;">
+      This inquiry was sent from the Boholana E-Realty client portal.
+    </p>
+  </div>
+
+</div>
+{% endblock %}

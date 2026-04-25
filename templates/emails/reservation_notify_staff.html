@@ -1,6 +1,6 @@
 {% extends 'emails/base_email.html' %}
 {% block email_content %}
-
+{% load humanize %}
 <div class="label">New Reservation</div>
 <h1>New Reservation Request</h1>
 <p>A client has submitted a reservation that requires your review.</p>
@@ -24,7 +24,7 @@
     </div>
     <div class="info-row">
         <span class="info-label">Fee</span>
-        <span class="info-value">₱{{ reservation.reservation_fee|floatformat:2 }}</span>
+        <span class="info-value">₱{{ reservation.reservation_fee|floatformat:2|intcomma }}</span>
     </div>
 </div>
 

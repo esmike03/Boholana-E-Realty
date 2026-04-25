@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from .models import (
     Reservation, ReservationStatusLog,
     Appointment, PropertyPreferenceForm,
-    ChatMessage, ChatAvailability
+    ChatMessage, ChatAvailability, AvailabilitySlot
 )
 
 
@@ -129,3 +129,13 @@ class ChatAvailabilityAdmin(admin.ModelAdmin):
             'padding:3px 10px; border-radius:20px; font-size:11px;">● Offline</span>'
         )
     availability_badge.short_description = 'Status'
+
+
+@admin.register(AvailabilitySlot)
+class AvailabilitySlotAdmin(admin.ModelAdmin):
+    list_display = (
+        'property', 'slot_date', 'start_time', 'end_time',
+        'is_active', 'created_by', 'created_at'
+    )
+    list_filter = ('is_active', 'slot_date')
+    search_fields = ('property__title', 'created_by__username', 'notes')

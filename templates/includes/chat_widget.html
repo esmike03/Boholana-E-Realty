@@ -1,0 +1,72 @@
+{% comment %}
+  Facebook Messenger-style floating chat widget for clients.
+  Included in public_base.html for authenticated clients only.
+{% endcomment %}
+
+<style>
+  #chat-widget { font-family: 'Inter', sans-serif; }
+  #chat-widget .cw-messages::-webkit-scrollbar { width: 4px; }
+  #chat-widget .cw-messages::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 999px; }
+  #chat-widget .cw-slide-up { animation: cwSlideUp .25s ease-out; }
+  @keyframes cwSlideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+
+<!-- Floating Chat Button -->
+<div id="chat-widget" class="fixed bottom-5 right-5 z-[9999]">
+
+  <!-- Chat FAB -->
+  <button id="cw-fab" onclick="cwToggleInbox()"
+    class="w-14 h-14 rounded-full bg-gray-900 hover:bg-yellow-600 text-white shadow-lg flex items-center justify-center transition-colors relative">
+    <i class="fas fa-comments text-lg" id="cw-fab-icon"></i>
+    <span id="cw-fab-badge"
+      class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center font-bold">
+    </span>
+  </button>
+
+  <!-- Inbox Panel -->
+  <div id="cw-inbox" class="hidden cw-slide-up absolute bottom-16 right-0 w-80 max-h-[28rem] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden">
+    <!-- Header -->
+    <div class="px-4 py-3 bg-gray-900 text-white flex items-center justify-between rounded-t-2xl flex-shrink-0">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-comments text-yellow-400 text-sm"></i>
+        <span class="text-sm font-semibold">Messages</span>
+      </div>
+      <button onclick="cwToggleInbox()" class="text-gray-400 hover:text-white transition">
+        <i class="fas fa-times text-xs"></i>
+      </button>
+    </div>
+    <!-- Conversation list -->
+    <div id="cw-convo-list" class="flex-1 overflow-y-auto divide-y divide-gray-50">
+      <div class="p-6 text-center text-gray-400 text-xs">
+        <i class="fas fa-spinner fa-spin text-lg mb-2 block"></i>
+        Loading...
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Panel -->
+  <div id="cw-chat" class="hidden cw-slide-up absolute bottom-16 right-0 w-80 h-[28rem] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden">
+    <!-- Chat Header -->
+    <div class="px-4 py-3 bg-gray-900 text-white flex items-center gap-3 rounded-t-2xl flex-shrink-0">
+      <button onclick="cwBackToInbox()" class="text-gray-400 hover:text-white transition">
+        <i class="fas fa-arrow-left text-xs"></i>
+      </button>
+      <div class="flex-1 min-w-0">
+        <p id="cw-chat-name" class="text-sm font-semibold truncate"></p>
+        <p id="cw-chat-prop" class="text-[10px] text-gray-400 truncate"></p>
+      </div>
+      <button onclick="cwCloseChat()" class="text-gray-400 hover:text-white transition">
+        <i class="fas fa-times text-xs"></i>
+      </button>
+    </div>
+    <!-- Messages -->
+    <div id="cw-chat-messages" class="cw-messages flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+    </div>
+    <!-- Quick Replies -->
+    <div id="cw-quick-replies" class="px-3 py-2 border-t border-gray-100 bg-white flex gap-1.5 overflow-x-auto flex-shrink-0">
+      <button onclick="cwFillMsg('I am interested in this property.')" class="text-[10px] border border-gray-200 hover:border-yellow-500 text-gray-500 px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0">Interested</button>
+      <button onclick="cwFillMsg('Can I schedule a visit?')" class="text-[10px] border border-gray-200 hover:border-yellow-500 text-gray-500 px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0">Schedule visit</button>
+      <button onclick="cwFillMsg('Is this property still available?')" class="text-[10px] border border-gray-200 hover:border-yellow-500 text-gray-500 px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0">Availability</button>
+    </div>
+    <!-- Input -->
+    <div class="px-3 py-2.5 border-t border-gray-100 bg-white flex-shrink-0">

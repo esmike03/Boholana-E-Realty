@@ -42,32 +42,14 @@ def log_action(document, user, action, description=''):
 def document_list(request):
     user = request.user
 
-    if request.user.role not in ['broker', 'admin'] \
-            and not request.user.is_superuser:
-        messages.error(request, 'Only brokers can approve disbursements.')
-        return redirect('sales:disbursements')
-    allowed = [
-        'admin', 'broker', 'staff',
-        'property_owner', 'sale_assistant', 'client'
-    ]
-    if user.role not in allowed and not user.is_superuser:
-        messages.error(request, 'You do not have permission.')
-        return redirect('dashboard')
-
-    # Filter by role
+    # Clients can only see their own documents
     if user.role == 'client':
-        documents = Document.objects.filter(
-            uploaded_by=user
-        )
+        documents = Document.objects.filter(uploaded_by=user)
     elif user.role == 'property_owner':
-        documents = Document.objects.filter(
-            Q(uploaded_by=user) |
-            Q(property__owner=user)
-        )
+        documents = Document.objects.filter(uploaded_by=user)
     elif user.role == 'sale_assistant':
         documents = Document.objects.filter(
-            Q(sale__sale_assistant=user) |
-            Q(uploaded_by=user)
+            is_confidential=False
         )
     else:
         documents = Document.objects.all()
@@ -113,12 +95,6 @@ def document_list(request):
 
 @login_required
 def document_upload(request):
-    
-    allowed = ['admin', 'broker', 'staff', 'property_owner']
-    if request.user.role not in allowed and not request.user.is_superuser:
-        messages.error(request, 'You do not have permission to upload documents.')
-        return redirect('documents:list')
-    
     if request.method == 'POST':
         title = request.POST.get('title')
         document_type = request.POST.get('document_type')
@@ -227,12 +203,6 @@ def document_detail(request, pk):
 
 @login_required
 def document_approve(request, pk):
-    
-    allowed = ['admin', 'broker', 'staff']
-    if request.user.role not in allowed and not request.user.is_superuser:
-        messages.error(request, 'You do not have permission.')
-        return redirect('documents:list')
-    
     if request.user.role not in ['broker', 'admin'] \
             and not request.user.is_superuser:
         messages.error(request, 'Only brokers can approve documents.')
@@ -251,8 +221,9 @@ def document_approve(request, pk):
         )
 
         messages.success(request, f'"{document.title}" has been approved.')
+        notify_document_approved(document, request.user)
         return redirect('documents:detail', pk=document.pk)
-    notify_document_approved(document, request.user)
+
     return render(request, 'documents/approve.html', {
         'document': document
     })
@@ -280,8 +251,9 @@ def document_reject(request, pk):
         )
 
         messages.warning(request, f'"{document.title}" has been rejected.')
+        notify_document_rejected(document, request.user, feedback)
         return redirect('documents:detail', pk=document.pk)
-    notify_document_rejected(document, request.user, feedback)
+
     return render(request, 'documents/reject.html', {
         'document': document
     })
@@ -341,24 +313,32 @@ def document_update(request, pk):
 @login_required
 def document_search(request):
     query = request.GET.get('q', '')
+    user = request.user
     documents = Document.objects.none()
 
     if query:
-        documents = Document.objects.filter(
+        # Start with role-based filtering
+        if user.role == 'client':
+            # Clients can only search their own documents
+            base_documents = Document.objects.filter(uploaded_by=user)
+        elif user.role == 'property_owner':
+            # Property owners can only search their own documents
+            base_documents = Document.objects.filter(uploaded_by=user)
+        elif user.role == 'sale_assistant':
+            # Sale assistants can search non-confidential documents
+            base_documents = Document.objects.filter(is_confidential=False)
+        else:
+            # Brokers, admins, staff can search all documents
+            base_documents = Document.objects.all()
+
+        # Apply search filter
+        documents = base_documents.filter(
             Q(title__icontains=query) |
             Q(document_type__icontains=query) |
             Q(uploaded_by__first_name__icontains=query) |
             Q(uploaded_by__last_name__icontains=query) |
             Q(property__title__icontains=query)
         )
-
-        if request.user.role == 'property_owner':
-            documents = documents.filter(uploaded_by=request.user)
-        elif request.user.role == 'client':
-            documents = documents.filter(
-                uploaded_by=request.user,
-                is_confidential=False
-            )
 
     return render(request, 'documents/search.html', {
         'documents': documents,
@@ -391,3 +371,200 @@ def document_checklist(request, sale_pk):
         'sale': sale,
         'checklists': checklists,
     })
+
+
+# ─────────────────────────────────────────
+# Client Document Tracking
+# ─────────────────────────────────────────
+
+@login_required
+def client_documents(request):
+    """Display all documents related to client's reservations"""
+    if request.user.role != 'client':
+        messages.error(request, 'You do not have permission to access this page.')
+        return redirect('dashboard')
+
+    # Get all documents uploaded by client
+    documents = Document.objects.filter(uploaded_by=request.user).select_related(
+        'reviewed_by', 'property', 'reservation'
+    ).order_by('-created_at')
+
+    # Statistics
+    stats = {
+        'total': documents.count(),
+        'pending': documents.filter(status='pending_approval').count(),
+        'approved': documents.filter(status='approved').count(),
+        'rejected': documents.filter(status='rejected').count(),
+    }
+
+    # Filters
+    search = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+    reservation_filter = request.GET.get('reservation', '')
+
+    if search:
+        documents = documents.filter(
+            Q(title__icontains=search) |
+            Q(document_type__icontains=search)
+        )
+    if status_filter:
+        documents = documents.filter(status=status_filter)
+    if reservation_filter:
+        documents = documents.filter(reservation_id=reservation_filter)
+
+    # Get client's reservations for filter
+    from apps.reservations.models import Reservation
+    reservations = Reservation.objects.filter(client=request.user).order_by('-created_at')
+
+    context = {
+        'documents': documents,
+        'stats': stats,
+        'search': search,
+        'status_filter': status_filter,
+        'reservation_filter': reservation_filter,
+        'reservations': reservations,
+        'status_choices': Document.STATUS_CHOICES,
+    }
+
+    return render(request, 'documents/client_documents.html', context)
+
+
+@login_required
+def client_document_upload(request):
+    """Allow client to upload documents for their reservations"""
+    if request.user.role != 'client':
+        messages.error(request, 'You do not have permission to upload documents.')
+        return redirect('dashboard')
+
+    # Get client's reservations (for dropdown and validation)
+    from apps.reservations.models import Reservation
+    client_reservations = Reservation.objects.filter(client=request.user).order_by('-created_at')
+
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        document_type = request.POST.get('document_type')
+        file = request.FILES.get('file')
+        file_format = request.POST.get('file_format', 'pdf')
+        reservation_id = request.POST.get('reservation_id') or None
+        remarks = request.POST.get('remarks', '')
+
+        if not file:
+            messages.error(request, 'Please select a file to upload.')
+            return redirect('documents:client_upload')
+
+        if not title or not document_type:
+            messages.error(request, 'Please fill in all required fields.')
+            return redirect('documents:client_upload')
+
+        # Verify reservation belongs to client
+        reservation_obj = None
+        if reservation_id:
+            try:
+                reservation_obj = client_reservations.get(pk=reservation_id)
+            except Reservation.DoesNotExist:
+                messages.error(request, 'Invalid reservation selected.')
+                return redirect('documents:client_upload')
+
+        # Create document
+        document = Document.objects.create(
+            title=title,
+            document_type=document_type,
+            file=file,
+            file_format=file_format,
+            reservation=reservation_obj,
+            uploaded_by=request.user,
+            is_confidential=False,
+            remarks=remarks,
+            status='pending_approval',
+        )
+
+        log_action(
+            document, request.user, 'uploaded',
+            f'Document uploaded by client {request.user.username}'
+        )
+        notify_document_uploaded(document)
+        messages.success(request, f'"{title}" uploaded successfully. It will be reviewed shortly.')
+        return redirect('documents:client_documents')
+
+    return render(request, 'documents/client_upload.html', {
+        'type_choices': Document.DOCUMENT_TYPE_CHOICES,
+        'format_choices': Document.FILE_FORMAT_CHOICES,
+        'reservations': client_reservations,
+    })
+
+
+# ─────────────────────────────────────────
+# Listing Document Tracking
+# ─────────────────────────────────────────
+
+@login_required
+def listing_documents(request, property_pk):
+    """
+    Admin view for tracking and managing documents for a specific listing.
+    Features:
+    - View all documents for a property
+    - Filter by status, document type
+    - Search documents
+    - Approve/reject documents inline
+    - View document details and history
+    """
+    property = get_object_or_404(Property, pk=property_pk)
+    
+    # Permission check - only admin/broker/staff/owner can view
+    user = request.user
+    if user.role not in ['broker', 'admin', 'staff'] and not user.is_superuser:
+        if user.role == 'property_owner' and property.owner != user:
+            messages.error(request, 'You do not have permission to view these documents.')
+            return redirect('listings:list')
+        elif user.role != 'property_owner':
+            messages.error(request, 'You do not have permission to view these documents.')
+            return redirect('listings:list')
+    
+    # Get all documents for this property
+    documents = Document.objects.filter(
+        property=property
+    ).select_related('uploaded_by', 'reviewed_by', 'reservation', 'sale')
+    
+    # Filters and Search
+    search = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+    type_filter = request.GET.get('type', '')
+    
+    if search:
+        documents = documents.filter(
+            Q(title__icontains=search) |
+            Q(uploaded_by__first_name__icontains=search) |
+            Q(uploaded_by__last_name__icontains=search) |
+            Q(remarks__icontains=search)
+        )
+    
+    if status_filter:
+        documents = documents.filter(status=status_filter)
+    
+    if type_filter:
+        documents = documents.filter(document_type=type_filter)
+    
+    # Order by newest first
+    documents = documents.order_by('-created_at')
+    
+    # Get stats
+    all_docs = Document.objects.filter(property=property)
+    stats = {
+        'total': all_docs.count(),
+        'pending': all_docs.filter(status='pending_approval').count(),
+        'approved': all_docs.filter(status='approved').count(),
+        'rejected': all_docs.filter(status='rejected').count(),
+    }
+    
+    context = {
+        'property': property,
+        'documents': documents,
+        'stats': stats,
+        'search': search,
+        'status_filter': status_filter,
+        'type_filter': type_filter,
+        'status_choices': Document.STATUS_CHOICES,
+        'type_choices': Document.DOCUMENT_TYPE_CHOICES,
+    }
+    
+    return render(request, 'documents/listing_tracking.html', context)

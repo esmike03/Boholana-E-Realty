@@ -1,6 +1,6 @@
 {% extends 'emails/base_email.html' %}
 {% block email_content %}
-
+{% load humanize %}
 {% if reservation.status == 'approved' %}
 <div class="label">Reservation Approved</div>
 <h1>Your reservation has been approved! 🎉</h1>

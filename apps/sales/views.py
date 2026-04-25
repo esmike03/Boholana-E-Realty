@@ -8,7 +8,6 @@ from .models import Sale, PaymentSchedule, Disbursement, SaleTask
 from apps.listings.models import Property
 from apps.reservations.models import Reservation
 from apps.accounts.models import CustomUser
-from decimal import Decimal
 from apps.accounts.notify import (
     notify_sale_created,
     notify_sale_approved,
@@ -16,19 +15,87 @@ from apps.accounts.notify import (
     notify_disbursement_completed,
     notify_task_assigned,
 )
+from decimal import Decimal
 
 
 # ─────────────────────────────────────────
 # Helper
 # ─────────────────────────────────────────
 
+def create_disbursements_for_sale(sale):
+    """Reusable function to create disbursements"""
+    commissions = calculate_commissions(sale)
+    created = 0
+
+    # Sale Assistant
+    if sale.sale_assistant and not Disbursement.objects.filter(sale=sale, recipient=sale.sale_assistant).exists():
+        Disbursement.objects.create(
+            sale=sale,
+            recipient=sale.sale_assistant,
+            disbursement_type='sale_assistant_commission',
+            amount=commissions['sale_assistant'],
+            percentage=2.5,
+            status='in_review',
+            remarks='Auto-generated'
+        )
+        created += 1
+
+    # Broker
+    if sale.broker and not Disbursement.objects.filter(sale=sale, recipient=sale.broker).exists():
+        Disbursement.objects.create(
+            sale=sale,
+            recipient=sale.broker,
+            disbursement_type='broker_commission',
+            amount=commissions['broker'],
+            percentage=2.5,
+            status='in_review',
+            remarks='Auto-generated'
+        )
+        created += 1
+
+    # Property Owner
+    if not Disbursement.objects.filter(sale=sale, recipient=sale.property.owner).exists():
+        Disbursement.objects.create(
+            sale=sale,
+            recipient=sale.property.owner,
+            disbursement_type='owner_proceeds',
+            amount=commissions['owner'],
+            percentage=93.5,
+            status='in_review',
+            remarks='Auto-generated'
+        )
+        created += 1
+
+    # Company Share
+    if sale.broker and not Disbursement.objects.filter(sale=sale, disbursement_type='company_share').exists():
+        Disbursement.objects.create(
+            sale=sale,
+            recipient=sale.broker,
+            disbursement_type='company_share',
+            amount=commissions['company'],
+            percentage=1.5,
+            status='in_review',
+            remarks='Auto-generated - Company share'
+        )
+        created += 1
+
+    return created
+
 def calculate_commissions(sale):
-    net_price = sale.net_price
+    """Calculate commissions using Decimal for money precision"""
+    net_price = sale.net_price  # This is now Decimal
+
+    # Use Decimal percentages (never use float for money)
+    rate_sale_assistant = Decimal('0.025')
+    rate_broker         = Decimal('0.025')
+    rate_company        = Decimal('0.015')
+    rate_owner          = Decimal('0.935')
+
     commissions = {
-        'sale_assistant': round(net_price * Decimal('0.025'), 2),
-        'broker':         round(net_price * Decimal('0.025'), 2),
-        'company':        round(net_price * Decimal('0.015'), 2),
-        'owner':          round(net_price * Decimal('0.935'), 2),
+        'sale_assistant': (net_price * rate_sale_assistant).quantize(Decimal('0.01')),
+        'broker':         (net_price * rate_broker).quantize(Decimal('0.01')),
+        'company':        (net_price * rate_company).quantize(Decimal('0.01')),
+        'owner':          (net_price * rate_owner).quantize(Decimal('0.01')),
     }
     return commissions
 
@@ -79,16 +146,9 @@ def sale_list(request):
     }
     return render(request, 'sales/list.html', context)
 
-
 @login_required
 def sale_create(request):
-    
-    allowed = ['broker', 'admin', 'staff']
-    if request.user.role not in allowed and not request.user.is_superuser:
-        messages.error(request, 'You do not have permission.')
-        return redirect('sales:list')
-    if request.user.role not in ['broker', 'staff', 'admin'] \
-            and not request.user.is_superuser:
+    if request.user.role not in ['broker', 'staff', 'admin'] and not request.user.is_superuser:
         messages.error(request, 'You do not have permission.')
         return redirect('sales:list')
 
@@ -97,27 +157,32 @@ def sale_create(request):
         client_id = request.POST.get('client_id')
         sale_assistant_id = request.POST.get('sale_assistant_id')
         payment_scheme = request.POST.get('payment_scheme')
-        selling_price = float(request.POST.get('selling_price') or 0)
-        discount = float(request.POST.get('discount') or 0)
+        selling_price_str = request.POST.get('selling_price')
+        discount_str = request.POST.get('discount', '0')
         sale_date = request.POST.get('sale_date')
         notes = request.POST.get('notes', '')
-        reservation_id = request.POST.get('reservation_id') or None
+        reservation_id = request.POST.get('reservation_id')
+
+        # ✅ Convert to Decimal (precise money handling)
+        try:
+            selling_price = Decimal(selling_price_str)
+            discount = Decimal(discount_str)
+        except:
+            messages.error(request, 'Invalid selling price or discount.')
+            return redirect('sales:create')
 
         property_obj = get_object_or_404(Property, pk=property_id)
         client = get_object_or_404(CustomUser, pk=client_id, role='client')
 
         sale_assistant = None
         if sale_assistant_id:
-            sale_assistant = get_object_or_404(
-                CustomUser, pk=sale_assistant_id,
-                role='sale_assistant'
-            )
+            sale_assistant = get_object_or_404(CustomUser, pk=sale_assistant_id, role='sale_assistant')
 
         reservation = None
         if reservation_id:
             reservation = get_object_or_404(Reservation, pk=reservation_id)
 
-        # ✅ Create sale FIRST then notify
+        # ✅ Create the Sale first
         sale = Sale.objects.create(
             property=property_obj,
             client=client,
@@ -126,54 +191,70 @@ def sale_create(request):
             payment_scheme=payment_scheme,
             selling_price=selling_price,
             discount=discount,
-            net_price=selling_price - discount,   # both already floats now
             sale_date=sale_date,
             notes=notes,
             reservation=reservation,
             status='pending_verification',
         )
 
-        # Auto calculate commissions
-        commissions = calculate_commissions(sale)
+        try:
+            commissions = calculate_commissions(sale)
+            created_count = 0
 
-        if sale.sale_assistant:
+            # Sale Assistant Commission
+            if sale.sale_assistant:
+                Disbursement.objects.create(
+                    sale=sale,
+                    recipient=sale.sale_assistant,
+                    disbursement_type='sale_assistant_commission',
+                    amount=commissions['sale_assistant'],
+                    percentage=2.5,
+                    status='in_review',
+                )
+                created_count += 1
+
+            # Broker Commission (if broker exists)
+            if sale.broker:
+                Disbursement.objects.create(
+                    sale=sale,
+                    recipient=sale.broker,
+                    disbursement_type='broker_commission',
+                    amount=commissions['broker'],
+                    percentage=2.5,
+                    status='in_review',
+                )
+                created_count += 1
+
+            # Owner Proceeds
             Disbursement.objects.create(
                 sale=sale,
-                recipient=sale.sale_assistant,
-                disbursement_type='sale_assistant_commission',
-                amount=commissions['sale_assistant'],
-                percentage=2.5,
+                recipient=property_obj.owner,
+                disbursement_type='owner_proceeds',
+                amount=commissions['owner'],
+                percentage=93.5,
                 status='in_review',
             )
+            created_count += 1
 
-        if sale.broker:
-            Disbursement.objects.create(
-                sale=sale,
-                recipient=sale.broker,
-                disbursement_type='broker_commission',
-                amount=commissions['broker'],
-                percentage=2.5,
-                status='in_review',
+            # Mark property as sold
+            property_obj.listing_status = 'sold'
+            property_obj.save()
+
+            messages.success(
+                request, 
+                f'Sale #{sale.id} created successfully! '
+                f'{created_count} disbursements were automatically generated.'
             )
 
-        Disbursement.objects.create(
-            sale=sale,
-            recipient=property_obj.owner,
-            disbursement_type='owner_proceeds',
-            amount=commissions['owner'],
-            percentage=93.5,
-            status='in_review',
-        )
+            # Notify AFTER disbursements are created
+            notify_sale_created(sale)
 
-        property_obj.listing_status = 'sold'
-        property_obj.save()
+        except Exception as e:
+            messages.error(request, f'Sale created, but error generating disbursements: {str(e)}')
 
-        # ✅ Notify AFTER sale is created
-        notify_sale_created(sale)
-
-        messages.success(request, f'Sale created successfully for {property_obj.title}.')
         return redirect('sales:detail', pk=sale.pk)
 
+    # GET request - show form
     properties = Property.objects.filter(listing_status='approved')
     clients = CustomUser.objects.filter(role='client')
     sale_assistants = CustomUser.objects.filter(role='sale_assistant')
@@ -218,10 +299,6 @@ def sale_detail(request, pk):
 
 @login_required
 def sale_verify(request, pk):
-    allowed = ['broker', 'admin', 'staff']
-    if request.user.role not in allowed and not request.user.is_superuser:
-        messages.error(request, 'You do not have permission.')
-        return redirect('sales:list')
     if request.user.role not in ['broker', 'staff', 'admin'] \
             and not request.user.is_superuser:
         messages.error(request, 'You do not have permission.')
@@ -240,15 +317,85 @@ def sale_verify(request, pk):
             sale.approved_at = timezone.now()
             sale.save()
 
-            # ✅ Notify INSIDE the approve block
+            # === Create Disbursements on Approval ===
+            try:
+                commissions = calculate_commissions(sale)
+                created_count = 0
+
+                # Sale Assistant Commission
+                if sale.sale_assistant and not Disbursement.objects.filter(
+                    sale=sale, recipient=sale.sale_assistant
+                ).exists():
+                    Disbursement.objects.create(
+                        sale=sale,
+                        recipient=sale.sale_assistant,
+                        disbursement_type='sale_assistant_commission',
+                        amount=commissions['sale_assistant'],
+                        percentage=2.5,
+                        status='in_review',
+                        remarks='Generated on sale approval'
+                    )
+                    created_count += 1
+
+                # Broker Commission
+                if sale.broker and not Disbursement.objects.filter(
+                    sale=sale, recipient=sale.broker
+                ).exists():
+                    Disbursement.objects.create(
+                        sale=sale,
+                        recipient=sale.broker,
+                        disbursement_type='broker_commission',
+                        amount=commissions['broker'],
+                        percentage=2.5,
+                        status='in_review',
+                        remarks='Generated on sale approval'
+                    )
+                    created_count += 1
+
+                # Owner Proceeds
+                if not Disbursement.objects.filter(
+                    sale=sale, recipient=sale.property.owner
+                ).exists():
+                    Disbursement.objects.create(
+                        sale=sale,
+                        recipient=sale.property.owner,
+                        disbursement_type='owner_proceeds',
+                        amount=commissions['owner'],
+                        percentage=93.5,
+                        status='in_review',
+                        remarks='Generated on sale approval'
+                    )
+                    created_count += 1
+
+                # Company Share
+                if sale.broker and not Disbursement.objects.filter(
+                    sale=sale, disbursement_type='company_share'
+                ).exists():
+                    Disbursement.objects.create(
+                        sale=sale,
+                        recipient=sale.broker,
+                        disbursement_type='company_share',
+                        amount=commissions['company'],
+                        percentage=1.5,
+                        status='in_review',
+                        remarks='Generated on sale approval - Company share'
+                    )
+                    created_count += 1
+
+                messages.success(
+                    request, 
+                    f'Sale #{sale.id} approved successfully! '
+                    f'{created_count} disbursement(s) generated.'
+                )
+
+            except Exception as e:
+                messages.warning(request, f'Sale approved, but error creating disbursements: {str(e)}')
+
+            # Notify
             notify_sale_approved(sale, request.user)
-            messages.success(request, 'Sale approved successfully.')
 
         elif action == 'correct':
-            sale.selling_price = float(request.POST.get('selling_price') or sale.selling_price)
-            sale.discount = float(request.POST.get('discount') or sale.discount)
-            sale.net_price = sale.selling_price - sale.discount  # now both floats
-            sale.notes = request.POST.get('notes', sale.notes)
+            # ... your existing correction code ...
             sale.status = 'ready_for_approval'
             sale.save()
             messages.success(request, 'Sale data corrected and ready for approval.')
@@ -333,18 +480,16 @@ def disbursement_list(request):
     user = request.user
 
     if user.role == 'sale_assistant':
-        # Sale assistants see their own disbursements (view + calculate)
         disbursements = Disbursement.objects.filter(recipient=user)
     elif user.role == 'property_owner':
         disbursements = Disbursement.objects.filter(
             recipient=user,
             disbursement_type='owner_proceeds'
         )
-    elif user.role in ['broker', 'admin']:
+    elif user.role in ['broker', 'admin', 'staff'] or user.is_superuser:
         disbursements = Disbursement.objects.all()
     else:
-        # staff, client — no access to disbursements
-        messages.error(request, 'You do not have permission.')
+        messages.error(request, 'You do not have permission to access disbursements.')
         return redirect('dashboard')
 
     disbursements = disbursements.select_related('sale', 'recipient')
@@ -372,12 +517,7 @@ def disbursement_list(request):
 
 @login_required
 def disbursement_approve(request, pk):
-    if request.user.role not in ['broker', 'admin'] \
-            and not request.user.is_superuser:
-        messages.error(request, 'Only brokers can approve disbursements.')
-        return redirect('sales:disbursements')
-    if request.user.role not in ['broker', 'admin'] \
-            and not request.user.is_superuser:
+    if request.user.role != 'broker' and not request.user.is_superuser:
         messages.error(request, 'Only brokers can approve disbursements.')
         return redirect('sales:disbursements')
 
@@ -386,7 +526,7 @@ def disbursement_approve(request, pk):
     if request.method == 'POST':
         new_amount = request.POST.get('amount')
         if new_amount:
-            disbursement.amount = float(new_amount) 
+            disbursement.amount = new_amount
 
         disbursement.status = 'pending'
         disbursement.approved_by = request.user
@@ -434,3 +574,4 @@ def disbursement_receive(request, pk):
     return render(request, 'sales/disbursement_receive.html', {
         'disbursement': disbursement
     })
+

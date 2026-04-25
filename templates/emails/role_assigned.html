@@ -1,6 +1,6 @@
 {% extends 'emails/base_email.html' %}
 {% block email_content %}
-
+{% load humanize %}
 <div class="label">Account Update</div>
 <h1>Your role has been updated</h1>
 <p>Hi {{ user.get_full_name|default:user.username }}, your role at Boholana E-Realty has been updated.</p>

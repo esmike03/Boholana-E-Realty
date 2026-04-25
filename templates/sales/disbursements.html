@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load humanize %}
 {% block title %}Disbursements — Boholana E-Realty{% endblock %}
 {% block page_title %}Disbursements{% endblock %}
 {% block page_subtitle %}Manage commission disbursements{% endblock %}
@@ -9,15 +9,15 @@
 <!-- Stats -->
 <div class="grid grid-cols-3 gap-4 mb-6">
     <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-        <p class="text-2xl font-bold text-yellow-600">{{ in_review_count }}</p>
+        <p class="text-2xl font-bold text-yellow-600">{{ in_review_count|intcomma }}</p>
         <p class="text-xs text-gray-500 mt-1">In Review</p>
     </div>
     <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-        <p class="text-2xl font-bold text-blue-600">{{ pending_count }}</p>
+        <p class="text-2xl font-bold text-blue-600">{{ pending_count|intcomma }}</p>
         <p class="text-xs text-gray-500 mt-1">Pending Payment</p>
     </div>
     <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-        <p class="text-2xl font-bold text-green-600">{{ completed_count }}</p>
+        <p class="text-2xl font-bold text-green-600">{{ completed_count|intcomma }}</p>
         <p class="text-xs text-gray-500 mt-1">Completed</p>
     </div>
 </div>
@@ -49,7 +49,7 @@
     <div class="px-6 py-3 bg-gray-50 border-b border-gray-100">
         <p class="text-sm text-gray-500">
             Total Amount:
-            <span class="font-bold text-gray-800">₱{{ total_amount|floatformat:2 }}</span>
+            <span class="font-bold text-gray-800">₱{{ total_amount|floatformat:2|intcomma }}</span>
         </p>
     </div>
 
@@ -81,7 +81,7 @@
                         {{ disbursement.get_disbursement_type_display }}
                     </td>
                     <td class="px-6 py-4 font-bold text-gray-800">
-                        ₱{{ disbursement.amount|floatformat:2 }}
+                        ₱{{ disbursement.amount|floatformat:2|intcomma }}
                     </td>
                     <td class="px-6 py-4 text-gray-400 text-xs">
                         {% if disbursement.percentage %}{{ disbursement.percentage }}%{% else %}—{% endif %}
@@ -97,7 +97,7 @@
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-1">
-                            {% if user.role in 'broker,admin' or user.is_superuser %}
+                            {% if user.role == 'broker' or user.is_superuser %}
                                 {% if disbursement.status == 'in_review' %}
                                 <a href="{% url 'sales:disbursement_approve' disbursement.pk %}"
                                    class="bg-green-100 hover:bg-green-200 text-green-600 px-3 py-1.5 rounded-lg text-xs transition">

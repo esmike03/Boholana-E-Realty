@@ -1,0 +1,957 @@
+{% extends 'base.html' %}
+
+{% block title %}Reservation Management — Boholana E-Realty{% endblock %}
+
+{% block page_title %}Reservation Management Dashboard{% endblock %}
+
+{% block page_subtitle %}Comprehensive reservation and appointment management{% endblock %}
+
+{% block content %}
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
+  <!-- Reservations Stats -->
+  <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+    <div class="flex items-center justify-between mb-4">
+      <div class="bg-blue-100 rounded-xl p-3">
+        <i class="fas fa-calendar-check text-blue-600"></i>
+      </div>
+      <span
+        class="text-xs text-blue-500 font-medium bg-blue-50 px-2 py-1 rounded-full"
+        >Total</span
+      >
+    </div>
+    <p class="text-2xl font-bold text-gray-800">
+      {{ stats.total_reservations }}
+    </p>
+    <p class="text-sm text-gray-500 mt-1">Reservations</p>
+    <div class="mt-3 flex gap-2 text-xs">
+      <span class="text-yellow-600"
+        >{{ stats.pending_reservations }} pending</span
+      >
+      <span class="text-gray-300">•</span>
+      <span class="text-green-600"
+        >{{ stats.approved_reservations }} approved</span
+      >
+    </div>
+  </div>
+
+  <!-- Appointments Stats -->
+  <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+    <div class="flex items-center justify-between mb-4">
+      <div class="bg-purple-100 rounded-xl p-3">
+        <i class="fas fa-clock text-purple-600"></i>
+      </div>
+      <span
+        class="text-xs text-purple-500 font-medium bg-purple-50 px-2 py-1 rounded-full"
+        >Total</span
+      >
+    </div>
+    <p class="text-2xl font-bold text-gray-800">
+      {{ stats.total_appointments }}
+    </p>
+    <p class="text-sm text-gray-500 mt-1">Appointments</p>
+    <div class="mt-3 flex gap-2 text-xs">
+      <span class="text-yellow-600"
+        >{{ stats.pending_appointments }} pending</span
+      >
+      <span class="text-gray-300">•</span>
+      <span class="text-blue-600"
+        >{{ stats.confirmed_appointments }} confirmed</span
+      >
+    </div>
+  </div>
+
+  <!-- Chat Availability -->
+  <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+    <div class="flex items-center justify-between mb-4">
+      <div class="bg-green-100 rounded-xl p-3">
+        <i class="fas fa-comments text-green-600"></i>
+      </div>
+      <span
+        class="text-xs font-medium px-2 py-1 rounded-full {% if availability.is_available %}bg-green-50 text-green-600{% else %}bg-red-50 text-red-600{% endif %}"
+      >
+        {{ availability.is_available|yesno:"Online,Offline" }}
+      </span>
+    </div>
+    <p class="text-lg font-bold text-gray-800">Live Chat</p>
+    <p class="text-sm text-gray-500 mt-1">Chat Status</p>
+    <form method="POST" class="mt-3">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="toggle_chat_availability" />
+      <button
+        type="submit"
+        class="text-xs px-3 py-1 rounded-full font-medium transition {% if availability.is_available %}bg-red-100 text-red-600 hover:bg-red-200{% else %}bg-green-100 text-green-600 hover:bg-green-200{% endif %}"
+      >
+        {{ availability.is_available | yesno:"Go Offline,Go Online" }}
+      
+    </button>
+    </form>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+    <div class="flex items-center justify-between mb-4">
+      <div class="bg-yellow-100 rounded-xl p-3">
+        <i class="fas fa-bolt text-yellow-600"></i>
+      </div>
+      <span
+        class="text-xs text-yellow-500 font-medium bg-yellow-50 px-2 py-1 rounded-full"
+        >Actions</span
+      >
+    </div>
+    <p class="text-lg font-bold text-gray-800">Inquiries & Slots</p>
+    <p class="text-sm text-gray-500 mt-1">
+      Preset schedules and monitor inquiries
+    </p>
+    <div class="mt-3 flex gap-2">
+      <a
+        href="#inquiries-section"
+        class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200 transition"
+      >
+        {{ stats.unread_inquiries }} unread
+      </a>
+      <a
+        href="#availability-section"
+        class="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded hover:bg-purple-200 transition"
+      >
+        {{ stats.total_availability_slots }} slots
+      </a>
+    </div>
+  </div>
+</div>
+
+<div
+  class="bg-white rounded-2xl border border-gray-100 p-4 mb-6 flex flex-wrap gap-2 text-xs"
+>
+  <a
+    href="#inquiries-section"
+    class="px-3 py-1.5 rounded-full bg-blue-50 text-blue-600"
+    >Inquiries</a
+  >
+  <a
+    href="#reservations-section"
+    class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-600"
+    >Reservations</a
+  >
+  <a
+    href="#appointments-section"
+    class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-600"
+    >Appointments</a
+  >
+  <a
+    href="#availability-section"
+    class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-600"
+    >Availability</a
+  >
+  <a
+    href="#messages-section"
+    class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-600"
+    >Messages</a
+  >
+</div>
+
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+  <!-- Left Column - Recent Activity & Quick Actions -->
+  <div class="xl:col-span-2 space-y-6">
+    <!-- Recent Inquiries -->
+    <div
+      id="inquiries-section"
+      class="bg-white rounded-2xl shadow-sm border border-gray-100"
+    >
+      <div
+        class="px-6 py-4 border-b border-gray-100 flex items-center justify-between"
+      >
+        <h3 class="font-semibold text-gray-800 text-sm">Recent Inquiries</h3>
+        <a
+          href="{% url 'accounts:inquiries' %}"
+          class="text-xs text-blue-500 hover:underline"
+          >View all</a
+        >
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr
+              class="text-xs text-gray-400 border-b border-gray-50 bg-gray-50"
+            >
+              <th class="px-6 py-3 text-left font-medium">Sender</th>
+              <th class="px-6 py-3 text-left font-medium">Property</th>
+              <th class="px-6 py-3 text-left font-medium">Message</th>
+              <th class="px-6 py-3 text-left font-medium">Date</th>
+              <th class="px-6 py-3 text-left font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            {% for inquiry in recent_inquiries %}
+            <tr
+              class="hover:bg-gray-50 transition {% if not inquiry.is_read %}bg-blue-50/30{% endif %}"
+            >
+              <td class="px-6 py-4 text-gray-700 text-sm">
+                {{ inquiry.name }}
+                <p class="text-xs text-gray-400">
+                  {{ inquiry.email|default:inquiry.phone|default:'No contact' }}
+                </p>
+              </td>
+              <td class="px-6 py-4 text-gray-600 text-xs">
+                {% if inquiry.property %} 
+                {{ inquiry.property.title|truncatechars:28 }} 
+                {% else %}
+                 General
+                Inquiry {% endif %}
+              </td>
+              <td class="px-6 py-4 text-gray-500 text-xs">
+                {{ inquiry.message|truncatechars:48 }}
+              </td>
+              <td class="px-6 py-4 text-gray-400 text-xs">
+                {{ inquiry.created_at|date:"M d, H:i" }}
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-2">
+                  <a
+                    href="{% url 'accounts:inquiry_detail' inquiry.pk %}"
+                    class="text-blue-500 hover:text-blue-700 text-xs"
+                  >
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  {% if not inquiry.is_read %}
+                  <form method="POST" class="inline">
+                    {% csrf_token %}
+                    <input
+                      type="hidden"
+                      name="action"
+                      value="mark_inquiry_read"
+                    />
+                    <input
+                      type="hidden"
+                      name="item_id"
+                      value="{{ inquiry.pk }}"
+                    />
+                    <button
+                      type="submit"
+                      class="text-green-500 hover:text-green-700 text-xs"
+                      title="Mark as read"
+                    >
+                      <i class="fas fa-check"></i>
+                    </button>
+                  </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="px-6 py-8 text-center text-gray-400">
+                <i class="fas fa-envelope text-2xl mb-2 block"></i>
+                No inquiries available.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Recent Reservations -->
+    <div
+      id="reservations-section"
+      class="bg-white rounded-2xl shadow-sm border border-gray-100"
+    >
+      <div
+        class="px-6 py-4 border-b border-gray-100 flex items-center justify-between"
+      >
+        <h3 class="font-semibold text-gray-800 text-sm">Recent Reservations</h3>
+        <a
+          href="{% url 'reservations:list' %}"
+          class="text-xs text-blue-500 hover:underline"
+          >View all</a
+        >
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr
+              class="text-xs text-gray-400 border-b border-gray-50 bg-gray-50"
+            >
+              <th class="px-6 py-3 text-left font-medium">Client</th>
+              <th class="px-6 py-3 text-left font-medium">Property</th>
+              <th class="px-6 py-3 text-left font-medium">Status</th>
+              <th class="px-6 py-3 text-left font-medium">Date</th>
+              <th class="px-6 py-3 text-left font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            {% for reservation in recent_reservations %}
+            <tr class="hover:bg-gray-50 transition">
+              <td class="px-6 py-4 text-gray-700 text-sm">
+                {{ reservation.client.get_full_name }}
+                <p class="text-xs text-gray-400">
+                  {{ reservation.client.username }}
+                </p>
+              </td>
+              <td class="px-6 py-4 text-gray-600 text-xs">
+                {{ reservation.property.title|truncatechars:25 }}
+              </td>
+              <td class="px-6 py-4">
+                <span
+                  class="px-2 py-1 rounded-full text-xs font-medium {% if reservation.status == 'approved' %}bg-green-100 text-green-700 {% elif reservation.status == 'pending' %}bg-yellow-100 text-yellow-700 {% elif reservation.status == 'cancelled' %}bg-red-100 text-red-700 {% else %}bg-blue-100 text-blue-700{% endif %}"
+                >
+                  {{ reservation.get_status_display }}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-gray-400 text-xs">
+                {{ reservation.created_at|date:"M d, H:i" }}
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-1">
+                  <a
+                    href="{% url 'reservations:detail' reservation.pk %}"
+                    class="text-blue-500 hover:text-blue-700 text-xs"
+                  >
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  {% if reservation.status == 'pending' %}
+                  <form method="POST" class="inline">
+                    {% csrf_token %}
+                    <input
+                      type="hidden"
+                      name="action"
+                      value="update_reservation_status"
+                    />
+                    <input type="hidden" name="item_type" value="reservation" />
+                    <input
+                      type="hidden"
+                      name="item_id"
+                      value="{{ reservation.pk }}"
+                    />
+                    <input type="hidden" name="status" value="approved" />
+                    <button
+                      type="submit"
+                      class="text-green-500 hover:text-green-700 text-xs ml-2"
+                      onclick="return confirm('Approve this reservation?');"
+                    >
+                      <i class="fas fa-check"></i>
+                    </button>
+                  </form>
+                  <form method="POST" class="inline">
+                    {% csrf_token %}
+                    <input
+                      type="hidden"
+                      name="action"
+                      value="cancel_reservation"
+                    />
+                    <input type="hidden" name="item_type" value="reservation" />
+                    <input
+                      type="hidden"
+                      name="item_id"
+                      value="{{ reservation.pk }}"
+                    />
+                    <button
+                      type="submit"
+                      class="text-red-500 hover:text-red-700 text-xs ml-1"
+                      onclick="return confirm('Cancel this reservation?');"
+                    >
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="px-6 py-8 text-center text-gray-400">
+                <i class="fas fa-calendar-check text-2xl mb-2 block"></i>
+                No reservations available.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Recent Appointments -->
+    <div
+      id="appointments-section"
+      class="bg-white rounded-2xl shadow-sm border border-gray-100"
+    >
+      <div
+        class="px-6 py-4 border-b border-gray-100 flex items-center justify-between"
+      >
+        <h3 class="font-semibold text-gray-800 text-sm">Recent Appointments</h3>
+        <a
+          href="{% url 'reservations:appointments' %}"
+          class="text-xs text-blue-500 hover:underline"
+          >View all</a
+        >
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr
+              class="text-xs text-gray-400 border-b border-gray-50 bg-gray-50"
+            >
+              <th class="px-6 py-3 text-left font-medium">Client</th>
+              <th class="px-6 py-3 text-left font-medium">Property</th>
+              <th class="px-6 py-3 text-left font-medium">Date/Time</th>
+              <th class="px-6 py-3 text-left font-medium">Status</th>
+              <th class="px-6 py-3 text-left font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            {% for appointment in recent_appointments %}
+            <tr class="hover:bg-gray-50 transition">
+              <td class="px-6 py-4 text-gray-700 text-sm">
+                {{ appointment.client.get_full_name }}
+                <p class="text-xs text-gray-400">
+                  {{ appointment.client.username }}
+                </p>
+              </td>
+              <td class="px-6 py-4 text-gray-600 text-xs">
+                {{ appointment.property.title|truncatechars:25 }}
+              </td>
+              <td class="px-6 py-4 text-gray-400 text-xs">
+                {{ appointment.preferred_date }}<br />
+                {{ appointment.preferred_time|time:"H:i" }}
+              </td>
+              <td class="px-6 py-4">
+                <span
+                  class="px-2 py-1 rounded-full text-xs font-medium {% if appointment.status == 'confirmed' %}bg-green-100 text-green-700 {% elif appointment.status == 'pending' %}bg-yellow-100 text-yellow-700 {% elif appointment.status == 'cancelled' %}bg-red-100 text-red-700 {% else %}bg-blue-100 text-blue-700{% endif %}"
+                >
+                  {{ appointment.get_status_display }}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-1">
+                  {% if appointment.status == 'pending' %}
+                  <form method="POST" class="inline">
+                    {% csrf_token %}
+                    <input
+                      type="hidden"
+                      name="action"
+                      value="approve_appointment"
+                    />
+                    <input type="hidden" name="item_type" value="appointment" />
+                    <input
+                      type="hidden"
+                      name="item_id"
+                      value="{{ appointment.pk }}"
+                    />
+                    <button
+                      type="submit"
+                      class="text-green-500 hover:text-green-700 text-xs"
+                      onclick="return confirm('Approve this appointment?');"
+                    >
+                      <i class="fas fa-check"></i>
+                    </button>
+                  </form>
+                  <form method="POST" class="inline">
+                    {% csrf_token %}
+                    <input
+                      type="hidden"
+                      name="action"
+                      value="cancel_appointment"
+                    />
+                    <input type="hidden" name="item_type" value="appointment" />
+                    <input
+                      type="hidden"
+                      name="item_id"
+                      value="{{ appointment.pk }}"
+                    />
+                    <input
+                      type="hidden"
+                      name="reason"
+                      value="Cancelled by staff"
+                    />
+                    <button
+                      type="submit"
+                      class="text-red-500 hover:text-red-700 text-xs ml-2"
+                      onclick="return confirm('Cancel this appointment?');"
+                    >
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="px-6 py-8 text-center text-gray-400">
+                <i class="fas fa-clock text-2xl mb-2 block"></i>
+                No appointments available.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Availability Slots -->
+    <div
+      id="availability-section"
+      class="bg-white rounded-2xl shadow-sm border border-gray-100"
+    >
+      <div
+        class="px-6 py-4 border-b border-gray-100 flex items-center justify-between"
+      >
+        <h3 class="font-semibold text-gray-800 text-sm">Availability Slots</h3>
+        <span class="text-xs text-gray-500">Pre-set schedule windows</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr
+              class="text-xs text-gray-400 border-b border-gray-50 bg-gray-50"
+            >
+              <th class="px-6 py-3 text-left font-medium">Property</th>
+              <th class="px-6 py-3 text-left font-medium">Date</th>
+              <th class="px-6 py-3 text-left font-medium">Time Window</th>
+              <th class="px-6 py-3 text-left font-medium">Status</th>
+              <th class="px-6 py-3 text-left font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            {% for slot in recent_slots %}
+            <tr class="hover:bg-gray-50 transition">
+              <td class="px-6 py-4 text-gray-700 text-sm">
+                {{ slot.property.title|truncatechars:28 }}
+              </td>
+              <td class="px-6 py-4 text-gray-500 text-xs">
+                {{ slot.slot_date }}
+              </td>
+              <td class="px-6 py-4 text-gray-500 text-xs">
+                {{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i"
+                }}
+              </td>
+              <td class="px-6 py-4">
+                <span
+                  class="px-2 py-1 rounded-full text-xs font-medium {% if slot.is_active %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-600{% endif %}"
+                >
+                  {{ slot.is_active|yesno:"Active,Inactive" }}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <form method="POST" class="inline">
+                  {% csrf_token %}
+                  <input
+                    type="hidden"
+                    name="action"
+                    value="toggle_availability_slot"
+                  />
+                  <input type="hidden" name="item_id" value="{{ slot.pk }}" />
+                  <button
+                    type="submit"
+                    class="text-xs {% if slot.is_active %}text-red-500 hover:text-red-700{% else %}text-blue-500 hover:text-blue-700{% endif %}"
+                  >
+                    {% if slot.is_active %}<i class="fas fa-ban"></i>{% else
+                    %}<i class="fas fa-check"></i>{% endif %}
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="px-6 py-8 text-center text-gray-400">
+                <i class="fas fa-calendar-alt text-2xl mb-2 block"></i>
+                No availability slots configured.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column - Quick Actions & Chat -->
+  <div class="space-y-6">
+    <!-- Set Availability Slot -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <h3
+        class="font-semibold text-gray-800 text-sm mb-4 flex items-center gap-2"
+      >
+        <i class="fas fa-calendar-alt text-indigo-500"></i>
+        Set Availability Slot
+      </h3>
+
+      <form method="POST" class="space-y-4">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create_availability_slot" />
+
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1"
+            >Property</label
+          >
+          <select
+            name="property_id"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="">Select Property</option>
+            {% for property in properties %}
+            <option value="{{ property.pk }}">
+              {{ property.title|truncatechars:30 }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1"
+            >Date</label
+          >
+          <input
+            type="date"
+            name="slot_date"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1"
+              >Start Time</label
+            >
+            <input
+              type="time"
+              name="start_time"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1"
+              >End Time</label
+            >
+            <input
+              type="time"
+              name="end_time"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1"
+            >Notes</label
+          >
+          <textarea
+            name="slot_notes"
+            rows="2"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+          ></textarea>
+        </div>
+
+        <button
+          type="submit"
+          class="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2.5 rounded-lg text-sm font-semibold transition"
+        >
+          <i class="fas fa-save mr-2"></i>Save Availability Slot
+        </button>
+      </form>
+    </div>
+
+    <!-- Schedule Appointment -->
+    <div
+      id="schedule-appointment"
+      class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+    >
+      <h3
+        class="font-semibold text-gray-800 text-sm mb-4 flex items-center gap-2"
+      >
+        <i class="fas fa-calendar-plus text-blue-500"></i>
+        Schedule Appointment
+      </h3>
+
+      <form method="POST" class="space-y-4">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="schedule_appointment" />
+
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1"
+            >Property</label
+          >
+          <select
+            name="property_id"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select Property</option>
+            {% for property in properties %}
+            <option value="{{ property.pk }}">
+              {{ property.title|truncatechars:30 }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1"
+              >Preferred Date</label
+            >
+            <input
+              type="date"
+              name="preferred_date"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1"
+              >Preferred Time</label
+            >
+            <input
+              type="time"
+              name="preferred_time"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1"
+            >Client</label
+          >
+          <select
+            name="client_id"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select Client</option>
+            {% for client in clients %}
+            <option value="{{ client.pk }}">
+              {{ client.get_full_name }} ({{ client.username }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1"
+            >Notes</label
+          >
+          <textarea
+            name="notes"
+            rows="2"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          ></textarea>
+        </div>
+
+        <button
+          type="submit"
+          class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2.5 rounded-lg text-sm font-semibold transition"
+        >
+          <i class="fas fa-calendar-plus mr-2"></i>Schedule Appointment
+        </button>
+      </form>
+    </div>
+
+    <!-- Create Reservation -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <h3
+        class="font-semibold text-gray-800 text-sm mb-4 flex items-center gap-2"
+      >
+        <i class="fas fa-file-contract text-green-500"></i>
+        Create Reservation
+      </h3>
+
+      <form method="POST" class="space-y-4">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create_reservation" />
+
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1"
+            >Property</label
+          >
+          <select
+            name="property_id"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            <option value="">Select Property</option>
+            {% for property in properties %}
+            <option value="{{ property.pk }}">
+              {{ property.title|truncatechars:30 }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1"
+              >Reservation Date</label
+            >
+            <input
+              type="date"
+              name="reservation_date"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1"
+              >Expiry Date</label
+            >
+            <input
+              type="date"
+              name="expiry_date"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1"
+              >Reservation Fee</label
+            >
+            <input
+              type="number"
+              name="reservation_fee"
+              step="0.01"
+              min="0"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1"
+              >Payment Method</label
+            >
+            <select
+              name="payment_method"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <option value="cash">Cash</option>
+              <option value="bank_transfer">Bank Transfer</option>
+              <option value="check">Check</option>
+              <option value="online">Online Payment</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1"
+            >Client</label
+          >
+          <select
+            name="client_id"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            <option value="">Select Client</option>
+            {% for client in clients %}
+            <option value="{{ client.pk }}">
+              {{ client.get_full_name }} ({{ client.username }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1"
+            >Notes</label
+          >
+          <textarea
+            name="notes"
+            rows="2"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+          ></textarea>
+        </div>
+
+        <button
+          type="submit"
+          class="w-full bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-lg text-sm font-semibold transition"
+        >
+          <i class="fas fa-file-contract mr-2"></i>Create Reservation
+        </button>
+      </form>
+    </div>
+
+    <!-- Live Chat Panel -->
+    <div
+      id="messages-section"
+      class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+    >
+      <h3
+        class="font-semibold text-gray-800 text-sm mb-4 flex items-center gap-2"
+      >
+        <i class="fas fa-comments text-green-500"></i>
+        Live Chat
+      </h3>
+
+      <div class="space-y-3">
+        <div
+          class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+        >
+          <div>
+            <p class="text-sm font-medium text-gray-700">Chat Status</p>
+            <p class="text-xs text-gray-500">
+              {{ availability.is_available|yesno:"Online - Available for chat,Offline - Not available" }}
+            </p>
+          </div>
+          <div
+            class="w-3 h-3 rounded-full {{ availability.is_available|yesno:'bg-green-500,bg-red-500' }}"
+          ></div>
+        </div>
+
+        <a
+          href="{% url 'reservations:chat_inbox' %}"
+          class="block w-full bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-lg text-sm font-semibold transition text-center"
+        >
+          <i class="fas fa-comments mr-2"></i>Open Chat Inbox
+        </a>
+
+        <div class="text-xs text-gray-500 text-center">
+          Manage conversations with clients
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Stats Summary -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <h3 class="font-semibold text-gray-800 text-sm mb-4">Today's Summary</h3>
+
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-gray-600">Pending Approvals</span>
+          <span class="font-semibold text-yellow-600"
+            >
+            {{ stats.pending_reservations|add:stats.pending_appointments }}
+            </span
+          >
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-gray-600">Active Reservations</span>
+          <span class="font-semibold text-green-600"
+            >{{ stats.approved_reservations }}</span
+          >
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-gray-600">Confirmed Appointments</span>
+          <span class="font-semibold text-blue-600"
+            >{{ stats.confirmed_appointments }}</span
+          >
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-gray-600">Cancelled Items</span>
+          <span class="font-semibold text-red-600"
+            >
+            {{ stats.cancelled_reservations|add:stats.cancelled_appointments}}
+            </span
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

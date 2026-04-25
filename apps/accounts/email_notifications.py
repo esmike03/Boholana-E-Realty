@@ -58,6 +58,44 @@ def email_new_inquiry(inquiry):
         print(f"No email provided by {inquiry.name} — skipping confirmation email.")
 
 
+def notify_inquiry(reservation, subject, message, sender):
+    """Send inquiry email about a reservation"""
+    from apps.accounts.models import CustomUser
+
+    # Get staff to notify (brokers and admins)
+    staff_list = CustomUser.objects.filter(
+        role__in=['broker', 'admin'],
+        is_active=True,
+        email__isnull=False
+    ).exclude(email='')
+
+    for staff in staff_list:
+        send_email(
+            subject=f'Reservation Inquiry: {subject}',
+            recipient_email=staff.email,
+            template='emails/reservation_inquiry.html',
+            context={
+                'reservation': reservation,
+                'subject': subject,
+                'message': message,
+                'sender': sender,
+                'staff': staff
+            }
+        )
+
+    # Confirmation to client
+    send_email(
+        subject='Inquiry Sent — Boholana E-Realty',
+        recipient_email=sender.email,
+        template='emails/inquiry_sent.html',
+        context={
+            'reservation': reservation,
+            'subject': subject,
+            'sender': sender
+        }
+    )
+
+
 # ─────────────────────────────────────────
 # Reservation Emails
 # ─────────────────────────────────────────

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load humanize %}
 {% block title %}Add Property — Boholana E-Realty{% endblock %}
 {% block page_title %}Add Property{% endblock %}
 {% block page_subtitle %}Create a new property listing{% endblock %}
@@ -80,41 +80,50 @@
                         <label class="block text-xs font-medium text-gray-600 mb-1.5">
                             Full Address <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" name="address" required
-                               placeholder="Street, Barangay"
-                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                        <div class="flex gap-2">
+                            <input type="text" id="address-input" name="address" required
+                                   placeholder="Street, Barangay"
+                                   class="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                            <button type="button" id="search-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
                     </div>
+
+                    <!-- Map Container -->
+                    <div id="map" class="w-full h-80 border border-gray-200 rounded-xl bg-gray-100"></div>
+
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1.5">
                                 City <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" name="city" required
+                            <input type="text" name="city" id="city-input" required
                                    placeholder="e.g. Tagbilaran"
                                    class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1.5">Province</label>
-                            <input type="text" name="province"
+                            <input type="text" name="province" id="province-input"
                                    value="Bohol"
                                    class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1.5">ZIP Code</label>
-                            <input type="text" name="zip_code"
+                            <input type="text" name="zip_code" id="zip-input"
                                    class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1.5">Latitude</label>
-                            <input type="number" name="latitude" step="any"
+                            <input type="number" name="latitude" id="lat-input" step="any"
                                    placeholder="e.g. 9.6500"
                                    class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1.5">Longitude</label>
-                            <input type="number" name="longitude" step="any"
+                            <input type="number" name="longitude" id="lng-input" step="any"
                                    placeholder="e.g. 123.8500"
                                    class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
                         </div>
@@ -230,4 +239,135 @@
         </form>
     </div>
 </div>
+
+<!-- Google Maps Script -->
+<script src="https://maps.googleapis.com/maps/api/js?key={{ settings.GOOGLE_MAPS_API_KEY }}&libraries=places"></script>
+<script>
+let map;
+let marker;
+let geocoder;
+let autocomplete;
+
+// Initialize map and autocomplete
+function initMap() {
+    // Default center (Bohol)
+    const boholCenter = { lat: 9.6500, lng: 123.8500 };
+    
+    map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 13,
+        center: boholCenter
+    });
+    
+    geocoder = new google.maps.Geocoder();
+    
+    // Setup autocomplete for address input
+    const addressInput = document.getElementById('address-input');
+    autocomplete = new google.maps.places.Autocomplete(addressInput, {
+        componentRestrictions: { country: 'ph' }
+    });
+    
+    autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (!place.geometry) {
+            alert('Please select a valid place from the suggestions');
+            return;
+        }
+        updateMapAndFields(place);
+    });
+    
+    // Map click handler
+    map.addListener('click', (event) => {
+        const clickedLocation = event.latLng;
+        placeMarker(clickedLocation);
+        geocodeLatLng(clickedLocation);
+    });
+    
+    // Search button click
+    document.getElementById('search-btn').addEventListener('click', searchAddress);
+}
+
+// Place marker on map
+function placeMarker(location) {
+    if (marker) marker.setMap(null);
+    
+    marker = new google.maps.Marker({
+        position: location,
+        map: map
+    });
+    
+    map.setCenter(location);
+}
+
+// Geocode address and update map
+function searchAddress() {
+    const address = document.getElementById('address-input').value;
+    if (!address) {
+        alert('Please enter an address');
+        return;
+    }
+    
+    geocoder.geocode({ address: address }, (results, status) => {
+        if (status === 'OK') {
+            updateMapAndFields(results[0]);
+        } else {
+            alert('Geocode was not successful for the following reason: ' + status);
+        }
+    });
+}
+
+// Geocode latitude and longitude
+function geocodeLatLng(latlng) {
+    geocoder.geocode({ location: latlng }, (results, status) => {
+        if (status === 'OK') {
+            if (results[0]) {
+                document.getElementById('address-input').value = results[0].formatted_address;
+                updateFieldsFromResult(results[0]);
+            }
+        } else {
+            console.log('Geocoder failed due to: ' + status);
+        }
+    });
+}
+
+// Update map and all fields from place/result
+function updateMapAndFields(place) {
+    const location = place.geometry.location;
+    
+    // Place marker
+    placeMarker(location);
+    
+    // Update coordinate fields
+    document.getElementById('lat-input').value = location.lat().toFixed(6);
+    document.getElementById('lng-input').value = location.lng().toFixed(6);
+    
+    // Extract address components
+    updateFieldsFromResult(place);
+}
+
+// Extract and update city, province, zip from place result
+function updateFieldsFromResult(place) {
+    const addressComponents = place.address_components || [];
+    let city = '';
+    let province = '';
+    let zip = '';
+    
+    addressComponents.forEach(component => {
+        const types = component.types;
+        if (types.includes('locality')) {
+            city = component.long_name;
+        } else if (types.includes('administrative_area_level_1')) {
+            province = component.long_name;
+        } else if (types.includes('postal_code')) {
+            zip = component.long_name;
+        }
+    });
+    
+    if (city) document.getElementById('city-input').value = city;
+    if (province) document.getElementById('province-input').value = province;
+    if (zip) document.getElementById('zip-input').value = zip;
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', initMap);
+</script>
 {% endblock %}

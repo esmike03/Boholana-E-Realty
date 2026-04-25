@@ -1,0 +1,246 @@
+{% extends 'public_base.html' %}
+{% block title %}My Documents — Boholana E-Realty{% endblock %}
+{% load humanize %}
+{% block content %}
+
+<!-- Header -->
+<section class="bg-white border-b border-gray-100 py-10 px-6">
+  <div class="max-w-7xl mx-auto">
+    <div class="inline-flex items-center gap-2 text-blue-600 text-xs font-semibold tracking-widest uppercase mb-3">
+      <i class="fas fa-file-contract"></i>
+      Client Portal
+    </div>
+    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">My Documents</h1>
+    <p class="text-gray-400 text-sm mt-1">Track and manage all your uploaded documents</p>
+  </div>
+</section>
+
+<section class="bg-gray-50 py-10 px-6 min-h-screen">
+  <div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- Statistics -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <p class="text-2xl font-bold text-gray-800">{{ stats.total }}</p>
+        <p class="text-xs text-gray-500 mt-1">Total Documents</p>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <p class="text-2xl font-bold text-yellow-600">{{ stats.pending }}</p>
+        <p class="text-xs text-gray-500 mt-1">Pending Review</p>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <p class="text-2xl font-bold text-green-600">{{ stats.approved }}</p>
+        <p class="text-xs text-gray-500 mt-1">Approved</p>
+      </div>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <p class="text-2xl font-bold text-red-600">{{ stats.rejected }}</p>
+        <p class="text-xs text-gray-500 mt-1">Rejected</p>
+      </div>
+    </div>
+
+    <!-- Filter and Upload -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+        <h2 class="text-lg font-semibold text-gray-800">My Documents</h2>
+        <a href="{% url 'documents:client_upload' %}"
+           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+          <i class="fas fa-plus"></i>
+          Upload Document
+        </a>
+      </div>
+
+      <!-- Filters -->
+      <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+        <form method="GET" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <input type="text" name="search" value="{{ search }}"
+                     placeholder="Search document title..."
+                     class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <select name="status"
+                      class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All Status</option>
+                {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                  {{ label }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <select name="reservation"
+                      class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">All Reservations</option>
+                {% for reservation in reservations %}
+                <option value="{{ reservation.pk }}" {% if reservation_filter|stringformat:"s" == reservation.pk|stringformat:"s" %}selected{% endif %}>
+                  {{ reservation.property.title|truncatechars:30 }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button type="submit"
+                    class="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition">
+              <i class="fas fa-search mr-1"></i>Filter
+            </button>
+            <a href="{% url 'documents:client_documents' %}"
+               class="text-gray-500 hover:text-gray-700 px-4 py-2 text-sm">Clear</a>
+          </div>
+        </form>
+      </div>
+
+      <!-- Documents Table -->
+      {% if documents %}
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-xs text-gray-400 border-b border-gray-50 bg-gray-50">
+              <th class="px-6 py-3 text-left font-medium">Document</th>
+              <th class="px-6 py-3 text-left font-medium">Type</th>
+              <th class="px-6 py-3 text-left font-medium">Linked To</th>
+              <th class="px-6 py-3 text-left font-medium">Status</th>
+              <th class="px-6 py-3 text-left font-medium">Uploaded</th>
+              <th class="px-6 py-3 text-center font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            {% for document in documents %}
+            <tr class="hover:bg-gray-50 transition">
+              <!-- Document Title -->
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="bg-blue-100 rounded-lg p-2 flex-shrink-0">
+                    <i class="fas fa-file-alt text-blue-600 text-sm"></i>
+                  </div>
+                  <div>
+                    <p class="font-medium text-gray-900">{{ document.title|truncatechars:40 }}</p>
+                    <p class="text-xs text-gray-500">v{{ document.version }}</p>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Type -->
+              <td class="px-6 py-4 text-gray-600 text-xs">
+                {{ document.get_document_type_display|truncatechars:30 }}
+              </td>
+
+              <!-- Linked To -->
+              <td class="px-6 py-4 text-gray-600 text-xs">
+                {% if document.reservation %}
+                  <span class="inline-block bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                    {{ document.reservation.property.title|truncatechars:25 }}
+                  </span>
+                {% elif document.property %}
+                  <span class="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                    {{ document.property.title|truncatechars:25 }}
+                  </span>
+                {% else %}
+                  <span class="text-gray-400">—</span>
+                {% endif %}
+              </td>
+
+              <!-- Status -->
+              <td class="px-6 py-4">
+                <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold
+                  {% if document.status == 'approved' %}bg-green-100 text-green-700
+                  {% elif document.status == 'pending_approval' %}bg-yellow-100 text-yellow-700
+                  {% elif document.status == 'rejected' %}bg-red-100 text-red-700
+                  {% else %}bg-gray-100 text-gray-700{% endif %}">
+                  {% if document.status == 'pending_approval' %}
+                    <i class="fas fa-hourglass-half mr-1"></i>Pending Review
+                  {% else %}
+                    {{ document.get_status_display }}
+                  {% endif %}
+                </span>
+
+                <!-- Rejection Feedback -->
+                {% if document.status == 'rejected' and document.rejection_feedback %}
+                <p class="text-xs text-red-600 mt-2 italic">
+                  <i class="fas fa-exclamation-circle mr-1"></i>{{ document.rejection_feedback|truncatechars:60 }}
+                </p>
+                {% endif %}
+              </td>
+
+              <!-- Uploaded Date -->
+              <td class="px-6 py-4 text-gray-400 text-xs">
+                {{ document.created_at|date:"M d, Y" }}
+              </td>
+
+              <!-- Actions -->
+              <td class="px-6 py-4">
+                <div class="flex items-center justify-center gap-2">
+                  <!-- View -->
+                  <a href="{% url 'documents:detail' document.pk %}"
+                     class="text-blue-500 hover:text-blue-700 transition" title="View">
+                    <i class="fas fa-eye"></i>
+                  </a>
+
+                  <!-- Edit (only for pending or rejected) -->
+                  {% if document.status in 'pending_approval,rejected' %}
+                  <a href="{% url 'documents:update' document.pk %}"
+                     class="text-green-500 hover:text-green-700 transition" title="Edit">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  {% endif %}
+
+                  <!-- Download -->
+                  {% if document.file %}
+                  <a href="{{ document.file.url }}"
+                     class="text-purple-500 hover:text-purple-700 transition" title="Download"
+                     download>
+                    <i class="fas fa-download"></i>
+                  </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% else %}
+      <div class="text-center py-12">
+        <i class="fas fa-inbox text-4xl text-gray-200 mb-4 block"></i>
+        <p class="text-gray-400 mb-4">No documents yet</p>
+        <a href="{% url 'documents:client_upload' %}"
+           class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition">
+          <i class="fas fa-upload mr-2"></i>Upload Your First Document
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Document Upload Tips -->
+    <div class="bg-blue-50 border border-blue-200 rounded-2xl p-6">
+      <h3 class="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+        <i class="fas fa-info-circle text-blue-600"></i>
+        Document Upload Tips
+      </h3>
+      <ul class="text-sm text-blue-800 space-y-2">
+        <li class="flex gap-2">
+          <span class="text-blue-600 font-bold">•</span>
+          <span>Upload clear, legible copies of all required documents for faster processing</span>
+        </li>
+        <li class="flex gap-2">
+          <span class="text-blue-600 font-bold">•</span>
+          <span>Supported formats: PDF, Word documents, and images (JPG, PNG)</span>
+        </li>
+        <li class="flex gap-2">
+          <span class="text-blue-600 font-bold">•</span>
+          <span>Your documents will be reviewed and you'll be notified of approval status</span>
+        </li>
+        <li class="flex gap-2">
+          <span class="text-blue-600 font-bold">•</span>
+          <span>If rejected, you can review the feedback and reupload a corrected version</span>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

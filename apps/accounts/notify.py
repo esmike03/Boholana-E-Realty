@@ -221,24 +221,40 @@ def notify_sale_approved(sale, approved_by):
 
 
 def notify_disbursement_approved(disbursement, approved_by):
+    """Notify recipient when disbursement is approved"""
+    # Safely convert amount to number
+    try:
+        amount = float(disbursement.amount)
+    except (TypeError, ValueError):
+        amount = 0.0
+
     send_notification(
         recipient=disbursement.recipient,
         title='Disbursement Approved',
-        message=f'Your {disbursement.get_disbursement_type_display()} of ₱{float(disbursement.amount):,.2f} has been approved and is pending payment.',
-        notification_type='disbursement_pending',
+        message=f'Your {disbursement.get_disbursement_type_display()} of ₱{amount:,.2f} has been approved and is pending payment.',
+        notification_type='disbursement_approved',
         sender=approved_by,
-        link=f'/manage/sales/disbursements/',
+        link=f'/sales/disbursements/',
         priority='high',
     )
 
 
 def notify_disbursement_completed(disbursement):
+    """Notify recipient when disbursement is completed"""
+    
+    amount = disbursement.amount
+    if isinstance(amount, str):
+        try:
+            amount = float(amount)
+        except:
+            amount = 0.0
+
     send_notification(
         recipient=disbursement.recipient,
         title='Payment Completed',
-        message=f'Your {disbursement.get_disbursement_type_display()} of ₱{float(disbursement.amount):,.2f} has been completed.',
+        message=f'Your {disbursement.get_disbursement_type_display()} of ₱{amount:,.2f} has been completed.',
         notification_type='disbursement_completed',
-        link=f'/manage/sales/disbursements/',
+        link=f'/sales/disbursements/',
         priority='medium',
     )
 
@@ -289,3 +305,44 @@ def notify_task_assigned(task):
         link=f'/manage/sales/{task.sale.pk}/',
         priority=task.priority,
     )
+
+
+def notify_appointment_status(appointment, changed_by):
+    """Notify client when appointment is cancelled/rejected."""
+    send_notification(
+        recipient=appointment.client,
+        title=f'Appointment {appointment.get_status_display()}',
+        message=f'Your appointment for "{appointment.property.title}" has been {appointment.get_status_display().lower()}.',
+        notification_type=f'appointment_{appointment.status}',
+        sender=changed_by,
+        link='/my-appointments/',
+        priority='high',
+    )
+
+
+def notify_favorite_property_unavailable(property_obj, changed_by=None):
+    """Notify all users who favorited a property that it is no longer available."""
+    for user in property_obj.favorited_by.all():
+        send_notification(
+            recipient=user,
+            title='Favorite Property Unavailable',
+            message=f'"{property_obj.title}" is no longer available.',
+            notification_type='favorite_unavailable',
+            sender=changed_by,
+            link=f'/properties/{property_obj.pk}/',
+            priority='medium',
+        )
+
+
+def notify_favorite_property_updated(property_obj, changes, changed_by=None):
+    """Notify all users who favorited a property that it has been updated."""
+    for user in property_obj.favorited_by.all():
+        send_notification(
+            recipient=user,
+            title='Favorite Property Updated',
+            message=f'"{property_obj.title}" has been updated: {changes}',
+            notification_type='favorite_updated',
+            sender=changed_by,
+            link=f'/properties/{property_obj.pk}/',
+            priority='low',
+        )

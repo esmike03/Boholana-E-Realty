@@ -1,0 +1,15 @@
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var dateInput = document.querySelector('input[name="reservation_date"]');
+  if (dateInput) {
+    flatpickr(dateInput, {
+      minDate: "today",
+      dateFormat: "Y-m-d"
+    });
+  }
+});
+</script>

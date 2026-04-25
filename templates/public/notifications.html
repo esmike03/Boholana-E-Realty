@@ -1,0 +1,121 @@
+{% extends 'public_base.html' %}
+{% load humanize %}
+{% block title %}Notifications — Boholana E-Realty{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<section class="bg-white border-b border-gray-100 py-10 px-6">
+  <div class="max-w-7xl mx-auto">
+    <div class="inline-flex items-center gap-2 text-yellow-600 text-xs font-semibold tracking-widest uppercase mb-3">
+      Client Portal
+    </div>
+    <div class="flex items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Notifications</h1>
+        <p class="text-gray-400 text-sm mt-1">Stay updated on your reservations, appointments, and favorites</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bg-gray-50 py-10 px-6 min-h-screen">
+  <div class="max-w-3xl mx-auto">
+
+    <!-- Filter Tabs + Mark All Read -->
+    <div class="flex items-center justify-between mb-5">
+      <div class="flex gap-2">
+        <a href="?filter=all"
+           class="px-4 py-2 rounded-xl text-xs font-medium transition
+           {% if filter_type == 'all' %}bg-yellow-500 text-white{% else %}bg-white text-gray-600 hover:bg-gray-50 border border-gray-200{% endif %}">
+          All
+        </a>
+        <a href="?filter=unread"
+           class="px-4 py-2 rounded-xl text-xs font-medium transition
+           {% if filter_type == 'unread' %}bg-yellow-500 text-white{% else %}bg-white text-gray-600 hover:bg-gray-50 border border-gray-200{% endif %}">
+          Unread
+          {% if unread_count > 0 %}
+          <span class="ml-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+            {{ unread_count }}
+          </span>
+          {% endif %}
+        </a>
+        <a href="?filter=read"
+           class="px-4 py-2 rounded-xl text-xs font-medium transition
+           {% if filter_type == 'read' %}bg-yellow-500 text-white{% else %}bg-white text-gray-600 hover:bg-gray-50 border border-gray-200{% endif %}">
+          Read
+        </a>
+      </div>
+
+      {% if unread_count > 0 %}
+      <a href="?mark_all_read=1" class="text-xs text-yellow-600 hover:underline font-medium">
+        <i class="fas fa-check-double mr-1"></i>Mark all as read
+      </a>
+      {% endif %}
+    </div>
+
+    <!-- Notifications List -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      {% if notifications %}
+      <div class="divide-y divide-gray-50">
+        {% for notification in notifications %}
+        <a href="{% url 'accounts:notification_read' notification.pk %}"
+           class="flex items-start gap-4 px-5 py-4 hover:bg-gray-50 transition
+           {% if not notification.is_read %}bg-yellow-50/40{% endif %}">
+
+          <!-- Icon -->
+          <div class="flex-shrink-0 mt-0.5">
+            <div class="w-9 h-9 rounded-full flex items-center justify-center
+              {% if 'reservation' in notification.notification_type %}bg-blue-50
+              {% elif 'appointment' in notification.notification_type %}bg-green-50
+              {% elif 'favorite' in notification.notification_type %}bg-red-50
+              {% elif 'listing' in notification.notification_type %}bg-yellow-50
+              {% else %}bg-gray-100{% endif %}">
+              <i class="fas
+                {% if 'reservation' in notification.notification_type %}fa-bookmark text-blue-500
+                {% elif 'appointment' in notification.notification_type %}fa-calendar-check text-green-500
+                {% elif 'favorite' in notification.notification_type %}fa-heart text-red-400
+                {% elif 'listing' in notification.notification_type %}fa-home text-yellow-500
+                {% else %}fa-bell text-gray-400{% endif %}
+                text-xs"></i>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-gray-800
+              {% if not notification.is_read %}text-gray-900{% endif %}">
+              {{ notification.title }}
+            </p>
+            <p class="text-xs text-gray-500 mt-0.5 leading-relaxed">
+              {{ notification.message }}
+            </p>
+            <p class="text-[10px] text-gray-400 mt-1.5">
+              <i class="fas fa-clock mr-1"></i>{{ notification.created_at|timesince }} ago
+            </p>
+          </div>
+
+          <!-- Unread dot -->
+          {% if not notification.is_read %}
+          <div class="flex-shrink-0 mt-2">
+            <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+          </div>
+          {% endif %}
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="px-6 py-16 text-center">
+        <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-bell-slash text-xl text-gray-300"></i>
+        </div>
+        <p class="text-sm text-gray-400 font-medium">No notifications yet</p>
+        <p class="text-xs text-gray-300 mt-1">We'll notify you about your reservations, appointments, and favorites</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

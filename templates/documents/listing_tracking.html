@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ property.title }} — Document Tracking — Boholana E-Realty{% endblock %}
+{% block page_title %}Document Tracking{% endblock %}
+{% block page_subtitle %}Review and manage all documents for {{ property.title }}{% endblock %}
+
+{% block content %}
+
+<!-- Property Info Bar -->
+<div class="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-6 mb-6 text-white">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold mb-1">{{ property.title }}</h1>
+            <p class="text-blue-100">
+                <i class="fas fa-map-marker-alt mr-2"></i>
+                {{ property.address }}, {{ property.city }}, {{ property.province }}
+            </p>
+        </div>
+        <div class="text-right">
+            <p class="text-lg font-semibold">₱{{ property.price|floatformat:0|intcomma }}</p>
+            <p class="text-sm text-blue-100">{{ property.get_property_type_display }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Document Statistics -->
+<div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <p class="text-2xl font-bold text-gray-800">{{ stats.total }}</p>
+        <p class="text-sm text-gray-500 mt-1">Total Documents</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <p class="text-2xl font-bold text-yellow-600">{{ stats.pending }}</p>
+        <p class="text-sm text-gray-500 mt-1">Pending Review</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <p class="text-2xl font-bold text-green-600">{{ stats.approved }}</p>
+        <p class="text-sm text-gray-500 mt-1">Approved</p>
+    </div>
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <p class="text-2xl font-bold text-red-600">{{ stats.rejected }}</p>
+        <p class="text-sm text-gray-500 mt-1">Rejected</p>
+    </div>
+</div>
+
+<!-- Filter & Search -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+    <h3 class="font-semibold text-gray-800 text-sm mb-4">
+        <i class="fas fa-search mr-2 text-blue-500"></i>Search & Filter Documents
+    </h3>
+    
+    <form method="GET" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- Search -->
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-2">Search</label>
+                <input type="text" name="search" value="{{ search }}"
+                       placeholder="Document name, uploader..."
+                       class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <!-- Status Filter -->
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-2">Status</label>
+                <select name="status" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Status</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Type Filter -->
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-2">Document Type</label>
+                <select name="type" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Types</option>
+                    {% for value, label in type_choices %}
+                        <option value="{{ value }}" {% if type_filter == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex items-end gap-2">
+                <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-sm font-semibold transition">
+                    <i class="fas fa-filter mr-1"></i>Filter
+                </button>
+                <a href="{% url 'documents:listing_documents' property.pk %}" 
+                   class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-lg text-sm font-semibold transition text-center">
+                    <i class="fas fa-redo mr-1"></i>Clear
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Documents Table -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100">
+        <h3 class="font-semibold text-gray-800 text-sm">
+            <i class="fas fa-file-alt mr-2 text-blue-500"></i>
+            All Documents ({{ documents.count }})
+        </h3>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-xs text-gray-400 border-b border-gray-50 bg-gray-50">
+                    <th class="px-6 py-3 text-left font-medium">#</th>
+                    <th class="px-6 py-3 text-left font-medium">Document Name</th>
+                    <th class="px-6 py-3 text-left font-medium">Type</th>
+                    <th class="px-6 py-3 text-left font-medium">Uploaded By</th>
+                    <th class="px-6 py-3 text-left font-medium">Uploaded Date</th>
+                    <th class="px-6 py-3 text-left font-medium">Status</th>
+                    <th class="px-6 py-3 text-left font-medium">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                {% for document in documents %}
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-3 text-gray-400 text-xs">#{{ document.id }}</td>
+                    
+                    <td class="px-6 py-3">
+                        <div>
+                            <p class="font-medium text-gray-800 text-sm">{{ document.title }}</p>
+                            {% if document.remarks %}
+                            <p class="text-xs text-gray-500 mt-1">
+                                <i class="fas fa-sticky-note mr-1"></i>{{ document.remarks|truncatechars:50 }}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </td>
+                    
+                    <td class="px-6 py-3 text-gray-600 text-xs">
+                        <span class="bg-gray-100 px-2 py-1 rounded-full">
+                            {{ document.get_document_type_display|truncatechars:20 }}
+                        </span>
+                    </td>
+                    
+                    <td class="px-6 py-3 text-gray-600 text-sm">
+                        <div>
+                            <p class="font-medium">{{ document.uploaded_by.get_full_name|default:document.uploaded_by.username }}</p>
+                            <p class="text-xs text-gray-400">{{ document.uploaded_by.email }}</p>
+                        </div>
+                    </td>
+                    
+                    <td class="px-6 py-3 text-gray-500 text-xs">
+                        {{ document.created_at|date:"M d, Y h:i A" }}
+                    </td>
+                    
+                    <td class="px-6 py-3">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold
+                            {% if document.status == 'approved' %}bg-green-100 text-green-700
+                            {% elif document.status == 'pending_approval' %}bg-yellow-100 text-yellow-700
+                            {% elif document.status == 'rejected' %}bg-red-100 text-red-700
+                            {% else %}bg-gray-100 text-gray-700{% endif %}">
+                            {{ document.get_status_display }}
+                        </span>
+                        {% if document.status == 'rejected' and document.rejection_feedback %}
+                        <p class="text-xs text-red-600 mt-2">
+                            <i class="fas fa-exclamation-circle mr-1"></i>{{ document.rejection_feedback|truncatechars:40 }}
+                        </p>
+                        {% endif %}
+                    </td>
+                    
+                    <td class="px-6 py-3">
+                        <div class="flex items-center gap-1">
+                            <!-- View Details -->
+                            <a href="{% url 'documents:detail' document.pk %}"
+                               class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-1.5 rounded-lg transition"
+                               title="View Details">
+                                <i class="fas fa-eye text-xs"></i>
+                            </a>
+                            
+                            <!-- Approve (if pending) -->
+                            {% if document.status == 'pending_approval' %}
+                            <a href="{% url 'documents:approve' document.pk %}?next={% url 'documents:listing_documents' property.pk %}"
+                               class="bg-green-100 hover:bg-green-200 text-green-600 p-1.5 rounded-lg transition"
+                               title="Approve">
+                                <i class="fas fa-check text-xs"></i>
+                            </a>
+                            
+                            <!-- Reject (if pending) -->
+                            <a href="{% url 'documents:reject' document.pk %}?next={% url 'documents:listing_documents' property.pk %}"
+                               class="bg-red-100 hover:bg-red-200 text-red-600 p-1.5 rounded-lg transition"
+                               title="Reject">
+                                <i class="fas fa-times text-xs"></i>
+                            </a>
+                            {% else %}
+                            <!-- Download Document -->
+                            <a href="{{ document.file.url }}"
+                               target="_blank"
+                               class="bg-blue-100 hover:bg-blue-200 text-blue-600 p-1.5 rounded-lg transition"
+                               title="Download">
+                                <i class="fas fa-download text-xs"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="px-6 py-12 text-center">
+                        <i class="fas fa-inbox text-4xl text-gray-200 mb-3 block"></i>
+                        <p class="text-gray-400 text-sm">No documents found.</p>
+                        {% if search or status_filter or type_filter %}
+                        <a href="{% url 'documents:listing_documents' property.pk %}" class="text-blue-500 hover:underline text-sm mt-2 block">
+                            Clear filters to see all documents
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Back Link -->
+<div class="mt-6">
+    <a href="{% url 'listings:detail' property.pk %}"
+       class="text-sm text-gray-400 hover:text-gray-600 transition">
+        <i class="fas fa-arrow-left mr-1"></i>Back to Property Details
+    </a>
+</div>
+
+{% endblock %}

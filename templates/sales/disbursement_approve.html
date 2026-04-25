@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load humanize %}
 {% block title %}Approve Disbursement{% endblock %}
 {% block page_title %}Approve Disbursement{% endblock %}
 
@@ -22,7 +23,7 @@
         <div class="p-4 bg-gray-50 rounded-xl mb-5">
             <p class="text-xs text-gray-400 mb-1">Current Amount</p>
             <p class="text-2xl font-bold text-gray-800">
-                ₱{{ disbursement.amount|floatformat:2 }}
+                ₱{{ disbursement.amount|floatformat:2|intcomma }}
             </p>
             {% if disbursement.percentage %}
             <p class="text-xs text-gray-400 mt-1">{{ disbursement.percentage }}% commission</p>

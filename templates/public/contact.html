@@ -1,23 +1,22 @@
 {% extends 'public_base.html' %}
 {% block title %}Contact Us — Boholana E-Realty{% endblock %}
-
+{% load humanize %}
 {% block content %}
 
 <!-- Header -->
-<section class="bg-white border-b border-gray-100 py-10 px-6">
-  <div class="max-w-7xl mx-auto">
-    <div class="inline-flex items-center gap-2 text-yellow-600 text-xs font-semibold tracking-widest uppercase mb-3">
-      
+<section class="bg-white border-b border-gray-100 py-6 px-6">
+  <div class="max-w-3xl mx-auto">
+    <div class="inline-flex items-center gap-2 text-yellow-600 text-xs font-semibold tracking-widest uppercase mb-2">
       Get in Touch
     </div>
-    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Contact Us</h1>
-    <p class="text-gray-400 text-sm mt-1">We'd love to hear from you</p>
+    <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Contact Us</h1>
+    <p class="text-gray-400 text-xs mt-1">We'd love to hear from you</p>
   </div>
 </section>
 
 <!-- Content -->
-<section class="bg-gray-50 py-16 px-6 min-h-screen">
-  <div class="max-w-5xl mx-auto">
+<section class="bg-gray-50 py-8 px-6">
+  <div class="max-w-3xl mx-auto">
 
     <!-- Flash messages -->
     {% if messages %}
@@ -31,252 +30,303 @@
       {% endfor %}
     {% endif %}
 
-    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-
-      <!-- Contact Info -->
-      <div class="lg:col-span-2 flex flex-col gap-4">
-        <div class="bg-gray-900 p-8">
-          <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-4">
-            Our Office
-          </p>
-          <h2 class="text-xl font-bold text-white leading-snug mb-6">
-            Let's talk about your<br>
-            <span class="text-yellow-400">dream property</span>
+    <div class="flex flex-col gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+        <!-- Office Box -->
+        <div class="bg-gray-900 p-5">
+          <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-2">Our Office</p>
+          <h2 class="text-base font-bold text-white leading-snug mb-4">
+            Let's talk about your<br><span class="text-yellow-400">dream property</span>
           </h2>
-          <ul class="space-y-5">
-            <li class="flex items-start gap-3">
-              <i class="fas fa-map-marker-alt text-yellow-500 text-xs mt-1"></i>
+          <ul class="space-y-3">
+            <li class="flex items-start gap-2">
+              <i class="fas fa-map-marker-alt text-yellow-500 text-xs mt-0.5 flex-shrink-0"></i>
               <div>
                 <p class="text-xs text-gray-500 uppercase tracking-widest mb-0.5">Address</p>
-                <p class="text-sm text-gray-300">Tagbilaran City, Bohol, Philippines</p>
+                <p class="text-sm text-gray-300">27 E-BUTALID ST. POB 1<br>( Near BDMPC/DML Montessori)<br>TAGBILARAN CITY, BOHOL, PH 6300</p>
               </div>
             </li>
-            <li class="flex items-start gap-3">
-              <i class="fas fa-phone text-yellow-500 text-xs mt-1"></i>
+            <li class="flex items-start gap-2">
+              <i class="fas fa-phone text-yellow-500 text-xs mt-0.5 flex-shrink-0"></i>
               <div>
                 <p class="text-xs text-gray-500 uppercase tracking-widest mb-0.5">Phone / Viber</p>
                 <p class="text-sm text-gray-300">+63 912 345 6789</p>
               </div>
             </li>
-            <li class="flex items-start gap-3">
-              <i class="fas fa-envelope text-yellow-500 text-xs mt-1"></i>
+            <li class="flex items-start gap-2">
+              <i class="fas fa-envelope text-yellow-500 text-xs mt-0.5 flex-shrink-0"></i>
               <div>
                 <p class="text-xs text-gray-500 uppercase tracking-widest mb-0.5">Email</p>
-                <p class="text-sm text-gray-300">info@boholana-erealty.com</p>
+                <p class="text-sm text-gray-300">boholanarealty.willyn@gmail.com</p>
               </div>
             </li>
-            <li class="flex items-start gap-3">
-              <i class="fas fa-clock text-yellow-500 text-xs mt-1"></i>
+            <li class="flex items-start gap-2">
+              <i class="fas fa-clock text-yellow-500 text-xs mt-0.5 flex-shrink-0"></i>
               <div>
                 <p class="text-xs text-gray-500 uppercase tracking-widest mb-0.5">Office Hours</p>
                 <p class="text-sm text-gray-300">Mon – Sat, 8:00 AM – 5:00 PM</p>
               </div>
             </li>
+            <li class="flex items-center gap-2 pt-1">
+              <i class="fas fa-paper-plane text-yellow-500 text-xs mt-0 flex-shrink-0"></i>
+              <button type="button"
+                      onclick="document.getElementById('msg-dialog').showModal()"
+                      class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-3 py-1 rounded font-semibold transition-colors text-xs cursor-pointer">
+                Message Us
+              </button>
+            </li>
           </ul>
         </div>
 
-        <!-- Social -->
-        <div class="bg-white border border-gray-100 p-6">
-          <p class="text-[10px] font-semibold tracking-widest uppercase text-gray-400 mb-4">
-            Follow Us
-          </p>
-          <div class="flex gap-2">
-            <a href="#"
-               class="w-9 h-9 border border-gray-200 hover:border-yellow-500 text-gray-400 hover:text-yellow-500 flex items-center justify-center transition-colors">
-              <i class="fab fa-facebook-f text-xs"></i>
-            </a>
-            <a href="#"
-               class="w-9 h-9 border border-gray-200 hover:border-yellow-500 text-gray-400 hover:text-yellow-500 flex items-center justify-center transition-colors">
-              <i class="fab fa-instagram text-xs"></i>
-            </a>
-            <a href="#"
-               class="w-9 h-9 border border-gray-200 hover:border-yellow-500 text-gray-400 hover:text-yellow-500 flex items-center justify-center transition-colors">
-              <i class="fab fa-viber text-xs"></i>
-            </a>
-          </div>
-        </div>
-
-        <!-- Quick Info Box -->
-        <div class="bg-yellow-50 border border-yellow-100 p-5">
-          <p class="text-xs font-semibold text-yellow-700 mb-2">
-            <i class="fas fa-info-circle mr-1"></i>
-            What happens after you submit?
-          </p>
-          <ul class="text-xs text-yellow-600 space-y-1.5">
-            <li class="flex items-start gap-2">
-              <i class="fas fa-check mt-0.5 text-yellow-500"></i>
-              You'll receive a confirmation email
-            </li>
-            <li class="flex items-start gap-2">
-              <i class="fas fa-check mt-0.5 text-yellow-500"></i>
-              Our team reviews your inquiry
-            </li>
-            <li class="flex items-start gap-2">
-              <i class="fas fa-check mt-0.5 text-yellow-500"></i>
-              We contact you via your preferred method
-            </li>
-            <li class="flex items-start gap-2">
-              <i class="fas fa-check mt-0.5 text-yellow-500"></i>
-              Typically within 24 business hours
-            </li>
-          </ul>
+        <!-- Map -->
+        <div class="bg-white border border-gray-100 overflow-hidden rounded-lg">
+          <div id="office-map" style="width: 100%; height: 100%; min-height: 320px;"></div>
         </div>
       </div>
 
-      <!-- Form -->
-      <div class="lg:col-span-3 bg-white border border-gray-100 p-8">
-        <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-2">
-          Message Us
+      <!-- Social -->
+      <div class="bg-white border border-gray-100 p-4">
+        <p class="text-[10px] font-semibold tracking-widest uppercase text-gray-400 mb-4">Follow Us</p>
+        <div class="flex gap-2">
+          <a href="#" class="w-9 h-9 border border-gray-200 hover:border-yellow-500 text-gray-400 hover:text-yellow-500 flex items-center justify-center transition-colors">
+            <i class="fab fa-facebook-f text-xs"></i>
+          </a>
+          <a href="#" class="w-9 h-9 border border-gray-200 hover:border-yellow-500 text-gray-400 hover:text-yellow-500 flex items-center justify-center transition-colors">
+            <i class="fab fa-instagram text-xs"></i>
+          </a>
+          <a href="#" class="w-9 h-9 border border-gray-200 hover:border-yellow-500 text-gray-400 hover:text-yellow-500 flex items-center justify-center transition-colors">
+            <i class="fab fa-viber text-xs"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Quick Info Box -->
+      <div class="bg-yellow-50 border border-yellow-100 p-5">
+        <p class="text-xs font-semibold text-yellow-700 mb-2">
+          <i class="fas fa-info-circle mr-1"></i> What happens after you submit?
         </p>
-        <h2 class="text-xl font-bold text-gray-900 tracking-tight mb-6">
-          Send Us a Message
-        </h2>
-
-        <form method="POST" class="space-y-5" id="contact-form">
-          {% csrf_token %}
-
-          <!-- ── Personal Info ── -->
-          <div>
-            <p class="text-[10px] font-semibold tracking-widest uppercase text-gray-400 mb-3">
-              Personal Information
-            </p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="text-xs font-medium text-gray-500 mb-1.5 block">
-                  Full Name <span class="text-red-400">*</span>
-                </label>
-                <input type="text" name="name" required
-                       placeholder="Juan dela Cruz"
-                       class="w-full border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-white"/>
-              </div>
-              <div>
-                <label class="text-xs font-medium text-gray-500 mb-1.5 block">
-                  Phone / Viber <span class="text-red-400">*</span>
-                </label>
-                <input type="text" name="phone" required
-                       placeholder="+63 9XX XXX XXXX"
-                       class="w-full border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-white"/>
-              </div>
-            </div>
-            <div class="mt-4">
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">
-                Email Address
-              </label>
-              <input type="email" name="email"
-                     placeholder="you@example.com"
-                     class="w-full border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-white"/>
-            </div>
-          </div>
-
-          <div class="border-t border-gray-100"></div>
-
-          <!-- ── Property Preference ── -->
-          <div>
-            <p class="text-[10px] font-semibold tracking-widest uppercase text-gray-400 mb-3">
-              Property Preference
-            </p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-              <!-- Property Type -->
-              <div>
-                <label class="text-xs font-medium text-gray-500 mb-1.5 block">
-                  Property Type
-                </label>
-                <select name="property_type"
-                        class="w-full border border-gray-200 px-4 py-3 text-sm text-gray-700 bg-white focus:outline-none focus:border-gray-900 transition-colors">
-                  <option value="">Select Type</option>
-                  <option value="house">House</option>
-                  <option value="lot">Lot</option>
-                  <option value="condo">Condominium</option>
-                  <option value="apartment">Apartment</option>
-                  <option value="commercial">Commercial</option>
-                  <option value="any">Any Type</option>
-                </select>
-              </div>
-
-              <!-- Listing Type -->
-              <div>
-                <label class="text-xs font-medium text-gray-500 mb-1.5 block">
-                  Listing Type
-                </label>
-                <select name="listing_type"
-                        class="w-full border border-gray-200 px-4 py-3 text-sm text-gray-700 bg-white focus:outline-none focus:border-gray-900 transition-colors">
-                  <option value="">Select Listing Type</option>
-                  <option value="for_sale">For Sale</option>
-                  <option value="for_rent">For Rent</option>
-                  <option value="any">Any</option>
-                </select>
-              </div>
-
-              <!-- City -->
-              <div>
-                <label class="text-xs font-medium text-gray-500 mb-1.5 block">
-                  City / Location of Interest
-                </label>
-                <input type="text" name="city"
-                       placeholder="e.g. Tagbilaran City, Panglao"
-                       class="w-full border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors bg-white"/>
-              </div>
-
-              <!-- Preferred Contact -->
-              <div>
-                <label class="text-xs font-medium text-gray-500 mb-1.5 block">
-                  Preferred Mode of Contact
-                </label>
-                <select name="preferred_contact"
-                        class="w-full border border-gray-200 px-4 py-3 text-sm text-gray-700 bg-white focus:outline-none focus:border-gray-900 transition-colors">
-                  <option value="any">No Preference</option>
-                  <option value="email">Email</option>
-                  <option value="phone">Phone / Viber</option>
-                  <option value="whatsapp">WhatsApp</option>
-                </select>
-              </div>
-
-            </div>
-          </div>
-
-          <div class="border-t border-gray-100"></div>
-
-          <!-- ── Message ── -->
-          <div>
-            <p class="text-[10px] font-semibold tracking-widest uppercase text-gray-400 mb-3">
-              Your Message
-            </p>
-            <div>
-              <label class="text-xs font-medium text-gray-500 mb-1.5 block">
-                Message <span class="text-red-400">*</span>
-              </label>
-              <textarea name="message" rows="5" required
-                        placeholder="Tell us about the property you're looking for, your budget, preferred features..."
-                        class="w-full border border-gray-200 px-4 py-3 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-gray-900 transition-colors resize-none bg-white"></textarea>
-            </div>
-          </div>
-
-          <!-- Submit -->
-          <button type="submit"
-                  id="submit-btn"
-                  class="w-full bg-gray-900 hover:bg-yellow-600 text-white py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2">
-            <i class="fas fa-paper-plane text-xs"></i>
-            Send Message
-          </button>
-
-        </form>
+        <ul class="text-xs text-yellow-600 space-y-1.5">
+          <li class="flex items-start gap-2"><i class="fas fa-check mt-0.5 text-yellow-500"></i> You'll receive a confirmation email</li>
+          <li class="flex items-start gap-2"><i class="fas fa-check mt-0.5 text-yellow-500"></i> Our team reviews your inquiry</li>
+          <li class="flex items-start gap-2"><i class="fas fa-check mt-0.5 text-yellow-500"></i> We contact you via your preferred method</li>
+          <li class="flex items-start gap-2"><i class="fas fa-check mt-0.5 text-yellow-500"></i> Typically within 24 business hours</li>
+        </ul>
       </div>
-
     </div>
   </div>
 </section>
 
-<script>
-  // Disable submit on click to prevent duplicate submissions
-  const form = document.getElementById('contact-form');
-  const btn = document.getElementById('submit-btn');
+<!-- Message Us Dialog (native HTML dialog - guaranteed to popup) -->
+<style>
+  #msg-dialog { border: none; border-radius: 12px; padding: 0; max-width: 640px; width: 90%; max-height: 85vh; overflow-y: auto; margin: auto; inset: 0; }
+  #msg-dialog::backdrop { background: rgba(0,0,0,0.5); }
+</style>
+<dialog id="msg-dialog">
+  <!-- Header -->
+  <div style="position:sticky;top:0;z-index:1;" class="bg-white border-b border-gray-100 p-4 flex items-center justify-between">
+    <div>
+      <p class="text-[10px] font-semibold tracking-widest uppercase text-yellow-600 mb-1">Message Us</p>
+      <h2 class="text-lg font-bold text-gray-900">Send Us a Message</h2>
+    </div>
+    <button type="button" onclick="document.getElementById('msg-dialog').close()" class="text-gray-400 hover:text-gray-600 text-xl">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
 
-  form.addEventListener('submit', function() {
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin text-xs mr-2"></i> Sending...';
-    btn.classList.add('opacity-70', 'cursor-not-allowed');
-  });
+  <!-- Body -->
+  <div class="p-6">
+    <form method="POST" class="space-y-6" id="contact-form-el">
+      {% csrf_token %}
+
+      <!-- Personal Info -->
+      <div>
+        <p class="text-[10px] font-semibold tracking-widest uppercase text-gray-400 mb-3">Personal Information</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs font-medium text-gray-500 mb-1.5 block">Full Name <span class="text-red-400">*</span></label>
+            <input type="text" name="name" required placeholder="Juan dela Cruz"
+                   value="{% if user.is_authenticated %}{{ user.get_full_name }}{% endif %}"
+                   class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition bg-white"/>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-gray-500 mb-1.5 block">Phone / Viber <span class="text-red-400">*</span></label>
+            <input type="text" name="phone" required placeholder="+63 9XX XXX XXXX"
+                   value="{% if user.is_authenticated and user.phone_number %}{{ user.phone_number }}{% endif %}"
+                   class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition bg-white"/>
+          </div>
+        </div>
+        <div class="mt-4">
+          <label class="text-xs font-medium text-gray-500 mb-1.5 block">Email Address</label>
+          <input type="email" name="email" placeholder="you@example.com"
+                 value="{% if user.is_authenticated %}{{ user.email }}{% endif %}"
+                 class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition bg-white"/>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-100"></div>
+
+      <!-- Property Preference -->
+      <div>
+        <p class="text-[10px] font-semibold tracking-widest uppercase text-gray-400 mb-3">Property Preference</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs font-medium text-gray-500 mb-1.5 block">Property Type</label>
+            <select name="property_type" class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition">
+              <option value="">Select Type</option>
+              <option value="house">House</option>
+              <option value="lot">Lot</option>
+              <option value="house_and_lot">House and Lot</option>
+              <option value="condo">Condominium</option>
+              <option value="apartment">Apartment</option>
+              <option value="commercial">Commercial</option>
+              <option value="any">Any Type</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-gray-500 mb-1.5 block">Listing Type</label>
+            <select name="listing_type" class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition">
+              <option value="">Select Listing Type</option>
+              <option value="for_sale">For Sale</option>
+              <option value="for_rent">For Rent</option>
+              <option value="any">Any</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-gray-500 mb-1.5 block">City / Location of Interest</label>
+            <input type="text" name="city" placeholder="e.g. Tagbilaran City, Panglao"
+                   class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition bg-white"/>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-gray-500 mb-1.5 block">Preferred Mode of Contact</label>
+            <select name="preferred_contact" class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition">
+              <option value="any">No Preference</option>
+              <option value="email">Email</option>
+              <option value="phone">Phone / Viber</option>
+              <option value="whatsapp">WhatsApp</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-100"></div>
+
+      <!-- Message -->
+      <div>
+        <p class="text-[10px] font-semibold tracking-widest uppercase text-gray-400 mb-3">Your Message</p>
+        <label class="text-xs font-medium text-gray-500 mb-1.5 block">Message <span class="text-red-400">*</span></label>
+        <textarea name="message" rows="5" required
+                  placeholder="Tell us about the property you're looking for, your budget, preferred features..."
+                  class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition resize-none bg-white"></textarea>
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" id="submit-btn"
+              class="w-full bg-gray-900 hover:bg-yellow-600 text-white py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+        <i class="fas fa-paper-plane text-xs"></i> Send Message
+      </button>
+    </form>
+
+    <!-- Divider -->
+    <div class="flex items-center gap-4 my-6">
+      <div class="flex-1 border-t border-gray-200"></div>
+      <span class="text-xs text-gray-400 font-medium">OR</span>
+      <div class="flex-1 border-t border-gray-200"></div>
+    </div>
+
+    <!-- Direct Contact Methods -->
+    <div class="space-y-3">
+      <p class="text-[10px] font-semibold tracking-widest uppercase text-gray-400 mb-4">Connect With Us Directly</p>
+      <a href="https://www.facebook.com/BoholanaRealty" target="_blank" rel="noopener noreferrer"
+         class="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:border-yellow-400 hover:bg-yellow-50 transition-all">
+        <i class="fab fa-facebook text-yellow-500 text-lg mt-0.5"></i>
+        <div><p class="text-xs font-semibold text-gray-700">Facebook</p><p class="text-xs text-gray-500">Boholana Realty</p></div>
+      </a>
+      <a href="https://wa.me/63922322592" target="_blank" rel="noopener noreferrer"
+         class="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:border-yellow-400 hover:bg-yellow-50 transition-all">
+        <i class="fab fa-whatsapp text-yellow-500 text-lg mt-0.5"></i>
+        <div><p class="text-xs font-semibold text-gray-700">WhatsApp / Viber</p><p class="text-xs text-gray-500">+63 922-322-5922</p></div>
+      </a>
+      <a href="mailto:boholanarealty.willyn@gmail.com"
+         class="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:border-yellow-400 hover:bg-yellow-50 transition-all">
+        <i class="fas fa-envelope text-yellow-500 text-lg mt-0.5"></i>
+        <div><p class="text-xs font-semibold text-gray-700">Email</p><p class="text-xs text-gray-500">boholanarealty.willyn@gmail.com</p></div>
+      </a>
+      <a href="skype:willyn.buena?chat"
+         class="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:border-yellow-400 hover:bg-yellow-50 transition-all">
+        <i class="fab fa-skype text-yellow-500 text-lg mt-0.5"></i>
+        <div><p class="text-xs font-semibold text-gray-700">Skype</p><p class="text-xs text-gray-500">willyn.buena</p></div>
+      </a>
+      <div class="flex items-start gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+        <i class="fab fa-weixin text-yellow-500 text-lg mt-0.5"></i>
+        <div><p class="text-xs font-semibold text-gray-700">WeChat</p><p class="text-xs text-gray-500">willynbuena</p></div>
+      </div>
+    </div>
+
+    <!-- Office & Landline -->
+    <div class="mt-5 pt-4 border-t border-gray-200">
+      <p class="text-[10px] font-semibold tracking-widest uppercase text-gray-400 mb-3">Office & Landline</p>
+      <div class="space-y-2">
+        <a href="tel:+63995362612" class="flex items-center gap-2 p-2 rounded-lg hover:bg-yellow-50 transition-all">
+          <i class="fas fa-phone text-yellow-500 text-sm"></i><span class="text-xs text-gray-600">0995 362 6112</span>
+        </a>
+        <a href="tel:+63384228738" class="flex items-start gap-2 p-2 rounded-lg hover:bg-yellow-50 transition-all">
+          <i class="fas fa-phone text-yellow-500 text-sm mt-0.5"></i>
+          <div><p class="text-xs text-gray-600">(038) 422-8738</p><p class="text-xs text-gray-400">Tagbilaran City - Documentation</p></div>
+        </a>
+        <a href="tel:+63384128179" class="flex items-start gap-2 p-2 rounded-lg hover:bg-yellow-50 transition-all">
+          <i class="fas fa-phone text-yellow-500 text-sm mt-0.5"></i>
+          <div><p class="text-xs text-gray-600">(038) 412-8179</p><p class="text-xs text-gray-400">Dauis-Panglao - Site Visits</p></div>
+        </a>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<!-- Form submit handler -->
+<script>
+(function() {
+  var form = document.getElementById('contact-form-el');
+  var btn = document.getElementById('submit-btn');
+  if (form && btn) {
+    form.addEventListener('submit', function() {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin text-xs mr-2"></i> Sending...';
+      btn.classList.add('opacity-70', 'cursor-not-allowed');
+    });
+  }
+})();
 </script>
+
+<!-- Google Maps -->
+<script>
+function initOfficeMap() {
+  var mapElement = document.getElementById('office-map');
+  if (!mapElement) return;
+  var officeLocation = { lat: 9.6500, lng: 123.8554 };
+  var map = new google.maps.Map(mapElement, {
+    zoom: 15, center: officeLocation,
+    mapTypeControl: false, fullscreenControl: false, streetViewControl: false, zoomControl: true,
+    styles: [
+      { "featureType": "all", "elementType": "labels.text.fill", "stylers": [{"color": "#616161"}] },
+      { "featureType": "water", "elementType": "geometry", "stylers": [{"color": "#e9e9e9"}, {"lightness": 17}] },
+      { "featureType": "road.highway", "elementType": "geometry.fill", "stylers": [{"color": "#f1f1f1"}] }
+    ]
+  });
+  var marker = new google.maps.Marker({
+    position: officeLocation, map: map, title: 'Boholana E-Realty Office',
+    icon: 'https://maps.google.com/mapfiles/ms/icons/FFD700.png'
+  });
+  var infoWindow = new google.maps.InfoWindow({
+    content: '<div style="padding:10px;font-family:Arial,sans-serif;">' +
+      '<p style="font-weight:bold;margin-bottom:5px;">Boholana E-Realty Office</p>' +
+      '<p style="margin:5px 0;font-size:12px;">27 E-BUTALID ST. POB 1</p>' +
+      '<p style="margin:5px 0;font-size:12px;">TAGBILARAN CITY, BOHOL, PH 6300</p>' +
+      '<p style="margin:5px 0;font-size:12px;">📞 +63 912 345 6789</p></div>'
+  });
+  marker.addListener('click', function() { infoWindow.open(map, marker); });
+  infoWindow.open(map, marker);
+}
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ settings.GOOGLE_MAPS_API_KEY }}&libraries=places&callback=initOfficeMap"></script>
 
 {% endblock %}

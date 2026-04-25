@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.db import models
 from django.utils.html import format_html
 from .models import CustomUser, UserActivityLog, UserPreference, Notification
 from .models import ContactMessage
@@ -16,9 +17,23 @@ class UserPreferenceInline(admin.StackedInline):
 class CustomUserAdmin(UserAdmin):
     list_display = (
         'avatar_display', 'username', 'full_name',
-        'email', 'role_badge', 'is_verified',
-        'is_disabled', 'is_active', 'date_joined'
+        'email', 'role_badge', 'commission_evaluation_label',
+        'is_verified', 'is_disabled', 'is_active', 'date_joined'
     )
+
+    def commission_evaluation_label(self, obj):
+        from apps.reports.models import Report
+        # SQLite does not support JSONField `contains`, so check the user relation in SQL first
+        # and fall back to scanning JSON parameters in Python.
+        if Report.objects.filter(report_type='commission_report', generated_by=obj).exists():
+            return format_html('<span style="background:#f59e0b; color:white; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600;">Commission Evaluation</span>')
+
+        for report in Report.objects.filter(report_type='commission_report').only('parameters'):
+            parameters = report.parameters or {}
+            if str(parameters.get('user_id')) == str(obj.id):
+                return format_html('<span style="background:#f59e0b; color:white; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600;">Commission Evaluation</span>')
+        return ''
+    commission_evaluation_label.short_description = 'Commission Report?'
     list_display_links = ('username', 'full_name')
     list_filter = ('role', 'is_verified', 'is_disabled', 'is_active')
     search_fields = ('username', 'email', 'first_name', 'last_name')

@@ -16,6 +16,7 @@ class Property(models.Model):
     PROPERTY_TYPE_CHOICES = (
         ('house', 'House'),
         ('lot', 'Lot'),
+        ('house_and_lot', 'House and Lot'),
         ('condo', 'Condominium'),
         ('commercial', 'Commercial'),
         ('apartment', 'Apartment'),
@@ -27,6 +28,7 @@ class Property(models.Model):
         ('pending_approval', 'Pending Approval'),
         ('flagged', 'Flagged for Review'),
         ('approved', 'Approved / For Sale'),
+        ('reserved', 'Reserved'),
         ('rejected', 'Rejected'),
         ('sold', 'Sold'),
         ('archived', 'Archived'),
@@ -58,12 +60,21 @@ class Property(models.Model):
         related_name='properties',
         limit_choices_to={'role': 'property_owner'}
     )
+
     broker = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='brokered_properties',
         limit_choices_to={'role': 'broker'}
+    )
+
+    sale_assistant = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='assigned_properties',
+        limit_choices_to={'role': 'sale_assistant'}
     )
 
     # Approval Workflow
@@ -118,6 +129,7 @@ class Property(models.Model):
     # Pricing
     price = models.DecimalField(max_digits=15, decimal_places=2)
     is_negotiable = models.BooleanField(default=False)
+    is_featured = models.BooleanField(default=False)
 
     # Tags & Favorites
     tags = models.ManyToManyField(

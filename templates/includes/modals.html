@@ -1,0 +1,47 @@
+<!-- Reservation Modal -->
+<div id="reservationModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-lg relative">
+    <button id="closeReservationModal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+    <div id="reservationModalContent" class="p-6">
+      <!-- Reservation form will be loaded here -->
+      <div class="flex justify-center items-center h-40">
+        <span class="text-gray-400">Loading...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Appointment Modal -->
+<div id="appointmentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-lg relative">
+    <button id="closeAppointmentModal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+    <div id="appointmentModalContent" class="p-6">
+      <!-- Appointment form will be loaded here -->
+      <div class="flex justify-center items-center h-40">
+        <span class="text-gray-400">Loading...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Modal logic
+function openModal(modalId, url, contentId) {
+  document.getElementById(modalId).classList.remove('hidden');
+  const content = document.getElementById(contentId);
+  content.innerHTML = '<div class="flex justify-center items-center h-40"><span class="text-gray-400">Loading...</span></div>';
+  fetch(url)
+    .then(r => r.text())
+    .then(html => { content.innerHTML = html; });
+}
+function closeModal(modalId) {
+  document.getElementById(modalId).classList.add('hidden');
+}
+document.getElementById('closeReservationModal').onclick = () => closeModal('reservationModal');
+document.getElementById('closeAppointmentModal').onclick = () => closeModal('appointmentModal');
+// Optional: close on background click
+window.addEventListener('click', function(e) {
+  if (e.target === document.getElementById('reservationModal')) closeModal('reservationModal');
+  if (e.target === document.getElementById('appointmentModal')) closeModal('appointmentModal');
+});
+</script>

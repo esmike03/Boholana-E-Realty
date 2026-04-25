@@ -1,27 +1,26 @@
 {% extends 'base.html' %}
-
 {% block title %}Sales — Boholana E-Realty{% endblock %}
 {% block page_title %}Manage Sales{% endblock %}
 {% block page_subtitle %}Track all property sales and transactions{% endblock %}
-
+{% load humanize %}
 {% block content %}
 
 <!-- Stats -->
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
     <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-        <p class="text-2xl font-bold text-gray-800">{{ total }}</p>
+        <p class="text-2xl font-bold text-gray-800">{{ total|intcomma }}</p>
         <p class="text-xs text-gray-500 mt-1">Total Sales</p>
     </div>
     <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-        <p class="text-2xl font-bold text-yellow-600">{{ pending }}</p>
+        <p class="text-2xl font-bold text-yellow-600">{{ pending|intcomma }}</p>
         <p class="text-xs text-gray-500 mt-1">Pending Verification</p>
     </div>
     <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-        <p class="text-2xl font-bold text-green-600">{{ approved }}</p>
+        <p class="text-2xl font-bold text-green-600">{{ approved|intcomma }}</p>
         <p class="text-xs text-gray-500 mt-1">Approved</p>
     </div>
     <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-        <p class="text-2xl font-bold text-blue-600">₱{{ total_amount|floatformat:0 }}</p>
+        <p class="text-2xl font-bold text-blue-600">₱{{ total_amount|floatformat:0|intcomma }}</p>
         <p class="text-xs text-gray-500 mt-1">Total Revenue</p>
     </div>
 </div>
@@ -100,7 +99,7 @@
                         {% endif %}
                     </td>
                     <td class="px-6 py-4 font-bold text-gray-800">
-                        ₱{{ sale.net_price|floatformat:0 }}
+                        ₱{{ sale.net_price|floatformat:0|intcomma }}
                     </td>
                     <td class="px-6 py-4 text-gray-500 text-xs">
                         {{ sale.get_payment_scheme_display }}

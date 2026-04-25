@@ -1,9 +1,8 @@
 {% extends 'base.html' %}
-
+{% load humanize %}
 {% block title %}Manage Listings — Boholana E-Realty{% endblock %}
 
 {% block page_title %}Manage Listings{% endblock %}
-
 {% block page_subtitle %}View and manage all property listings{% endblock %}
 
 {% block content %}
@@ -11,22 +10,22 @@
 <!-- Stats -->
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
   <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-    <p class="text-2xl font-bold text-gray-800">{{ total }}</p>
+    <p class="text-2xl font-bold text-gray-800">{{ total|intcomma }}</p>
     <p class="text-xs text-gray-500 mt-1">Total Listings</p>
   </div>
 
   <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-    <p class="text-2xl font-bold text-yellow-600">{{ pending }}</p>
+    <p class="text-2xl font-bold text-yellow-600">{{ pending|intcomma }}</p>
     <p class="text-xs text-gray-500 mt-1">Pending Approval</p>
   </div>
 
   <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-    <p class="text-2xl font-bold text-green-600">{{ approved }}</p>
+    <p class="text-2xl font-bold text-green-600">{{ approved|intcomma }}</p>
     <p class="text-xs text-gray-500 mt-1">Approved / Live</p>
   </div>
 
   <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-    <p class="text-2xl font-bold text-red-600">{{ flagged }}</p>
+    <p class="text-2xl font-bold text-red-600">{{ flagged|intcomma }}</p>
     <p class="text-xs text-gray-500 mt-1">Flagged</p>
   </div>
 </div>
@@ -39,7 +38,7 @@
   <div class="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
     <h3 class="font-semibold text-gray-800 text-sm">All Properties</h3>
 
-    {% if user.role == 'broker' or user.role == 'staff' or user.role == 'property_owner' or user.role == 'admin' or user.is_superuser %}
+    {% if user.role == 'property_owner' or user.role == 'admin' or user.role == 'staff' or user.is_superuser %}
     <a href="{% url 'listings:create' %}"
        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 w-fit">
       <i class="fas fa-plus"></i> Add Property
@@ -168,7 +167,7 @@
 
 
           <td class="px-6 py-4 font-semibold text-gray-700">
-            ₱{{ property.price|floatformat:0 }}
+            ₱{{ property.price|floatformat:0|intcomma }}
           </td>
 
 
@@ -208,13 +207,22 @@
             <div class="flex items-center gap-1">
 
               <a href="{% url 'listings:detail' property.pk %}"
-                class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-1.5 rounded-lg transition">
+                class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-1.5 rounded-lg transition"
+                title="View">
                 <i class="fas fa-eye text-xs"></i>
               </a>
 
               <a href="{% url 'listings:update' property.pk %}"
-                class="bg-blue-100 hover:bg-blue-200 text-blue-600 p-1.5 rounded-lg transition">
+                class="bg-blue-100 hover:bg-blue-200 text-blue-600 p-1.5 rounded-lg transition"
+                title="Edit">
                 <i class="fas fa-edit text-xs"></i>
+              </a>
+
+              <!-- Document Tracking -->
+              <a href="{% url 'documents:listing_documents' property.pk %}"
+                class="bg-purple-100 hover:bg-purple-200 text-purple-600 p-1.5 rounded-lg transition"
+                title="Document Tracking">
+                <i class="fas fa-file-contract text-xs"></i>
               </a>
 
             </div>

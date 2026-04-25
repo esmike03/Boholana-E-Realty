@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load humanize %}
 {% block title %}{{ property.title }} — Boholana E-Realty{% endblock %}
 {% block page_title %}Property Details{% endblock %}
 {% block page_subtitle %}View full property information{% endblock %}
@@ -53,7 +53,7 @@
 
             <!-- Price -->
             <div class="bg-blue-50 rounded-xl p-4 mb-5">
-                <p class="text-2xl font-bold text-blue-600">₱{{ property.price|floatformat:0 }}</p>
+                <p class="text-2xl font-bold text-blue-600">₱{{ property.price|floatformat:0|intcomma }}</p>
                 <p class="text-xs text-blue-400 mt-0.5">
                     {{ property.get_property_type_display }}
                     {% if property.is_negotiable %} • Negotiable{% endif %}
@@ -158,6 +158,9 @@
     <!-- Right -->
     <div class="space-y-5">
 
+        <!-- Mortgage Calculator -->
+        {% include 'includes/mortgage_calculator.html' %}
+
         <!-- Actions -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
             <h4 class="font-semibold text-gray-800 text-sm mb-4">Actions</h4>
@@ -167,7 +170,23 @@
                     <i class="fas fa-edit mr-2"></i>Edit Property
                 </a>
 
-                {% if user.role in 'broker,admin' or user.is_superuser %}
+                <!-- Document Tracking (for admin/broker/staff) -->
+                {% if user.role in 'broker,admin,staff' or user.is_superuser %}
+                    <a href="{% url 'documents:listing_documents' property.pk %}"
+                       class="block w-full text-center bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-xl text-sm font-semibold transition">
+                        <i class="fas fa-file-contract mr-2"></i>Document Tracking
+                    </a>
+                {% endif %}
+
+                <!-- Block Dates (owner/broker/admin/sale_assistant) -->
+                {% if user == property.owner or user.role in 'broker,admin,sale_assistant' or user.is_superuser %}
+                    <a href="{% url 'reservations:block_dates' property.pk %}"
+                       class="block w-full text-center bg-yellow-100 hover:bg-yellow-200 text-yellow-700 py-2.5 rounded-xl text-sm font-semibold transition">
+                        <i class="fas fa-calendar-times mr-2"></i>Block Dates
+                    </a>
+                {% endif %}
+
+                {% if user.role in 'broker,admin,staff' or user.is_superuser %}
                     {% if property.listing_status == 'pending_approval' or property.listing_status == 'flagged' %}
                         <a href="{% url 'listings:approve' property.pk %}"
                            class="block w-full text-center bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-xl text-sm font-semibold transition">

@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Client Preferences — Boholana E-Realty{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Client Property Preferences</h1>
+  <p class="text-gray-500 text-sm mt-1">See what clients are looking for when they visit the office</p>
+</div>
+
+{% if preferences %}
+<div class="grid gap-4">
+  {% for pref in preferences %}
+  <div class="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition">
+    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+
+      <!-- Client Info -->
+      <div class="flex items-center gap-4 min-w-0">
+        <div class="w-11 h-11 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+          <span class="text-yellow-700 font-bold text-sm">
+            {{ pref.user.first_name|first|upper }}{{ pref.user.last_name|first|upper }}
+          </span>
+        </div>
+        <div class="min-w-0">
+          <h3 class="font-semibold text-gray-900 truncate">
+            {{ pref.user.get_full_name|default:pref.user.username }}
+          </h3>
+          <p class="text-xs text-gray-400">
+            {{ pref.user.email }}
+            {% if pref.user.phone_number %} · {{ pref.user.phone_number }}{% endif %}
+          </p>
+          <p class="text-xs text-gray-400 mt-0.5">
+            Updated {{ pref.updated_at|timesince }} ago
+          </p>
+        </div>
+      </div>
+
+      <!-- Preference Details -->
+      <div class="flex flex-wrap gap-2 md:text-right">
+        {% if pref.preferred_property_types %}
+        <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs font-medium px-3 py-1 rounded-full">
+          <i class="fas fa-home text-[10px]"></i>
+          {{ pref.preferred_property_types }}
+        </span>
+        {% endif %}
+        {% if pref.preferred_cities %}
+        <span class="inline-flex items-center gap-1 bg-green-50 text-green-700 text-xs font-medium px-3 py-1 rounded-full">
+          <i class="fas fa-map-marker-alt text-[10px]"></i>
+          {{ pref.preferred_cities }}
+        </span>
+        {% endif %}
+        {% if pref.min_bedrooms %}
+        <span class="inline-flex items-center gap-1 bg-purple-50 text-purple-700 text-xs font-medium px-3 py-1 rounded-full">
+          <i class="fas fa-bed text-[10px]"></i>
+          {{ pref.min_bedrooms }}+ beds
+        </span>
+        {% endif %}
+        {% if pref.min_bathrooms %}
+        <span class="inline-flex items-center gap-1 bg-pink-50 text-pink-700 text-xs font-medium px-3 py-1 rounded-full">
+          <i class="fas fa-bath text-[10px]"></i>
+          {{ pref.min_bathrooms }}+ baths
+        </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Budget Row -->
+    {% if pref.min_price or pref.max_price %}
+    <div class="mt-4 pt-3 border-t border-gray-100">
+      <div class="flex items-center gap-2 text-sm text-gray-600">
+        <i class="fas fa-peso-sign text-yellow-500 text-xs"></i>
+        <span class="font-medium">Budget:</span>
+        {% if pref.min_price and pref.max_price %}
+          ₱{{ pref.min_price|intcomma }} — ₱{{ pref.max_price|intcomma }}
+        {% elif pref.min_price %}
+          From ₱{{ pref.min_price|intcomma }}
+        {% elif pref.max_price %}
+          Up to ₱{{ pref.max_price|intcomma }}
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="bg-white border border-gray-200 rounded-xl p-12 text-center">
+  <i class="fas fa-clipboard-list text-gray-300 text-4xl mb-4"></i>
+  <p class="text-gray-500 font-medium">No client preferences submitted yet</p>
+  <p class="text-gray-400 text-sm mt-1">Preferences will appear here when clients use the "Find Your Property" form</p>
+</div>
+{% endif %}
+{% endblock %}

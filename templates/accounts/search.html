@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load humanize %}
 {% block title %}Search Results — Boholana E-Realty{% endblock %}
 {% block page_title %}Search Results{% endblock %}
 {% block page_subtitle %}
@@ -100,7 +100,7 @@
                             <i class="fas fa-map-marker-alt text-yellow-500 mr-1"></i>
                             {{ property.city }}, {{ property.province }}
                             <span class="mx-2">•</span>
-                            ₱{{ property.price|floatformat:0 }}
+                            ₱{{ property.price|floatformat:0|intcomma }}
                         </p>
                     </div>
                     <div class="flex items-center gap-2 flex-shrink-0">

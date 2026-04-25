@@ -1,0 +1,108 @@
+{% extends 'public_base.html' %}
+{% block title %}Chat with Us — {{ property.title }}{% endblock %}
+
+{% block content %}
+
+<section class="bg-gray-100 min-h-screen py-6 px-4 md:px-6">
+  <div class="max-w-2xl mx-auto">
+
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+
+      <!-- Header -->
+      <div class="px-5 py-4 bg-white border-b border-gray-200">
+        <div class="flex items-center gap-3">
+          <!-- Back button -->
+          <a href="{% url 'property_detail' property.pk %}"
+            class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition text-gray-500">
+            <i class="fas fa-arrow-left text-sm"></i>
+          </a>
+          <div>
+            <h1 class="text-lg font-bold text-gray-900">Chat with Us</h1>
+            <p class="text-sm text-gray-500">{{ property.title }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="p-6">
+        <p class="text-gray-600 mb-6">Choose who you'd like to chat with about this property:</p>
+
+        <div class="space-y-4">
+          {% for recipient in available_recipients %}
+          <a href="{% url 'reservations:chat' property.pk %}?recipient_id={{ recipient.user.pk }}"
+            class="block p-4 border border-gray-200 rounded-xl hover:border-yellow-300 hover:bg-yellow-50 transition-all">
+            <div class="flex items-center gap-4">
+              <!-- Avatar -->
+              <div class="relative">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center overflow-hidden">
+                  {% if recipient.user.profile_picture %}
+                  <img src="{{ recipient.user.profile_picture.url }}" class="w-12 h-12 rounded-full object-cover">
+                  {% else %}
+                  <span class="text-white text-sm font-bold">{{ recipient.user.first_name|first|upper }}{{ recipient.user.last_name|first|upper }}</span>
+                  {% endif %}
+                </div>
+                {% if recipient.available %}
+                <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
+                {% endif %}
+              </div>
+
+              <!-- Info -->
+              <div class="flex-1">
+                <p class="font-semibold text-gray-900">
+                  {{ recipient.user.get_full_name|default:recipient.user.username }}
+                </p>
+                <p class="text-sm text-gray-500">
+                  {% if recipient.type == 'broker' %}
+                    Property Broker
+                  {% elif recipient.type == 'sale_assistant' %}
+                    Sales Assistant
+                  {% elif recipient.type == 'staff' %}
+                    Property Staff
+                  {% else %}
+                    Team Member
+                  {% endif %}
+                </p>
+              </div>
+
+              <!-- Status -->
+              <div class="text-right">
+                {% if recipient.available %}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  <span class="w-1.5 h-1.5 bg-green-400 rounded-full mr-1.5"></span>
+                  Active now
+                </span>
+                {% else %}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                  <span class="w-1.5 h-1.5 bg-gray-400 rounded-full mr-1.5"></span>
+                  Offline
+                </span>
+                {% endif %}
+              </div>
+            </div>
+          </a>
+          {% empty %}
+          <div class="text-center py-8">
+            <i class="fas fa-comments text-gray-300 text-4xl mb-4"></i>
+            <p class="text-gray-500">No team members available at the moment.</p>
+            <p class="text-sm text-gray-400 mt-1">Please try again later or contact us directly.</p>
+          </div>
+          {% endfor %}
+        </div>
+
+        {% if available_recipients %}
+        <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p class="text-sm text-blue-800">
+            <i class="fas fa-info-circle mr-2"></i>
+            Our team will respond to your messages as soon as possible. For urgent inquiries, you can also call us directly.
+          </p>
+        </div>
+        {% endif %}
+
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

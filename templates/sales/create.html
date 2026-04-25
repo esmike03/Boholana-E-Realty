@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load humanize %}
 {% block title %}New Sale — Boholana E-Realty{% endblock %}
 {% block page_title %}Create Sale{% endblock %}
 {% block page_subtitle %}Record a new property sale{% endblock %}
@@ -25,12 +25,12 @@
                     <label class="block text-xs font-medium text-gray-600 mb-1.5">
                         Property <span class="text-red-500">*</span>
                     </label>
-                    <select name="property_id" required
+                    <select name="property_id" id="property_id" required
                             class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
                         <option value="">Select Property</option>
                         {% for property in properties %}
-                            <option value="{{ property.pk }}">
-                                {{ property.title }} — ₱{{ property.price|floatformat:0 }}
+                            <option value="{{ property.pk }}" data-price="{{ property.price }}">
+                                {{ property.title }} — ₱{{ property.price|floatformat:0|intcomma }}
                             </option>
                         {% endfor %}
                     </select>
@@ -156,5 +156,21 @@ function computeNet() {
     const net = selling - discount;
     document.getElementById('net_price_display').value = net.toFixed(2);
 }
+
+// Autofill selling price when property is selected
+document.addEventListener('DOMContentLoaded', function() {
+    const propertySelect = document.getElementById('property_id');
+    const sellingPriceInput = document.getElementById('selling_price');
+    if (propertySelect && sellingPriceInput) {
+        propertySelect.addEventListener('change', function() {
+            const selected = propertySelect.options[propertySelect.selectedIndex];
+            const price = selected.getAttribute('data-price');
+            if (price) {
+                sellingPriceInput.value = price;
+                computeNet();
+            }
+        });
+    }
+});
 </script>
 {% endblock %}

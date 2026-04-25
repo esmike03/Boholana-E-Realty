@@ -1,0 +1,125 @@
+{% extends 'public_base.html' %}
+{% load humanize %}
+{% block title %}Properties For You — Boholana E-Realty{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<section class="bg-white border-b border-gray-100 py-10 px-6">
+  <div class="max-w-7xl mx-auto">
+    <div class="inline-flex items-center gap-2 text-yellow-600 text-xs font-semibold tracking-widest uppercase mb-3">
+      <i class="fas fa-heart"></i>
+      Matched For You
+    </div>
+    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Properties Matching Your Preferences</h1>
+    <p class="text-gray-400 text-sm mt-1">
+      Found <span class="font-semibold text-gray-900">{{ count }}</span> properties matching your criteria
+    </p>
+  </div>
+</section>
+
+<!-- Content -->
+<section class="bg-gray-50 py-10 px-6 min-h-screen">
+  <div class="max-w-7xl mx-auto">
+
+    {% if properties %}
+    <!-- Results Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+      {% for property in properties %}
+      <a href="{% url 'property_detail' property.id %}"
+         class="group block bg-white border border-gray-100 hover:border-gray-300 hover:shadow-lg transition-all duration-300">
+        <!-- Image -->
+        <div class="relative h-44 bg-gray-100 overflow-hidden">
+          {% if property.images.exists %}
+          <img src="{{ property.images.first.image.url }}"
+               alt="{{ property.title }}"
+               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          {% else %}
+          <div class="w-full h-full flex flex-col items-center justify-center gap-2 bg-gray-50">
+            <i class="fas fa-home text-3xl text-gray-200"></i>
+            <span class="text-xs tracking-widest uppercase text-gray-300">No image</span>
+          </div>
+          {% endif %}
+
+          <!-- Status badge -->
+          <span class="absolute top-3 left-3 text-[9px] font-semibold tracking-wider uppercase px-2.5 py-1
+            {% if property.status == 'available' %}bg-gray-900 text-white
+            {% elif property.status == 'reserved' %}bg-yellow-50 text-yellow-600 border border-yellow-200
+            {% else %}bg-red-50 text-red-500 border border-red-200{% endif %}">
+            {{ property.get_status_display }}
+          </span>
+        </div>
+
+        <!-- Info -->
+        <div class="p-4">
+          <h3 class="font-semibold text-gray-900 text-sm leading-snug mb-1 group-hover:text-yellow-600 transition-colors">
+            {{ property.title }}
+          </h3>
+          <p class="text-xs text-gray-400 flex items-center gap-1.5 mb-3">
+            <i class="fas fa-map-marker-alt text-yellow-500 text-[10px]"></i>
+            {{ property.city }}, {{ property.province }}
+          </p>
+
+          <!-- Specs -->
+          <div class="flex gap-3 text-xs text-gray-400 py-2.5 border-t border-b border-gray-100 mb-3">
+            {% if property.bedrooms %}
+            <span class="flex items-center gap-1"><i class="fas fa-bed text-gray-300"></i> {{ property.bedrooms }}</span>
+            {% endif %}
+            {% if property.bathrooms %}
+            <span class="flex items-center gap-1"><i class="fas fa-bath text-gray-300"></i> {{ property.bathrooms }}</span>
+            {% endif %}
+            {% if property.lot_area %}
+            <span class="flex items-center gap-1"><i class="fas fa-ruler-combined text-gray-300"></i> {{ property.lot_area }} sqm</span>
+            {% endif %}
+          </div>
+
+          <!-- Price -->
+          <div class="flex items-baseline justify-between">
+            <span class="text-base font-bold text-gray-900">₱ {{ property.price|floatformat:0|intcomma }}</span>
+            <span class="text-[10px] tracking-wider uppercase text-gray-400 border border-gray-100 px-2 py-0.5">
+              {{ property.get_property_type_display }}
+            </span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- Edit Preferences Link -->
+    <div class="mt-8 text-center">
+      <a href="{% url 'preference_form' %}"
+         class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-yellow-600 border border-gray-200 hover:border-yellow-400 px-5 py-2.5 rounded transition-all">
+        <i class="fas fa-sliders-h"></i>
+        Modify Preferences
+      </a>
+    </div>
+
+    {% else %}
+    <!-- No Results -->
+    <div class="max-w-lg mx-auto text-center py-20">
+      <div class="bg-white border border-gray-100 rounded-lg p-10">
+        <i class="fas fa-search text-4xl text-gray-200 mb-5 block"></i>
+        <h2 class="text-xl font-bold text-gray-900 mb-2">Sorry!</h2>
+        <p class="text-gray-500 text-sm mb-6">
+          We can't find properties matching what you're looking for right now. Try adjusting your preferences or browse all available properties.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <a href="{% url 'preference_form' %}"
+             class="inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-5 py-2.5 rounded text-sm font-semibold transition-colors">
+            <i class="fas fa-sliders-h"></i>
+            Modify Preferences
+          </a>
+          <a href="{% url 'properties' %}"
+             class="inline-flex items-center gap-2 border border-gray-200 hover:border-gray-400 text-gray-600 px-5 py-2.5 rounded text-sm font-medium transition-colors">
+            <i class="fas fa-home"></i>
+            Browse All Properties
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}

@@ -1,6 +1,6 @@
 {% extends 'emails/base_email.html' %}
 {% block email_content %}
-
+{% load humanize %}
 <div class="label">Welcome</div>
 <h1>Your account has been created</h1>
 <p>Hi {{ user.get_full_name|default:user.username }}, your account at Boholana E-Realty has been created successfully.</p>

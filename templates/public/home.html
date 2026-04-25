@@ -1,28 +1,109 @@
 {% extends 'public_base.html' %} 
 {% load humanize %}
 {% block title %}Boholana E-Realty — Find Your Dream Property in Bohol{% endblock %} {% block content %}
-
+{% load humanize %}
 <link
   href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
   rel="stylesheet"
 />
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        fontFamily: { sans: ["Plus Jakarta Sans", "sans-serif"] },
-        colors: {
-          gold: {
-            DEFAULT: "#B8922A",
-            light: "#D4AA4A",
-            pale: "#FDF8EE",
-          },
-        },
-      },
-    },
-  };
-</script>
+<style>
+  :root {
+    --gold: #B8922A;
+    --gold-light: #D4AA4A;
+    --gold-pale: #FDF8EE;
+  }
+  .text-gold { color: var(--gold); }
+  .text-gold-light { color: var(--gold-light); }
+  .bg-gold { background-color: var(--gold); }
+  .bg-gold-light { background-color: var(--gold-light); }
+  .bg-gold-pale { background-color: var(--gold-pale); }
+  .border-gold { border-color: var(--gold); }
+  .hover\:text-gold:hover { color: var(--gold); }
+  .hover\:border-gold:hover { border-color: var(--gold); }
+  .hover\:bg-gold-pale:hover { background-color: var(--gold-pale); }
+  .border-gold\/20 { border-color: rgba(184,146,42,0.2); }
+  .hover\:border-gold\/30:hover { border-color: rgba(184,146,42,0.3); }
+  .text-gold\/50 { color: rgba(184,146,42,0.5); }
+  .border-gold-pale { border-color: var(--gold-pale); }
+</style>
+
+<!-- FEATURED PROPERTIES -->
+<section id="featured" class="pt-24 pb-16 px-6 bg-gold-pale">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex items-end justify-between mb-10">
+      <div>
+        <p class="text-xs font-semibold tracking-widest uppercase text-gold mb-2">
+          <i class="fas fa-star text-gold mr-1"></i> Hand-Picked
+        </p>
+        <h2 class="text-3xl font-bold text-gray-900 tracking-tight">
+          Featured Properties
+        </h2>
+      </div>
+      <a href="{% url 'properties' %}"
+        class="text-sm font-medium text-gray-900 border-b border-gray-900 pb-0.5 hover:text-gold hover:border-gold transition-colors flex items-center gap-1.5">
+        View all <i class="fas fa-arrow-right text-xs"></i>
+      </a>
+    </div>
+
+    {% if featured_properties %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for property in featured_properties %}
+      <a href="{% url 'property_detail' property.id %}"
+        class="group block bg-white border-2 border-gold/20 hover:border-gold hover:shadow-lg transition-all duration-300 relative">
+        <!-- Featured Badge -->
+        <div class="absolute top-0 right-0 z-10 bg-gold text-white text-[9px] font-semibold tracking-wider uppercase px-3 py-1">
+          <i class="fas fa-star mr-1"></i>Featured
+        </div>
+        <!-- Image -->
+        <div class="relative h-52 bg-gray-100 overflow-hidden">
+          {% if property.images.first %}
+          <img src="{{ property.images.first.image.url }}" alt="{{ property.title }}"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          {% else %}
+          <div class="w-full h-full flex flex-col items-center justify-center gap-2 bg-gray-50">
+            <i class="fas fa-home text-3xl text-gray-200"></i>
+            <span class="text-xs tracking-widest uppercase text-gray-300">No image</span>
+          </div>
+          {% endif %}
+
+          <span class="absolute top-3 left-3 text-[9px] tracking-wider uppercase px-2.5 py-1 bg-white/90 text-gray-600 border border-gray-100">
+            {{ property.get_property_type_display }}
+          </span>
+        </div>
+
+        <!-- Body -->
+        <div class="p-5">
+          <h3 class="font-semibold text-gray-900 text-base leading-snug mb-1.5 group-hover:text-gold transition-colors">
+            {{ property.title }}
+          </h3>
+          <p class="text-xs text-gray-400 flex items-center gap-1.5 mb-4">
+            <i class="fas fa-map-marker-alt text-gold text-[10px]"></i>
+            {{ property.city }}, {{ property.province }}
+          </p>
+
+          <div class="flex gap-4 py-3 border-t border-b border-gray-100 mb-4">
+            {% if property.bedrooms %}<span class="text-xs text-gray-400 flex items-center gap-1"><i class="fas fa-bed text-gray-300 text-[10px]"></i> {{ property.bedrooms }} Bed</span>{% endif %}
+            {% if property.bathrooms %}<span class="text-xs text-gray-400 flex items-center gap-1"><i class="fas fa-bath text-gray-300 text-[10px]"></i> {{ property.bathrooms }} Bath</span>{% endif %}
+            {% if property.lot_area %}<span class="text-xs text-gray-400 flex items-center gap-1"><i class="fas fa-ruler-combined text-gray-300 text-[10px]"></i> {{ property.lot_area }} sqm</span>{% endif %}
+          </div>
+
+          <div class="flex items-baseline justify-between">
+            <span class="text-xl font-bold text-gray-900">₱ {{ property.price|floatformat:0|intcomma }}</span>
+            <span class="text-[10px] tracking-wider uppercase text-gray-400">{{ property.get_listing_type_display }}</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="py-16 text-center border border-dashed border-gold/20 rounded-xl bg-white">
+      <i class="fas fa-star text-3xl text-gray-200 mb-3 block"></i>
+      <p class="text-sm text-gray-400">No featured properties yet.</p>
+      <p class="text-xs text-gray-300 mt-1">Check back soon for hand-picked listings!</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
 
 <!-- HERO -->
 <section class="pt-32 pb-20 px-6">
@@ -127,7 +208,7 @@
 
 <div class="max-w-7xl mx-auto px-6"><hr class="border-gray-100" /></div>
 
-<!-- FEATURED PROPERTIES -->
+<!-- LATEST PROPERTIES -->
 <section class="py-20 px-6">
   <div class="max-w-7xl mx-auto">
     <div class="flex items-end justify-between mb-10">
@@ -150,7 +231,7 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {% for property in featured_properties %}
+      {% for property in latest_properties %}
       <a
         href="{% url 'property_detail' property.id %}"
         class="group block border border-gray-100 hover:border-gray-300 hover:shadow-lg transition-all duration-300"

@@ -1,4 +1,33 @@
 {% extends 'public_base.html' %}
+{% block extrahead %}
+    {% include 'includes/flatpickr_reservation.html' %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var dateInput = document.querySelector('input[name="reservation_date"]');
+      if (dateInput) {
+        var today = new Date();
+        today.setHours(0,0,0,0);
+        dateInput.addEventListener('input', function() {
+          var selected = new Date(this.value);
+          if (selected < today) {
+            this.value = '';
+          }
+        });
+        dateInput.addEventListener('keydown', function(e) {
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            setTimeout(() => {
+              if (this.value) {
+                var selected = new Date(this.value);
+                if (selected < today) this.value = '';
+              }
+            }, 10);
+          }
+        });
+      }
+    });
+    </script>
+{% endblock %}
+{% load humanize %}
 {% block title %}Reserve Property — Boholana E-Realty{% endblock %}
 {% block page_title %}Reserve Property{% endblock %}
 {% block page_subtitle %}Submit a reservation request{% endblock %}
@@ -33,7 +62,7 @@
             {{ property.city }}, {{ property.province }}
           </p>
         </div>
-        <span class="text-base font-bold text-gray-900 flex-shrink-0">₱{{ property.price|floatformat:0 }}</span>
+        <span class="text-base font-bold text-gray-900 flex-shrink-0">₱{{ property.price|floatformat:0|intcomma }}</span>
       </div>
 
       <!-- Messages -->
@@ -59,7 +88,7 @@
           <label class="block text-xs font-medium text-gray-500 mb-1.5">
             Reservation Date <span class="text-red-400">*</span>
           </label>
-          <input type="date" name="reservation_date" required min="{{ today }}"
+          <input type="date" name="reservation_date" required min="{{ today|date:'Y-m-d' }}"
             class="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-800 bg-white focus:outline-none focus:border-gray-900 transition-colors" />
         </div>
 

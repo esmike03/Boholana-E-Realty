@@ -1,4 +1,3 @@
-from twilio.rest import Client
 from django.conf import settings
 
 def send_reservation_sms(reservation, new_status):

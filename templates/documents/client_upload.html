@@ -1,0 +1,227 @@
+{% extends 'public_base.html' %}
+{% block title %}Upload Document — Boholana E-Realty{% endblock %}
+{% load humanize %}
+{% block content %}
+
+<!-- Header -->
+<section class="bg-white border-b border-gray-100 py-10 px-6">
+  <div class="max-w-7xl mx-auto">
+    <div class="inline-flex items-center gap-2 text-blue-600 text-xs font-semibold tracking-widest uppercase mb-3">
+      <i class="fas fa-upload"></i>
+      Client Portal
+    </div>
+    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Upload Document</h1>
+    <p class="text-gray-400 text-sm mt-1">Submit documents for your reservation</p>
+  </div>
+</section>
+
+<section class="bg-gray-50 py-10 px-6 min-h-screen">
+  <div class="max-w-2xl mx-auto">
+
+    <!-- Upload Form -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+      <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Document Title -->
+        <div>
+          <label for="title" class="block text-sm font-semibold text-gray-800 mb-2">
+            Document Title *
+          </label>
+          <input type="text" id="title" name="title"
+                 placeholder="e.g., Valid ID, Proof of Income, etc."
+                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                 required>
+          <p class="text-xs text-gray-500 mt-1">Give your document a descriptive title</p>
+        </div>
+
+        <!-- Document Type -->
+        <div>
+          <label for="document_type" class="block text-sm font-semibold text-gray-800 mb-2">
+            Document Type *
+          </label>
+          <select id="document_type" name="document_type"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  required>
+            <option value="">— Select Document Type —</option>
+            {% for value, label in type_choices %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+          <p class="text-xs text-gray-500 mt-1">Choose the type of document you're uploading</p>
+        </div>
+
+        <!-- Associated Reservation -->
+        <div>
+          <label for="reservation_id" class="block text-sm font-semibold text-gray-800 mb-2">
+            Associated Reservation
+          </label>
+          <select id="reservation_id" name="reservation_id"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+            <option value="">— Optional: Link to a Reservation —</option>
+            {% for reservation in reservations %}
+            <option value="{{ reservation.pk }}">
+              {{ reservation.property.title }} ({{ reservation.get_status_display }})
+            </option>
+            {% endfor %}
+          </select>
+          <p class="text-xs text-gray-500 mt-1">Optionally associate this document with a reservation</p>
+        </div>
+
+        <!-- File Upload -->
+        <div>
+          <label for="file" class="block text-sm font-semibold text-gray-800 mb-2">
+            Select File *
+          </label>
+          <div class="relative">
+            <input type="file" id="file" name="file"
+                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
+                   class="hidden"
+                   required>
+            <label for="file"
+                   class="block w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-center cursor-pointer hover:border-blue-500 transition bg-gray-50 hover:bg-blue-50">
+              <div class="flex flex-col items-center">
+                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                <p class="text-sm font-medium text-gray-700">Click to upload or drag and drop</p>
+                <p class="text-xs text-gray-500">PDF, Word, or Image (max 10MB)</p>
+              </div>
+              <input type="file" id="file" name="file" class="hidden" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif" required
+                     onchange="updateFileName(this)">
+            </label>
+            <p id="filename" class="text-xs text-gray-500 mt-2 text-center"></p>
+          </div>
+        </div>
+
+        <!-- File Format -->
+        <div>
+          <label for="file_format" class="block text-sm font-semibold text-gray-800 mb-2">
+            File Format
+          </label>
+          <select id="file_format" name="file_format"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+            {% for value, label in format_choices %}
+            <option value="{{ value }}" {% if value == 'pdf' %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Additional Remarks -->
+        <div>
+          <label for="remarks" class="block text-sm font-semibold text-gray-800 mb-2">
+            Additional Remarks
+          </label>
+          <textarea id="remarks" name="remarks" rows="3"
+                    placeholder="Add any notes or information about this document..."
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"></textarea>
+          <p class="text-xs text-gray-500 mt-1">Optional: Add any additional information</p>
+        </div>
+
+        <!-- Divider -->
+        <hr class="border-gray-200">
+
+        <!-- Confirmation Checklist -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+          <p class="text-sm font-semibold text-blue-900 flex items-center gap-2">
+            <i class="fas fa-check-circle text-blue-600"></i>
+            Before uploading, please confirm:
+          </p>
+          <div class="space-y-2 text-sm text-blue-800">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" required class="rounded border-gray-300">
+              <span>The document is clear and legible</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" required class="rounded border-gray-300">
+              <span>The document is not expired (if applicable)</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" required class="rounded border-gray-300">
+              <span>I consent to submit this document for review</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="flex items-center justify-between gap-4 pt-4">
+          <a href="{% url 'documents:client_documents' %}"
+             class="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+            Cancel
+          </a>
+          <button type="submit"
+                  class="px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition flex items-center gap-2">
+            <i class="fas fa-upload"></i>
+            Upload Document
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Help Section -->
+    <div class="mt-8 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <h3 class="font-semibold text-gray-800 mb-4">What documents do I need?</h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-3">
+          <h4 class="font-medium text-gray-700 flex items-center gap-2">
+            <i class="fas fa-id-card text-blue-600"></i>
+            Identification Documents
+          </h4>
+          <ul class="text-sm text-gray-600 space-y-1 ml-6">
+            <li>• Valid ID (SSS, PRC, Driver's License, Passport)</li>
+            <li>• Birth Certificate</li>
+            <li>• Marriage Certificate (if married)</li>
+          </ul>
+        </div>
+
+        <div class="space-y-3">
+          <h4 class="font-medium text-gray-700 flex items-center gap-2">
+            <i class="fas fa-money-bill text-green-600"></i>
+            Financial Documents
+          </h4>
+          <ul class="text-sm text-gray-600 space-y-1 ml-6">
+            <li>• Bank Statement (last 3 months)</li>
+            <li>• Proof of Income</li>
+            <li>• Tax Declaration</li>
+          </ul>
+        </div>
+
+        <div class="space-y-3">
+          <h4 class="font-medium text-gray-700 flex items-center gap-2">
+            <i class="fas fa-home text-orange-600"></i>
+            Property Documents
+          </h4>
+          <ul class="text-sm text-gray-600 space-y-1 ml-6">
+            <li>• Proof of Residence</li>
+            <li>• Property Documents</li>
+            <li>• Land Title</li>
+          </ul>
+        </div>
+
+        <div class="space-y-3">
+          <h4 class="font-medium text-gray-700 flex items-center gap-2">
+            <i class="fas fa-file-contract text-purple-600"></i>
+            Transaction Documents
+          </h4>
+          <ul class="text-sm text-gray-600 space-y-1 ml-6">
+            <li>• Reservation Agreement</li>
+            <li>• Payment Receipts</li>
+            <li>• Deed of Sale</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+function updateFileName(input) {
+  const filename = document.getElementById('filename');
+  if (input.files && input.files[0]) {
+    filename.textContent = '📄 ' + input.files[0].name;
+  }
+}
+</script>
+
+{% endblock %}

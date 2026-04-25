@@ -10,6 +10,8 @@ from apps.accounts.notify import (
     notify_listing_approved,
     notify_listing_rejected,
     notify_listing_flagged,
+    notify_favorite_property_unavailable,
+    notify_favorite_property_updated,
 )
 
 # ─────────────────────────────────────────
@@ -17,10 +19,15 @@ from apps.accounts.notify import (
 # ─────────────────────────────────────────
 
 def home_view(request):
+    featured = Property.objects.filter(
+        listing_status='approved', is_featured=True
+    ).order_by('-created_at')[:6]
+    latest = Property.objects.filter(
+        listing_status='approved'
+    ).order_by('-created_at')[:6]
     context = {
-        'featured_properties': Property.objects.filter(
-            listing_status='approved'
-        ).order_by('-created_at')[:6],
+        'featured_properties': featured,
+        'latest_properties': latest,
         'total_properties': Property.objects.filter(listing_status='approved').count(),
         'available_properties': Property.objects.filter(listing_status='approved').count(),
         'sold_properties': Property.objects.filter(listing_status='sold').count(),
@@ -86,11 +93,15 @@ def property_detail_view(request, pk):
     is_favorited = False
     if request.user.is_authenticated:
         is_favorited = property.favorited_by.filter(pk=request.user.pk).exists()
+    
+    # Calculate 20% down payment for mortgage calculator
+    min_down_payment = property.price * 0.20
 
     return render(request, 'public/property_detail.html', {
         'property': property,
         'related_properties': related_properties,
         'is_favorited': is_favorited,
+        'min_down_payment': min_down_payment,
     })
 
 
@@ -109,7 +120,7 @@ def contact_view(request):
         preferred_contact = request.POST.get('preferred_contact', '').strip() or None
 
         if not name or not message:
-            messages.error(request, 'Name and message are required.')
+            messages.error(request, 'Please fill out the required fields.')
             return redirect('contact')
 
         from apps.accounts.models import ContactMessage
@@ -156,11 +167,11 @@ def get_client_ip(request):
 @login_required
 def listing_list(request):
     user = request.user
-    allowed = ['admin', 'broker', 'staff', 'property_owner', 'sale_assistant']
-    if user.role not in allowed and not user.is_superuser:
-        messages.error(request, 'You do not have permission.')
+
+    if user.role == 'client' and not user.is_superuser:
+        messages.error(request, 'You do not have permission to access listing management.')
         return redirect('home')
-    
+
     properties = Property.objects.select_related('owner', 'broker')
 
     # Role-based filtering
@@ -202,12 +213,7 @@ def listing_list(request):
 
 @login_required
 def listing_create(request):
-    user = request.user
-    allowed = ['admin', 'broker', 'staff', 'property_owner', 'sale_assistant']
-    if user.role not in allowed and not user.is_superuser:
-        messages.error(request, 'You do not have permission.')
-        return redirect('home')
-    if request.user.role not in ['broker', 'staff', 'property_owner', 'admin'] \
+    if request.user.role not in ['broker', 'property_owner', 'admin', 'staff'] \
             and not request.user.is_superuser:
         messages.error(request, 'You do not have permission to add listings.')
         return redirect('listings:list')
@@ -309,26 +315,20 @@ def listing_detail(request, pk):
     status_logs = PropertyStatusLog.objects.filter(
         property=property
     ).order_by('-changed_at')
+    
+    # Calculate 20% down payment for mortgage calculator
+    from decimal import Decimal
+    min_down_payment = property.price * Decimal('0.20')
 
     return render(request, 'listings/detail.html', {
         'property': property,
         'status_logs': status_logs,
+        'min_down_payment': min_down_payment,
     })
 
 
 @login_required
 def listing_update(request, pk):
-    user = request.user
-    allowed = ['broker', 'admin', 'staff', 'property_owner']
-    if request.user.role not in allowed and not request.user.is_superuser:
-        messages.error(request, 'You do not have permission.')
-        return redirect('listings:list')
-
-    # Property owners can only edit their own
-    if request.user.role == 'property_owner' and property.owner != request.user:
-        messages.error(request, 'You can only edit your own properties.')
-        return redirect('listings:list')
-    
     property = get_object_or_404(Property, pk=pk)
 
     # Permission check
@@ -338,6 +338,7 @@ def listing_update(request, pk):
 
     if request.method == 'POST':
         old_status = property.listing_status
+        old_price = property.price
 
         property.title = request.POST.get('title', property.title)
         property.description = request.POST.get('description', property.description)
@@ -386,6 +387,15 @@ def listing_update(request, pk):
                 remarks='Property updated and resubmitted for approval.'
             )
 
+        # Notify users who favorited this property about price change
+        from decimal import Decimal
+        try:
+            new_price = Decimal(str(property.price))
+        except Exception:
+            new_price = old_price
+        if old_price and new_price and old_price != new_price:
+            notify_favorite_property_updated(property, f'price changed from ₱{old_price:,.2f} to ₱{new_price:,.2f}', request.user)
+
         messages.success(request, 'Property updated successfully.')
         return redirect('listings:detail', pk=property.pk)
 
@@ -403,12 +413,8 @@ def listing_update(request, pk):
 
 @login_required
 def listing_approve(request, pk):
-    allowed = ['broker', 'admin', 'staff']
-    if request.user.role not in allowed and not request.user.is_superuser:
-        messages.error(request, 'Only brokers and staff can approve listings.')
-        return redirect('listings:list')
-    if request.user.role not in ['broker', 'admin'] and not request.user.is_superuser:
-        messages.error(request, 'Only brokers can approve listings.')
+    if request.user.role not in ['broker', 'admin', 'staff'] and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to approve listings.')
         return redirect('listings:list')
 
     property = get_object_or_404(Property, pk=pk)
@@ -459,6 +465,7 @@ def listing_reject(request, pk):
             remarks=reason
         )
         notify_listing_rejected(property, request.user, reason)
+        notify_favorite_property_unavailable(property, request.user)
         messages.success(request, f'"{property.title}" has been rejected.')
         return redirect('listings:detail', pk=property.pk)
 
@@ -491,7 +498,8 @@ def listing_flag(request, pk):
             remarks=reason
         )
         notify_listing_flagged(property, request.user, reason)
-        messages.warning(request, f'"{property.title}" has been flagged for review.')
+        notify_favorite_property_unavailable(property, request.user)
+        messages.warning(request, f'"{ property.title}" has been flagged for review.')
         return redirect('listings:detail', pk=property.pk)
 
     return render(request, 'listings/flag.html', {'property': property})
@@ -517,8 +525,8 @@ def listing_archive(request, pk):
             new_status='archived',
             remarks=request.POST.get('remarks', 'Listing archived.')
         )
-
-        messages.success(request, f'"{property.title}" has been archived.')
+        notify_favorite_property_unavailable(property, request.user)
+        messages.success(request, f'"{ property.title}" has been archived.')
         return redirect('listings:list')
 
     return render(request, 'listings/archive.html', {'property': property})
@@ -544,8 +552,8 @@ def listing_mark_sold(request, pk):
             new_status='sold',
             remarks='Property marked as sold.'
         )
-
-        messages.success(request, f'"{property.title}" marked as sold.')
+        notify_favorite_property_unavailable(property, request.user)
+        messages.success(request, f'"{ property.title}" marked as sold.')
         return redirect('listings:detail', pk=property.pk)
 
     return redirect('listings:detail', pk=property.pk)
@@ -579,16 +587,12 @@ def favorites_view(request):
         'properties': favorite_properties,
     })
     
-# ─────────────────────────────────────────
+    # ─────────────────────────────────────────
 # Tags Management
 # ─────────────────────────────────────────
 
 @login_required
 def tag_list(request):
-    allowed = ['broker', 'admin', 'staff']
-    if request.user.role not in allowed and not request.user.is_superuser:
-        messages.error(request, 'You do not have permission.')
-        return redirect('listings:list')
     if request.user.role not in ['broker', 'admin', 'staff'] \
             and not request.user.is_superuser:
         messages.error(request, 'You do not have permission.')
@@ -704,7 +708,7 @@ def tag_detail(request, pk):
     })
     
 def property_detail_view(request, pk):
-    property = get_object_or_404(Property, pk=pk)
+    property = get_object_or_404(Property, pk=pk, listing_status__in=['approved', 'reserved', 'sold'])
 
     related_properties = Property.objects.filter(
         listing_status='approved',
@@ -713,7 +717,7 @@ def property_detail_view(request, pk):
 
     is_favorited = False
     has_active_reservation = False
-    has_active_appointment = False  # ✅ Add this
+    has_active_appointment = False
 
     if request.user.is_authenticated:
         is_favorited = property.favorited_by.filter(
@@ -758,7 +762,7 @@ def contact_view(request):
         preferred_contact = request.POST.get('preferred_contact', '').strip() or None
 
         if not name or not message:
-            messages.error(request, 'Name and message are required.')
+            messages.error(request, 'Please fill out the required fields.')
             return redirect('contact')
 
         from apps.accounts.models import ContactMessage

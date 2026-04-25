@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block title %}Block Dates — {{ property.title }}{% endblock %}
+{% block page_title %}Block Dates{% endblock %}
+{% block page_subtitle %}Set unavailable dates for {{ property.title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+
+    <!-- Property Info -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6 flex items-center gap-4">
+        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-home text-blue-600"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+            <h3 class="font-semibold text-gray-800 text-sm">{{ property.title }}</h3>
+            <p class="text-xs text-gray-400 mt-0.5">{{ property.city }}, {{ property.province }}</p>
+        </div>
+        <span class="px-2.5 py-1 rounded-full text-xs font-medium
+            {% if property.listing_status == 'approved' %}bg-green-100 text-green-700
+            {% else %}bg-gray-100 text-gray-600{% endif %}">
+            {{ property.get_listing_status_display }}
+        </span>
+    </div>
+
+    {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+        <div class="p-3 rounded-lg text-sm mb-2
+            {% if message.tags == 'error' %}bg-red-50 text-red-600
+            {% elif message.tags == 'success' %}bg-green-50 text-green-600
+            {% else %}bg-blue-50 text-blue-600{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Block Dates Form -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h3 class="font-semibold text-gray-800 text-sm mb-1">Manage Blocked Dates</h3>
+        <p class="text-xs text-gray-400 mb-5">Clients will not be able to schedule appointments on these dates.</p>
+
+        <form method="POST" id="blockDatesForm">
+            {% csrf_token %}
+
+            <!-- Calendar Date Picker -->
+            <div class="mb-5">
+                <label class="block text-xs font-medium text-gray-600 mb-2">
+                    <i class="fas fa-calendar-plus mr-1 text-blue-500"></i> Add a Date
+                </label>
+                <div class="flex gap-2">
+                    <input type="date" id="dateToAdd" min="{{ today }}"
+                           class="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    <button type="button" onclick="addDate()"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition">
+                        <i class="fas fa-plus mr-1"></i>Add
+                    </button>
+                </div>
+            </div>
+
+            <!-- Current Blocked Dates -->
+            <div class="mb-5">
+                <label class="block text-xs font-medium text-gray-600 mb-2">
+                    <i class="fas fa-ban mr-1 text-red-400"></i> Blocked Dates
+                </label>
+                <div id="blockedDatesList" class="flex flex-wrap gap-2 min-h-[40px] p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <!-- Populated by JS -->
+                </div>
+                <p class="text-xs text-gray-400 mt-1.5">Click the × on a date to remove it.</p>
+            </div>
+
+            <!-- Hidden input for form submission -->
+            <input type="hidden" name="blocked_dates" id="blockedDatesInput" value="">
+
+            <div class="flex gap-3">
+                <button type="submit"
+                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-save mr-2"></i>Save Blocked Dates
+                </button>
+                <a href="{% url 'listings:detail' property.pk %}"
+                   class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold transition text-center">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let blockedDates = [];
+
+// Initialize from existing data
+(function() {
+    const existing = "{{ blocked_dates|escapejs }}";
+    if (existing.trim()) {
+        blockedDates = existing.split(',').map(d => d.trim()).filter(d => d);
+    }
+    renderDates();
+})();
+
+function addDate() {
+    const input = document.getElementById('dateToAdd');
+    const date = input.value;
+    if (!date) return;
+    if (blockedDates.includes(date)) {
+        alert('This date is already blocked.');
+        return;
+    }
+    blockedDates.push(date);
+    blockedDates.sort();
+    renderDates();
+    input.value = '';
+}
+
+function removeDate(date) {
+    blockedDates = blockedDates.filter(d => d !== date);
+    renderDates();
+}
+
+function renderDates() {
+    const container = document.getElementById('blockedDatesList');
+    const hiddenInput = document.getElementById('blockedDatesInput');
+
+    if (blockedDates.length === 0) {
+        container.innerHTML = '<span class="text-xs text-gray-400 py-1">No dates blocked yet</span>';
+    } else {
+        container.innerHTML = blockedDates.map(date => {
+            const d = new Date(date + 'T00:00:00');
+            const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            return `<span class="inline-flex items-center gap-1.5 bg-red-50 text-red-700 px-3 py-1.5 rounded-full text-xs font-medium border border-red-100">
+                <i class="fas fa-calendar-times text-red-400 text-[10px]"></i>
+                ${label}
+                <button type="button" onclick="removeDate('${date}')"
+                        class="ml-0.5 text-red-400 hover:text-red-600 transition">
+                    <i class="fas fa-times text-[10px]"></i>
+                </button>
+            </span>`;
+        }).join('');
+    }
+
+    hiddenInput.value = blockedDates.join(', ');
+}
+</script>
+
+{% endblock %}

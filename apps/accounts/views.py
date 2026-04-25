@@ -5,14 +5,15 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q
 from apps.listings.models import Property
-from apps.reservations.models import Reservation
+from apps.reservations.models import Reservation, Appointment
 from apps.sales.models import Sale
 from apps.documents.models import Document
 from .models import CustomUser, UserActivityLog, UserPreference, Notification
-from allauth.socialaccount.models import SocialAccount
-# from apps.accounts.email_notifications import email_account_created
-from apps.accounts.email_notifications import email_role_assigned
-from apps.accounts.email_notifications import email_account_disabled
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+from django.views.decorators.http import require_POST
+
+
 
 # ─────────────────────────────────────────
 # Auth Views
@@ -136,121 +137,139 @@ def register_view(request):
 def dashboard_view(request):
     user = request.user
 
+    # Clients should not access the admin dashboard — redirect to home
     if user.role == 'client':
-        messages.warning(
-            request,
-            'Client accounts do not have dashboard access.'
-        )
         return redirect('home')
 
-    context = {'user': user}
+    context = {
+        'user_role': user.role,
+    }
 
-    if user.role == 'admin':
-        from apps.accounts.models import ContactMessage
-        from apps.listings.models import Property
-        from apps.sales.models import Sale
-        from apps.documents.models import Document
-        context.update({
-            'total_users': CustomUser.objects.count(),
+    if user.role in ['broker', 'admin'] or user.is_superuser:
+        # Brokers/Admins see all reservations and sales
+        context = {
+            'user_role': user.role,
             'total_properties': Property.objects.count(),
+            'available_properties': Property.objects.filter(listing_status='approved').count(),
+            'pending_properties': Property.objects.filter(listing_status='pending_approval').count(),
+            'sold_properties': Property.objects.filter(listing_status='sold').count(),
+            'total_reservations': Reservation.objects.count(),
+            'pending_reservations': Reservation.objects.filter(status='pending').count(),
+            'approved_reservations': Reservation.objects.filter(status='approved').count(),
+            'cancelled_reservations': Reservation.objects.filter(status='cancelled').count(),
+            'all_reservations': Reservation.objects.select_related(
+                'property', 'client'
+            ).order_by('-created_at')[:10],
             'total_sales': Sale.objects.count(),
-            'pending_documents': Document.objects.filter(
-                status='pending_approval'
-            ).count(),
-            'total_inquiries': ContactMessage.objects.count(),
-            'unread_inquiries': ContactMessage.objects.filter(
-                is_read=False
-            ).count(),
-        })
-
-    elif user.role == 'broker':
-        from apps.listings.models import Property
-        from apps.sales.models import Sale, Disbursement
-        from apps.reservations.models import Reservation
-        from apps.accounts.models import ContactMessage
-        context.update({
-            'pending_listings': Property.objects.filter(
-                listing_status='pending_approval'
-            ).count(),
-            'active_listings': Property.objects.filter(
-                listing_status='approved'
-            ).count(),
-            'pending_sales': Sale.objects.filter(
-                status='pending_verification'
-            ).count(),
-            'pending_disbursements': Disbursement.objects.filter(
-                status='in_review'
-            ).count(),
-            'pending_reservations': Reservation.objects.filter(
-                status='pending'
-            ).count(),
-            'unread_inquiries': ContactMessage.objects.filter(
-                is_read=False
-            ).count(),
-        })
-
-    elif user.role == 'property_owner':
-        from apps.listings.models import Property
-        from apps.sales.models import Sale
-        from apps.reservations.models import Reservation, Appointment
-        from apps.documents.models import Document
-        context.update({
-            'my_listings': Property.objects.filter(owner=user).count(),
-            'pending_listings': Property.objects.filter(
-                owner=user, listing_status='pending_approval'
-            ).count(),
-            'approved_listings': Property.objects.filter(
-                owner=user, listing_status='approved'
-            ).count(),
-            'my_sales': Sale.objects.filter(
-                property__owner=user
-            ).count(),
-            'pending_appointments': Appointment.objects.filter(
-                property__owner=user, status='pending'
-            ).count(),
-            'my_documents': Document.objects.filter(
-                Q(uploaded_by=user) | Q(property__owner=user)
-            ).count(),
-        })
+            'active_sales': Sale.objects.filter(status='approved').count(),
+            'pending_documents': Document.objects.filter(status='pending_approval').count(),
+            'recent_sales': Sale.objects.select_related(
+                'property', 'client'
+            ).order_by('-created_at')[:5],
+            'properties': Property.objects.filter(listing_status='approved').order_by('-created_at')[:5],
+        }
 
     elif user.role == 'staff':
-        from apps.listings.models import Property
-        from apps.sales.models import Sale
-        from apps.documents.models import Document
-        context.update({
-            'pending_listings': Property.objects.filter(
-                listing_status='pending_approval'
-            ).count(),
-            'flagged_listings': Property.objects.filter(
-                listing_status='flagged'
-            ).count(),
-            'pending_sales': Sale.objects.filter(
-                status='pending_verification'
-            ).count(),
-            'pending_documents': Document.objects.filter(
-                status='pending_approval'
-            ).count(),
-        })
+        # Staff sees all reservations
+        context = {
+            'user_role': user.role,
+            'total_properties': Property.objects.count(),
+            'available_properties': Property.objects.filter(listing_status='approved').count(),
+            'pending_properties': Property.objects.filter(listing_status='pending_approval').count(),
+            'total_reservations': Reservation.objects.count(),
+            'pending_reservations': Reservation.objects.filter(status='pending').count(),
+            'approved_reservations': Reservation.objects.filter(status='approved').count(),
+            'cancelled_reservations': Reservation.objects.filter(status='cancelled').count(),
+            'all_reservations': Reservation.objects.select_related(
+                'property', 'client'
+            ).order_by('-created_at')[:10],
+            'pending_documents': Document.objects.filter(status='pending_approval').count(),
+        }
 
     elif user.role == 'sale_assistant':
-        from apps.sales.models import Sale, Disbursement
-        from apps.reservations.models import Reservation, Appointment
-        context.update({
-            'my_sales': Sale.objects.filter(
-                sale_assistant=user
+        # Sales assistants see their assigned reservations and sales
+        context = {
+            'user_role': user.role,
+            'total_sales': Sale.objects.filter(sale_assistant=user).count(),
+            'active_sales': Sale.objects.filter(
+                sale_assistant=user, status='approved'
             ).count(),
+            'total_reservations': Reservation.objects.filter(handled_by=user).count(),
             'pending_reservations': Reservation.objects.filter(
                 handled_by=user, status='pending'
             ).count(),
-            'pending_appointments': Appointment.objects.filter(
-                handled_by=user, status='pending'
+            'approved_reservations': Reservation.objects.filter(
+                handled_by=user, status='approved'
             ).count(),
-            'my_disbursements': Disbursement.objects.filter(
-                recipient=user, status='pending'
+            'cancelled_reservations': Reservation.objects.filter(
+                handled_by=user, status='cancelled'
             ).count(),
-        })
+            'all_reservations': Reservation.objects.filter(
+                handled_by=user
+            ).select_related('property', 'client').order_by('-created_at')[:10],
+            'recent_sales': Sale.objects.filter(
+                sale_assistant=user
+            ).select_related('property', 'client').order_by('-created_at')[:5],
+        }
+
+    elif user.role == 'property_owner':
+        # Property owners see reservations for their properties
+        context = {
+            'user_role': user.role,
+            'total_properties': Property.objects.filter(owner=user).count(),
+            'available_properties': Property.objects.filter(
+                owner=user, listing_status='approved'
+            ).count(),
+            'pending_properties': Property.objects.filter(
+                owner=user, listing_status='pending_approval'
+            ).count(),
+            'sold_properties': Property.objects.filter(
+                owner=user, listing_status='sold'
+            ).count(),
+            'total_reservations': Reservation.objects.filter(property__owner=user).count(),
+            'pending_reservations': Reservation.objects.filter(
+                property__owner=user, status='pending'
+            ).count(),
+            'approved_reservations': Reservation.objects.filter(
+                property__owner=user, status='approved'
+            ).count(),
+            'cancelled_reservations': Reservation.objects.filter(
+                property__owner=user, status='cancelled'
+            ).count(),
+            'all_reservations': Reservation.objects.filter(
+                property__owner=user
+            ).select_related('property', 'client').order_by('-created_at')[:10],
+            'recent_sales': Sale.objects.filter(
+                property__owner=user
+            ).select_related('property', 'client').order_by('-created_at')[:5],
+        }
 
     return render(request, 'accounts/dashboard.html', context)
+
+
+@require_POST
+@login_required
+def add_to_featured(request):
+    user = request.user
+    if not (user.is_superuser or user.role in ['admin', 'broker']):
+        messages.error(request, 'You do not have permission to add featured properties.')
+        return redirect('dashboard')
+    featured_count = Property.objects.filter(listing_status='approved', is_featured=True).count()
+    if featured_count >= 5:
+        messages.error(request, 'You can only have up to 5 featured properties.')
+        return redirect('dashboard')
+    property_id = request.POST.get('property_id')
+    prop = Property.objects.filter(id=property_id, listing_status='approved').first()
+    if not prop:
+        messages.error(request, 'Property not found or not approved.')
+        return redirect('dashboard')
+    prop.is_featured = True
+    prop.save()
+    messages.success(request, f'Property "{prop.title}" added to featured!')
+    return redirect('dashboard')
+
+
+
 
 
 # ─────────────────────────────────────────
@@ -341,6 +360,180 @@ def profile_view(request):
         return redirect('accounts:profile')
 
     return render(request, 'accounts/profile.html', {
+        'preference': preference
+    })
+
+
+@login_required
+def client_account_view(request):
+    """Client account management page - view and edit own account only"""
+    # Only clients can access this page
+    if request.user.role != 'client':
+        messages.error(request, 'Only clients can access this page.')
+        return redirect('dashboard')
+
+    user = request.user
+    try:
+        preference = user.preferences
+    except UserPreference.DoesNotExist:
+        preference = UserPreference.objects.create(user=user)
+
+    if request.method == 'POST':
+        form_type = request.POST.get('form_type')
+
+        if form_type == 'personal':
+            user.first_name = request.POST.get('first_name', user.first_name)
+            user.last_name = request.POST.get('last_name', user.last_name)
+            user.email = request.POST.get('email', user.email)
+            user.phone_number = request.POST.get('phone_number', user.phone_number)
+            user.address = request.POST.get('address', user.address)
+            if request.FILES.get('profile_picture'):
+                user.profile_picture = request.FILES['profile_picture']
+            user.save()
+            messages.success(request, 'Account updated successfully!')
+
+        elif form_type == 'password':
+            from django.contrib.auth import update_session_auth_hash
+            current_password = request.POST.get('current_password')
+            new_password = request.POST.get('new_password')
+            confirm_password = request.POST.get('confirm_password')
+
+            if not user.check_password(current_password):
+                messages.error(request, 'Current password is incorrect.')
+            elif new_password != confirm_password:
+                messages.error(request, 'New passwords do not match.')
+            elif len(new_password) < 8:
+                messages.error(request, 'Password must be at least 8 characters.')
+            else:
+                user.set_password(new_password)
+                user.save()
+                update_session_auth_hash(request, user)
+                messages.success(request, 'Password changed successfully!')
+
+        elif form_type == 'preferences':
+            preference.preferred_property_type = request.POST.get(
+                'preferred_property_type', ''
+            ) or None
+            preference.preferred_location = request.POST.get(
+                'preferred_location', ''
+            )
+            preference.min_budget = request.POST.get('min_budget') or None
+            preference.max_budget = request.POST.get('max_budget') or None
+            preference.preferred_bedrooms = request.POST.get(
+                'preferred_bedrooms'
+            ) or None
+            preference.preferred_bathrooms = request.POST.get(
+                'preferred_bathrooms'
+            ) or None
+            preference.email_notifications = 'email_notifications' in request.POST
+            preference.sms_notifications = 'sms_notifications' in request.POST
+            preference.save()
+            messages.success(request, 'Preferences updated successfully!')
+
+        return redirect('accounts:client_account')
+
+    # Build suggested properties based on preferences
+    from apps.listings.models import Property
+    from django.db.models import Q, Case, When, IntegerField, Value
+    suggested = Property.objects.filter(listing_status='approved')
+    has_preferences = False
+
+    # Apply soft filters using Q objects for scoring
+    q_filters = Q()
+
+    if preference.preferred_property_type:
+        has_preferences = True
+        q_filters &= Q(property_type=preference.preferred_property_type)
+
+    if preference.preferred_location:
+        has_preferences = True
+        loc = preference.preferred_location.strip()
+        q_filters &= (Q(city__icontains=loc) | Q(province__icontains=loc) | Q(address__icontains=loc))
+
+    if preference.min_budget:
+        has_preferences = True
+        q_filters &= Q(price__gte=preference.min_budget)
+
+    if preference.max_budget:
+        has_preferences = True
+        q_filters &= Q(price__lte=preference.max_budget)
+
+    if preference.preferred_bedrooms:
+        has_preferences = True
+        q_filters &= Q(bedrooms__gte=preference.preferred_bedrooms)
+
+    if preference.preferred_bathrooms:
+        has_preferences = True
+        q_filters &= Q(bathrooms__gte=preference.preferred_bathrooms)
+
+    if has_preferences:
+        suggested = suggested.filter(q_filters).select_related('owner').prefetch_related('images')[:6]
+    else:
+        # No preferences set — show newest approved listings
+        suggested = suggested.select_related('owner').prefetch_related('images').order_by('-created_at')[:6]
+
+    return render(request, 'accounts/client_account.html', {
+        'preference': preference,
+        'suggested_properties': suggested,
+        'has_preferences': has_preferences,
+    })
+
+
+@login_required
+def property_owner_account_view(request):
+    """Property owner account management page - view and edit own account"""
+    # Only property owners can access this page
+    if request.user.role != 'property_owner':
+        messages.error(request, 'Only property owners can access this page.')
+        return redirect('dashboard')
+
+    user = request.user
+    try:
+        preference = user.preferences
+    except UserPreference.DoesNotExist:
+        preference = UserPreference.objects.create(user=user)
+
+    if request.method == 'POST':
+        form_type = request.POST.get('form_type')
+
+        if form_type == 'personal':
+            user.first_name = request.POST.get('first_name', user.first_name)
+            user.last_name = request.POST.get('last_name', user.last_name)
+            user.email = request.POST.get('email', user.email)
+            user.phone_number = request.POST.get('phone_number', user.phone_number)
+            user.address = request.POST.get('address', user.address)
+            if request.FILES.get('profile_picture'):
+                user.profile_picture = request.FILES['profile_picture']
+            user.save()
+            messages.success(request, 'Account updated successfully!')
+
+        elif form_type == 'password':
+            from django.contrib.auth import update_session_auth_hash
+            current_password = request.POST.get('current_password')
+            new_password = request.POST.get('new_password')
+            confirm_password = request.POST.get('confirm_password')
+
+            if not user.check_password(current_password):
+                messages.error(request, 'Current password is incorrect.')
+            elif new_password != confirm_password:
+                messages.error(request, 'New passwords do not match.')
+            elif len(new_password) < 8:
+                messages.error(request, 'Password must be at least 8 characters.')
+            else:
+                user.set_password(new_password)
+                user.save()
+                update_session_auth_hash(request, user)
+                messages.success(request, 'Password changed successfully!')
+
+        elif form_type == 'preferences':
+            preference.email_notifications = 'email_notifications' in request.POST
+            preference.sms_notifications = 'sms_notifications' in request.POST
+            preference.save()
+            messages.success(request, 'Preferences updated successfully!')
+
+        return redirect('accounts:property_owner_account')
+
+    return render(request, 'accounts/property_owner_account.html', {
         'preference': preference
     })
 
@@ -454,8 +647,6 @@ def user_create_view(request):
             ip_address=get_client_ip(request),
             performed_by=request.user
         )
-        from apps.accounts.email_notifications import email_account_created
-        email_account_created(user, created_by=request.user)
 
         messages.success(request, f'Account for {user.get_full_name()} created successfully.')
         return redirect('accounts:users')
@@ -544,7 +735,7 @@ def user_disable_view(request, pk):
                 ip_address=get_client_ip(request),
                 performed_by=request.user
             )
-            email_account_disabled(user)
+
             messages.success(request, f'{user.get_full_name()} account has been disabled.')
 
         elif action == 'enable':
@@ -594,7 +785,7 @@ def assign_role_view(request, pk):
             ip_address=get_client_ip(request),
             performed_by=request.user
         )
-        email_role_assigned(user, user.get_role_display())
+
         messages.success(request, f'Role updated to {user.get_role_display()} for {user.get_full_name()}.')
         return redirect('accounts:user_detail', pk=user.pk)
 
@@ -647,7 +838,9 @@ def notifications_view(request):
     elif filter_type == 'read':
         notifications = notifications.filter(is_read=True)
 
-    return render(request, 'accounts/notifications.html', {
+    template = 'public/notifications.html' if request.user.role == 'client' else 'accounts/notifications.html'
+
+    return render(request, template, {
         'notifications': notifications,
         'unread_count': unread_count,
         'filter_type': filter_type,
@@ -691,6 +884,8 @@ def notifications_json(request):
         'message': n.message[:80],
         'is_read': n.is_read,
         'created_at': n.created_at.strftime('%b %d, %Y'),
+        'time': n.created_at.strftime('%b %d, %Y %I:%M %p'),
+        'type': n.notification_type,
         'link': n.link or '',
         'priority': n.priority,
     } for n in notifications]
@@ -773,7 +968,7 @@ def global_search(request):
     
 @login_required
 def inquiry_list(request):
-    if request.user.role not in ['broker', 'admin', 'staff'] \
+    if request.user.role not in ['broker', 'admin', 'staff', 'sale_assistant', 'property_owner'] \
             and not request.user.is_superuser:
         messages.error(request, 'You do not have permission.')
         return redirect('dashboard')
@@ -781,44 +976,52 @@ def inquiry_list(request):
     from apps.accounts.models import ContactMessage
     inquiries = ContactMessage.objects.all().order_by('-created_at')
 
+    if request.user.role == 'property_owner':
+        inquiries = inquiries.filter(property__owner=request.user)
+    elif request.user.role == 'sale_assistant':
+        inquiries = inquiries.filter(property__sale_assistant=request.user)
+
+    # Filter
     search = request.GET.get('search', '')
     is_read = request.GET.get('is_read', '')
-    property_type = request.GET.get('property_type', '')  # ✅ new filter
 
     if search:
         inquiries = inquiries.filter(
             Q(name__icontains=search) |
             Q(email__icontains=search) |
             Q(phone__icontains=search) |
-            Q(message__icontains=search) |
-            Q(city__icontains=search)
+            Q(message__icontains=search)
         )
     if is_read == 'read':
         inquiries = inquiries.filter(is_read=True)
     elif is_read == 'unread':
         inquiries = inquiries.filter(is_read=False)
-    if property_type:  # ✅
-        inquiries = inquiries.filter(property_type=property_type)
 
     return render(request, 'accounts/inquiry_list.html', {
         'inquiries': inquiries,
-        'total': ContactMessage.objects.count(),
-        'unread': ContactMessage.objects.filter(is_read=False).count(),
+        'total': inquiries.count(),
+        'unread': inquiries.filter(is_read=False).count(),
         'search': search,
         'is_read': is_read,
-        'property_type': property_type,
     })
 
 
 @login_required
 def inquiry_detail(request, pk):
-    if request.user.role not in ['broker', 'admin', 'staff'] \
+    if request.user.role not in ['broker', 'admin', 'staff', 'sale_assistant', 'property_owner'] \
             and not request.user.is_superuser:
         messages.error(request, 'You do not have permission.')
         return redirect('dashboard')
 
     from apps.accounts.models import ContactMessage
-    inquiry = get_object_or_404(ContactMessage, pk=pk)
+    inquiry = ContactMessage.objects.filter(pk=pk)
+
+    if request.user.role == 'property_owner':
+        inquiry = inquiry.filter(property__owner=request.user)
+    elif request.user.role == 'sale_assistant':
+        inquiry = inquiry.filter(property__sale_assistant=request.user)
+
+    inquiry = get_object_or_404(inquiry)
 
     # Mark as read
     if not inquiry.is_read:
@@ -829,54 +1032,3 @@ def inquiry_detail(request, pk):
     return render(request, 'accounts/inquiry_detail.html', {
         'inquiry': inquiry,
     })
-
-
-
-def google_callback(request):
-    """
-    Called after successful Google OAuth login.
-    Assigns client role if new user, then redirects appropriately.
-    """
-    user = request.user
-
-    if not user.is_authenticated:
-        return redirect('accounts:login')
-
-    # Check if this is a Google social account
-    is_google = SocialAccount.objects.filter(
-        user=user, provider='google'
-    ).exists()
-
-    if is_google:
-        # Set social provider info
-        if not user.social_provider or user.social_provider == 'none':
-            user.social_provider = 'google'
-
-            # Auto-fill name from Google if not set
-            social = SocialAccount.objects.get(user=user, provider='google')
-            extra_data = social.extra_data
-
-            if not user.first_name:
-                user.first_name = extra_data.get('given_name', '')
-            if not user.last_name:
-                user.last_name = extra_data.get('family_name', '')
-            if not user.profile_picture and extra_data.get('picture'):
-                user.social_uid = extra_data.get('sub', '')
-
-            # Assign client role if no role set
-            if not user.role or user.role == '':
-                user.role = 'client'
-
-            user.is_verified = True
-            user.save()
-
-    # Redirect based on role
-    if user.role == 'client':
-        return redirect('home')
-    elif user.role in ['admin', 'broker', 'staff', 'sale_assistant', 'property_owner']:
-        return redirect('dashboard')
-    else:
-        user.role = 'client'
-        user.save()
-        return redirect('home')
-    

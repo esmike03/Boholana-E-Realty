@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
-from decouple import config
+from decouple import config, Csv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,7 +27,20 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool, default=True)
 
-ALLOWED_HOSTS = ['*']
+_env_allowed_hosts = config(
+    'ALLOWED_HOSTS',
+    cast=Csv(),
+    default='127.0.0.1,localhost,.ngrok-free.app,.ngrok.app'
+)
+ALLOWED_HOSTS = [h.strip() for h in _env_allowed_hosts if str(h).strip()]
+for required_host in ['127.0.0.1', 'localhost', '.ngrok-free.app', '.ngrok.app']:
+    if required_host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(required_host)
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    cast=Csv(),
+    default='https://*.ngrok-free.app,https://*.ngrok.app'
+)
 
 
 # Application definition
@@ -54,6 +67,7 @@ INSTALLED_APPS = [
     'apps.sales',
     'apps.documents',
     'apps.reports',
+    'apps.preferences',
     
     'tailwind',
     'theme',
@@ -93,6 +107,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.accounts.context_processors.unread_chat_count',
             ],
         },
     },
@@ -106,12 +121,8 @@ WSGI_APPLICATION = 'boholana_erealty.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('DATABASE_NAME'),
-        'USER': config('DATABASE_USER'),
-        'PASSWORD': config('DATABASE_PASSWORD'),
-        'HOST': config('DATABASE_HOST'),
-        'PORT': config('DATABASE_PORT'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
@@ -193,15 +204,14 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # ✅ Allauth settings
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
-# ✅ Redirect after Google login
-LOGIN_REDIRECT_URL = '/auth/google/callback/'
+# Redirect after login (including Google OAuth)
+LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
 
 # ✅ Google OAuth provider settings
@@ -210,9 +220,9 @@ SOCIALACCOUNT_PROVIDERS = {
         'SCOPE': ['profile', 'email'],
         'AUTH_PARAMS': {'access_type': 'online'},
         'APP': {
-            'client_id': '90929032222-oab8299osl17l4j967a26c7au4pamjdt.apps.googleusercontent.com',     # ← fill after Google setup
-            'secret': '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',        # ← fill after Google setup
-            'key': ''
+            'client_id': config('GOOGLE_CLIENT_ID', default=''),
+            'secret': config('GOOGLE_CLIENT_SECRET', default=''),
+            'key': config('GOOGLE_CLIENT_KEY', default='')
         }
     }
 }
@@ -234,3 +244,17 @@ DEFAULT_FROM_EMAIL = config(
 TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN  = os.environ.get('TWILIO_AUTH_TOKEN')
 TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER')
+
+# Google Maps API
+GOOGLE_MAPS_API_KEY = config('GOOGLE_MAPS_API_KEY', default='YOUR_GOOGLE_MAPS_API_KEY_HERE')
+
+# Production security flags (enable by setting DJANGO_PRODUCTION=True)
+DJANGO_PRODUCTION = config('DJANGO_PRODUCTION', cast=bool, default=False)
+if DJANGO_PRODUCTION:
+    SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', cast=int, default=31536000)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', cast=bool, default=True)
+    SECURE_HSTS_PRELOAD = config('SECURE_HSTS_PRELOAD', cast=bool, default=True)
+    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', cast=bool, default=True)
+    SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', cast=bool, default=True)
+    CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', cast=bool, default=True)
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

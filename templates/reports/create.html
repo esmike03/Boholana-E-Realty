@@ -1,99 +1,625 @@
 {% extends 'base.html' %}
-
+{% load humanize %}
 {% block title %}Generate Report — Boholana E-Realty{% endblock %}
 {% block page_title %}Generate Report{% endblock %}
-{% block page_subtitle %}Create a new system report{% endblock %}
-
+{% block page_subtitle %}Create custom reports for sales, properties, commissions, and more{% endblock %}
 {% block content %}
-<div class="max-w-2xl">
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="mb-4 p-3 rounded-lg text-sm
-                    {% if message.tags == 'error' %}bg-red-50 text-red-600
-                    {% else %}bg-green-50 text-green-600{% endif %}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
+<!-- Report Type Selection Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+  <!-- Admin/Broker/Staff Reports -->
+  {% if user.role == 'broker' or user.role == 'admin' or user.role == 'staff' or user.is_superuser %}
 
-        <form method="POST" class="space-y-5">
-            {% csrf_token %}
-
-            <div>
-                <label class="block text-xs font-medium text-gray-600 mb-1.5">
-                    Report Title <span class="text-red-500">*</span>
-                </label>
-                <input type="text" name="title" required
-                       placeholder="e.g. Q1 2024 Sales Summary"
-                       class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1.5">
-                        Report Type <span class="text-red-500">*</span>
-                    </label>
-                    <select name="report_type" required
-                            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
-                        <option value="">Select Type</option>
-                        {% for value, label in report_type_choices %}
-                            <option value="{{ value }}">{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1.5">
-                        Format <span class="text-red-500">*</span>
-                    </label>
-                    <select name="format" required
-                            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
-                        {% for value, label in format_choices %}
-                            <option value="{{ value }}">{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-xs font-medium text-gray-600 mb-1.5">
-                    Description (optional)
-                </label>
-                <textarea name="description" rows="2"
-                          class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none"></textarea>
-            </div>
-
-            <!-- Date Range -->
-            <div>
-                <h4 class="font-semibold text-gray-700 text-sm mb-3 pb-2 border-b border-gray-100">
-                    Date Range (optional)
-                </h4>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1.5">From</label>
-                        <input type="date" name="date_from"
-                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1.5">To</label>
-                        <input type="date" name="date_to"
-                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex gap-3">
-                <button type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition">
-                    <i class="fas fa-cog mr-2"></i>Generate Report
-                </button>
-                <a href="{% url 'reports:list' %}"
-                   class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-6 py-2.5 rounded-xl text-sm font-semibold transition">
-                    Cancel
-                </a>
-            </div>
-        </form>
+  <!-- Total Listings Overview -->
+  <div
+    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:border-blue-200 transition cursor-pointer"
+    onclick="selectReport('total_listings')"
+  >
+    <div class="flex items-start justify-between mb-3">
+      <div class="bg-blue-100 rounded-lg p-3">
+        <i class="fas fa-list-check text-blue-600 text-xl"></i>
+      </div>
+      <i class="fas fa-arrow-right text-gray-300"></i>
     </div>
+    <h3 class="font-semibold text-gray-800 mb-1">Total Listings Overview</h3>
+    <p class="text-xs text-gray-500">
+      Total properties listed, total users, and sales overview
+    </p>
+  </div>
+
+  <!-- Commission Report -->
+  <div
+    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:border-blue-200 transition cursor-pointer"
+    onclick="selectReport('commission_report')"
+  >
+    <div class="flex items-start justify-between mb-3">
+      <div class="bg-yellow-100 rounded-lg p-3">
+        <i class="fas fa-dollar-sign text-yellow-600 text-xl"></i>
+      </div>
+      <i class="fas fa-arrow-right text-gray-300"></i>
+    </div>
+    <h3 class="font-semibold text-gray-800 mb-1">Commission Report</h3>
+    <p class="text-xs text-gray-500">
+      Commission details: agent, owner, property, and sale earned
+    </p>
+    <span
+      class="inline-block mt-2 bg-yellow-400 text-white text-xs font-semibold px-3 py-1 rounded-full"
+      >Who should be evaluated: Sale Assistants, Brokers, and Recipients
+      involved in sales</span
+    >
+  </div>
+
+  <!-- Document Tracking Report -->
+  <div
+    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:border-blue-200 transition cursor-pointer"
+    onclick="selectReport('listing_documents')"
+  >
+    <div class="flex items-start justify-between mb-3">
+      <div class="bg-indigo-100 rounded-lg p-3">
+        <i class="fas fa-file-alt text-indigo-600 text-xl"></i>
+      </div>
+      <i class="fas fa-arrow-right text-gray-300"></i>
+    </div>
+    <h3 class="font-semibold text-gray-800 mb-1">Document Tracking Report</h3>
+    <p class="text-xs text-gray-500">
+      Track which documents are submitted for each listing
+    </p>
+  </div>
+
+  <!-- Sales Summary -->
+  <div
+    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:border-blue-200 transition cursor-pointer"
+    onclick="selectReport('sales_summary')"
+  >
+    <div class="flex items-start justify-between mb-3">
+      <div class="bg-teal-100 rounded-lg p-3">
+        <i class="fas fa-receipt text-teal-600 text-xl"></i>
+      </div>
+      <i class="fas fa-arrow-right text-gray-300"></i>
+    </div>
+    <h3 class="font-semibold text-gray-800 mb-1">Sales Summary</h3>
+    <p class="text-xs text-gray-500">
+      Overall sales report with revenue and status
+    </p>
+  </div>
+
+  {% endif %}
+
+  <!-- Sale Assistant Reports -->
+  {% if user.role == 'sale_assistant' %}
+  <div
+    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:border-blue-200 transition cursor-pointer"
+    onclick="selectReport('commission_report')"
+  >
+    <div class="flex items-start justify-between mb-3">
+      <div class="bg-yellow-100 rounded-lg p-3">
+        <i class="fas fa-dollar-sign text-yellow-600 text-xl"></i>
+      </div>
+      <i class="fas fa-arrow-right text-gray-300"></i>
+    </div>
+    <h3 class="font-semibold text-gray-800 mb-1">My Commission Report</h3>
+    <p class="text-xs text-gray-500">
+      Your total commission amount and disbursement details
+    </p>
+  </div>
+  {% endif %}
+
+  <!-- Property Owner Reports -->
+  {% if user.role == 'property_owner' %}
+  <div
+    class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:border-blue-200 transition cursor-pointer"
+    onclick="selectReport('sales_by_property')"
+  >
+    <div class="flex items-start justify-between mb-3">
+      <div class="bg-indigo-100 rounded-lg p-3">
+        <i class="fas fa-home text-indigo-600 text-xl"></i>
+      </div>
+      <i class="fas fa-arrow-right text-gray-300"></i>
+    </div>
+    <h3 class="font-semibold text-gray-800 mb-1">Property Sales Report</h3>
+    <p class="text-xs text-gray-500">
+      Inquiries, reservations, and successful sales per property
+    </p>
+  </div>
+  {% endif %}
 </div>
+
+<!-- Report Configuration Form -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+  {% if messages %} {% for message in messages %}
+  <div
+    class="mb-4 p-3 rounded-lg text-sm {% if message.tags == 'error' %}bg-red-50 text-red-600 {% else %}bg-green-50 text-green-600{% endif %}"
+  >
+    {{ message }}
+  </div>
+  {% endfor %} {% endif %}
+
+  <form method="POST" id="reportForm" class="space-y-6">
+    {% csrf_token %}
+
+    <div>
+      <label class="block text-sm font-semibold text-gray-800 mb-2">
+        Report Type <span class="text-red-500">*</span>
+      </label>
+      <select
+        name="report_type"
+        id="reportType"
+        required
+        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">-- Select Report Type --</option>
+        {% for value, label in report_type_choices %}
+        <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Property and Sale Assistant Selectors (Sales Summary only) -->
+    <div
+      id="salesSummaryFilters"
+      class="grid grid-cols-1 md:grid-cols-2 gap-4"
+      style="display: none"
+    >
+      <div>
+        <label class="block text-sm font-semibold text-gray-800 mb-2">
+          <i class="fas fa-home mr-2 text-blue-500"></i>Filter by Property
+          (optional)
+        </label>
+        <select
+          name="property_id"
+          id="propertyIdSelectSalesSummary"
+          class="w-full border border-blue-400 rounded-lg px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">-- All Properties --</option>
+          {% for property in properties %}
+          <option value="{{ property.id }}">{{ property.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-800 mb-2">
+          <i class="fas fa-user-tie mr-2 text-blue-500"></i>Filter by Sale
+          Assistant (optional)
+        </label>
+        <select
+          name="sale_assistant_id"
+          id="saleAssistantIdSelectSalesSummary"
+          class="w-full border border-blue-400 rounded-lg px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">-- All Sale Assistants --</option>
+          {% for sa in sale_assistants %}
+          <option value="{{ sa.id }}">{{ sa.get_full_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-span-2">
+        <p class="text-xs text-gray-500 mt-2">
+          Selecting a property or sale assistant will generate a report filtered
+          by your selection. Leave blank to include all.
+        </p>
+      </div>
+    </div>
+
+    <!-- Listing Selector for Document Tracking -->
+    <div id="listingSelector" style="display: none">
+      <label class="block text-sm font-semibold text-gray-800 mb-2">
+        Which property listing do you want to document track?
+        <span class="text-red-500">*</span>
+      </label>
+      <select
+        name="property_id"
+        id="propertyIdSelect"
+        class="w-full border border-blue-400 rounded-lg px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">-- Select Property Listing --</option>
+        {% for property in properties %}
+        <option value="{{ property.id }}">{{ property.title }}</option>
+        {% endfor %}
+      </select>
+      <p class="text-xs text-gray-500 mt-2">
+        Selecting a property will generate a full document tracking report for
+        that listing, including all its details and submitted documents.
+      </p>
+    </div>
+
+    <div>
+      <label class="block text-sm font-semibold text-gray-800 mb-2">
+        Report Title <span class="text-red-500">*</span>
+      </label>
+      <input
+        type="text"
+        name="title"
+        id="reportTitle"
+        required
+        placeholder="e.g. Q1 2024 Sales Summary"
+        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+
+    <!-- Commission Report Role/User Filter -->
+    <div id="commissionFilter" style="display: none">
+      <label class="block text-sm font-semibold text-gray-800 mb-2"
+        >Select Role</label
+      >
+      <select
+        id="commissionRole"
+        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm mb-2"
+      >
+        <option value="">-- Select Role --</option>
+        {% for role in commission_roles %}
+        <option value="{{ role }}">{{ role|title }}</option>
+        {% endfor %}
+      </select>
+      <label class="block text-sm font-semibold text-gray-800 mb-2"
+        >Select User</label
+      >
+      <select
+        name="commission_user"
+        id="commissionUser"
+        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm"
+      >
+        <option value="">-- Select User --</option>
+      </select>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-semibold text-gray-800 mb-2">
+          Format <span class="text-red-500">*</span>
+        </label>
+        <select
+          name="format"
+          required
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="pdf">PDF</option>
+          <option value="excel">Excel</option>
+          <option value="csv">CSV</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-800 mb-2">
+          Description
+        </label>
+        <input
+          type="text"
+          name="description"
+          placeholder="Optional description..."
+          class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+    </div>
+
+    <!-- Sales Summary Period Filter -->
+    <div>
+      <label class="block text-sm font-semibold text-gray-800 mb-3">
+        <i class="fas fa-calendar-alt mr-2 text-blue-500"></i>Sales Summary
+        Period
+      </label>
+      <select
+        name="period_type"
+        id="periodType"
+        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="custom">-- Custom Date Range --</option>
+        <option value="monthly">Monthly</option>
+        <option value="quarterly">Quarterly</option>
+        <option value="semiannual">Semi-Annual</option>
+        <option value="yearly">Yearly</option>
+      </select>
+
+      <!-- Monthly Selector -->
+      <div id="monthlySelector" class="mt-3 hidden">
+        <label class="text-xs text-gray-600 mb-1 block"
+          >Select Month and Year</label
+        >
+        <div class="grid grid-cols-2 gap-2">
+          <select
+            name="month"
+            class="border border-gray-200 rounded-lg px-2 py-2 text-sm"
+          >
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+          <input
+            type="number"
+            name="year_monthly"
+            min="2000"
+            max="2100"
+            value="{{ now.year }}"
+            class="border border-gray-200 rounded-lg px-2 py-2 text-sm"
+            placeholder="Year"
+          />
+        </div>
+      </div>
+
+      <!-- Quarterly Selector -->
+      <div id="quarterlySelector" class="mt-3 hidden">
+        <label class="text-xs text-gray-600 mb-1 block"
+          >Select Quarter and Year</label
+        >
+        <div class="grid grid-cols-2 gap-2">
+          <select
+            name="quarter"
+            class="border border-gray-200 rounded-lg px-2 py-2 text-sm"
+          >
+            <option value="1">Q1 (Jan-Mar)</option>
+            <option value="2">Q2 (Apr-Jun)</option>
+            <option value="3">Q3 (Jul-Sep)</option>
+            <option value="4">Q4 (Oct-Dec)</option>
+          </select>
+          <input
+            type="number"
+            name="year_quarterly"
+            min="2000"
+            max="2100"
+            value="{{ now.year }}"
+            class="border border-gray-200 rounded-lg px-2 py-2 text-sm"
+            placeholder="Year"
+          />
+        </div>
+      </div>
+
+      <!-- Semi-Annual Selector -->
+      <div id="semiannualSelector" class="mt-3 hidden">
+        <label class="text-xs text-gray-600 mb-1 block"
+          >Select Period and Year</label
+        >
+        <div class="grid grid-cols-2 gap-2">
+          <select
+            name="half"
+            class="border border-gray-200 rounded-lg px-2 py-2 text-sm"
+          >
+            <option value="1">First Half (Jan-Jun)</option>
+            <option value="2">Second Half (Jul-Dec)</option>
+          </select>
+          <input
+            type="number"
+            name="year_semiannual"
+            min="2000"
+            max="2100"
+            value="{{ now.year }}"
+            class="border border-gray-200 rounded-lg px-2 py-2 text-sm"
+            placeholder="Year"
+          />
+        </div>
+      </div>
+
+      <!-- Yearly Selector -->
+      <div id="yearlySelector" class="mt-3 hidden">
+        <label class="text-xs text-gray-600 mb-1 block">Select Year</label>
+        <input
+          type="number"
+          name="year_yearly"
+          min="2000"
+          max="2100"
+          value="{{ now.year }}"
+          class="border border-gray-200 rounded-lg px-2 py-2 text-sm"
+          placeholder="Year"
+        />
+      </div>
+
+      <!-- Custom Date Range -->
+      <div id="customDateRangeSelector" class="mt-3">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs text-gray-600 mb-1 block">From Date</label>
+            <input
+              type="date"
+              name="date_from"
+              class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label class="text-xs text-gray-600 mb-1 block">To Date</label>
+            <input
+              type="date"
+              name="date_to"
+              class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        function showPeriodSelector() {
+          var val = document.getElementById("periodType").value;
+          document.getElementById("monthlySelector").classList.add("hidden");
+          document.getElementById("quarterlySelector").classList.add("hidden");
+          document.getElementById("semiannualSelector").classList.add("hidden");
+          document.getElementById("yearlySelector").classList.add("hidden");
+          document
+            .getElementById("customDateRangeSelector")
+            .classList.add("hidden");
+          if (val === "monthly")
+            document
+              .getElementById("monthlySelector")
+              .classList.remove("hidden");
+          else if (val === "quarterly")
+            document
+              .getElementById("quarterlySelector")
+              .classList.remove("hidden");
+          else if (val === "semiannual")
+            document
+              .getElementById("semiannualSelector")
+              .classList.remove("hidden");
+          else if (val === "yearly")
+            document
+              .getElementById("yearlySelector")
+              .classList.remove("hidden");
+          else
+            document
+              .getElementById("customDateRangeSelector")
+              .classList.remove("hidden");
+        }
+        document
+          .getElementById("periodType")
+          .addEventListener("change", showPeriodSelector);
+        showPeriodSelector();
+      });
+    </script>
+
+    <!-- Listing Status Filter (total_listings only) -->
+    <div id="statusSelector" style="display: none">
+      <label class="block text-sm font-semibold text-gray-800 mb-2">
+        <i class="fas fa-filter mr-2 text-blue-500"></i>Listing Status
+      </label>
+      <select
+        name="listing_status"
+        id="listingStatus"
+        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">All Statuses</option>
+        <option value="draft">Draft</option>
+        <option value="pending_approval">Pending Approval</option>
+        <option value="flagged">Flagged for Review</option>
+        <option value="approved">Approved / For Sale</option>
+        <option value="reserved">Reserved</option>
+        <option value="rejected">Rejected</option>
+        <option value="sold">Sold</option>
+        <option value="archived">Archived</option>
+      </select>
+      <p class="text-xs text-gray-400 mt-1">
+        Filter listings by status. Leave as "All Statuses" to include all
+        listings.
+      </p>
+    </div>
+
+    <div class="flex gap-3 pt-4">
+      <button
+        type="submit"
+        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2"
+      >
+        <i class="fas fa-file-pdf"></i>Generate Report
+      </button>
+      <a
+        href="{% url 'reports:list' %}"
+        class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold transition text-center"
+      >
+        View Reports
+      </a>
+    </div>
+  </form>
+</div>
+
+<script>
+  // Commission users by role (from Django context)
+  const commissionUsersByRole = {
+      {% for role, users in commission_users_by_role.items %}
+      '{{ role }}': [
+          {% for user in users %}
+          { id: {{ user.id }}, name: '{{ user.get_full_name|escapejs }}' },
+          {% endfor %}
+      ],
+      {% endfor %}
+  };
+
+
+  function toggleSalesSummaryFilters() {
+      var reportType = document.getElementById('reportType');
+      var filters = document.getElementById('salesSummaryFilters');
+      if (reportType && filters) {
+          filters.style.display = reportType.value === 'sales_summary' ? 'grid' : 'none';
+      }
+  }
+
+
+
+  function selectReport(reportType) {
+      document.getElementById('reportType').value = reportType;
+
+      // Set a default title based on type
+      const titles = {
+          'total_listings': 'Total Listings Overview Report',
+          'user_summary': 'User Summary Report',
+          'commission_report': 'Commission Report',
+          'sales_summary': 'Sales Summary Report',
+          'sales_by_property': 'Property Sales Report',
+          'listing_documents': 'Document Tracking Report',
+      };
+      document.getElementById('reportTitle').value = titles[reportType] || '';
+
+      // Show/hide listing status filter
+      var statusSelector = document.getElementById('statusSelector');
+      if (statusSelector) {
+          statusSelector.style.display = reportType === 'total_listings' ? 'block' : 'none';
+      }
+
+      // Show/hide listing selector for document tracking
+      var listingSelector = document.getElementById('listingSelector');
+      if (listingSelector) {
+          listingSelector.style.display = reportType === 'listing_documents' ? 'block' : 'none';
+      }
+
+      toggleSalesSummaryFilters();
+
+      document.getElementById('reportForm').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // Also toggle when the dropdown changes directly
+  document.getElementById('reportType').addEventListener('change', function() {
+      var statusSelector = document.getElementById('statusSelector');
+      if (statusSelector) {
+          statusSelector.style.display = this.value === 'total_listings' ? 'block' : 'none';
+      }
+      // Show/hide commission filter
+      var commissionFilter = document.getElementById('commissionFilter');
+      if (commissionFilter) {
+          commissionFilter.style.display = this.value === 'commission_report' ? 'block' : 'none';
+          if (this.value !== 'commission_report') {
+              document.getElementById('commissionRole').value = '';
+              document.getElementById('commissionUser').innerHTML = '<option value="">-- Select User --</option>';
+          }
+      }
+      // Show/hide listing selector for document tracking
+      var listingSelector = document.getElementById('listingSelector');
+      if (listingSelector) {
+          listingSelector.style.display = this.value === 'listing_documents' ? 'block' : 'none';
+      }
+      // Always call sales summary filter toggle last
+      toggleSalesSummaryFilters();
+  });
+
+  // Populate users when role changes
+  document.getElementById('commissionRole').addEventListener('change', function() {
+      var role = this.value;
+      var userSelect = document.getElementById('commissionUser');
+      userSelect.innerHTML = '<option value="">-- Select User --</option>';
+      if (role && commissionUsersByRole[role]) {
+          commissionUsersByRole[role].forEach(function(user) {
+              var opt = document.createElement('option');
+              opt.value = user.id;
+              opt.textContent = user.name;
+              userSelect.appendChild(opt);
+          });
+      }
+  });
+  // Only require property_id if listing_documents is selected
+  document.getElementById('reportForm').addEventListener('submit', function(e) {
+      var reportType = document.getElementById('reportType').value;
+      var propertyId = document.getElementById('propertyIdSelect');
+      if (reportType === 'listing_documents' && propertyId && !propertyId.value) {
+          propertyId.classList.add('border-red-500');
+          propertyId.focus();
+          e.preventDefault();
+          alert('Please select a property listing to document track.');
+          return false;
+      } else if (propertyId) {
+          propertyId.classList.remove('border-red-500');
+      }
+  });
+</script>
+
 {% endblock %}

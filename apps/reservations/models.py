@@ -56,6 +56,35 @@ class Appointment(models.Model):
         return f"Appointment #{self.id} - {self.client} on {self.preferred_date}"
 
 
+class AvailabilitySlot(models.Model):
+    property = models.ForeignKey(
+        Property,
+        on_delete=models.CASCADE,
+        related_name='availability_slots'
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='created_availability_slots'
+    )
+    slot_date = models.DateField()
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    is_active = models.BooleanField(default=True)
+    notes = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['slot_date', 'start_time']
+
+    def __str__(self):
+        return (
+            f"{self.property.title} - {self.slot_date} "
+            f"{self.start_time.strftime('%H:%M')} to {self.end_time.strftime('%H:%M')}"
+        )
+
+
 class PropertyPreferenceForm(models.Model):
     client = models.ForeignKey(
         settings.AUTH_USER_MODEL,

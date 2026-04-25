@@ -202,6 +202,8 @@ class Notification(models.Model):
         ('account_disabled', 'Account Disabled'),
         ('account_enabled', 'Account Enabled'),
         ('role_assigned', 'Role Assigned'),
+        ('favorite_unavailable', 'Favorite Property Unavailable'),
+        ('favorite_updated', 'Favorite Property Updated'),
         ('general', 'General Notification'),
     )
 

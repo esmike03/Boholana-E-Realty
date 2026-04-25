@@ -1,0 +1,132 @@
+{% extends 'public_base.html' %}
+{% load humanize %}
+{% block title %}My Appointments — Boholana E-Realty{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<section class="bg-white border-b border-gray-100 py-10 px-6">
+  <div class="max-w-7xl mx-auto">
+    <div class="inline-flex items-center gap-2 text-yellow-600 text-xs font-semibold tracking-widest uppercase mb-3">
+      Client Portal
+    </div>
+    <div class="flex items-center justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">My Appointments</h1>
+        <p class="text-gray-400 text-sm mt-1">Track your property viewing appointments</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bg-gray-50 py-10 px-6 min-h-screen">
+  <div class="max-w-5xl mx-auto">
+
+    <h2 class="text-xs font-semibold tracking-widest uppercase text-yellow-600 mb-4">
+      Appointments
+      <span class="ml-2 text-gray-400 normal-case font-normal tracking-normal">
+        ({{ appointments.count }})
+      </span>
+    </h2>
+
+    {% if appointments %}
+    <div class="space-y-3">
+      {% for appointment in appointments %}
+      <div class="bg-white border border-gray-100 p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+
+        <!-- Property Image -->
+        <div class="w-20 h-16 bg-gray-100 flex-shrink-0 overflow-hidden">
+          {% if appointment.property.images.exists %}
+            <img src="{{ appointment.property.images.first.image.url }}"
+                 class="w-full h-full object-cover">
+          {% else %}
+            <div class="w-full h-full flex items-center justify-center">
+              <i class="fas fa-home text-gray-300"></i>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Info -->
+        <div class="flex-1 min-w-0">
+          <h3 class="font-semibold text-gray-900 text-sm truncate">
+            {{ appointment.property.title }}
+          </h3>
+          <p class="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
+            <i class="fas fa-map-marker-alt text-yellow-500 text-[10px]"></i>
+            {{ appointment.property.city }}, {{ appointment.property.province }}
+          </p>
+          <div class="flex flex-wrap items-center gap-3 mt-2 text-xs text-gray-400">
+            <span>
+              <i class="fas fa-calendar mr-1"></i>
+              Preferred: {{ appointment.preferred_date }}
+            </span>
+            <span>
+              <i class="fas fa-clock mr-1"></i>
+              {{ appointment.preferred_time }}
+            </span>
+            {% if appointment.confirmed_date %}
+            <span class="text-green-600 font-medium">
+              <i class="fas fa-check-circle mr-1"></i>
+              Confirmed: {{ appointment.confirmed_date }}
+              {% if appointment.confirmed_time %}at {{ appointment.confirmed_time }}{% endif %}
+            </span>
+            {% endif %}
+          </div>
+          {% if appointment.notes %}
+          <p class="text-xs text-gray-400 mt-1 italic">
+            "{{ appointment.notes|truncatechars:60 }}"
+          </p>
+          {% endif %}
+        </div>
+
+        <!-- Status & Actions -->
+        <div class="flex flex-col items-end gap-2 flex-shrink-0">
+          <span class="text-xs font-semibold px-2.5 py-1 border
+            {% if appointment.status == 'confirmed' %}bg-green-50 text-green-700 border-green-200
+            {% elif appointment.status == 'pending' %}bg-yellow-50 text-yellow-700 border-yellow-200
+            {% elif appointment.status == 'cancelled' %}bg-gray-50 text-gray-500 border-gray-200
+            {% elif appointment.status == 'completed' %}bg-blue-50 text-blue-700 border-blue-200
+            {% elif appointment.status == 'no_show' %}bg-red-50 text-red-500 border-red-200
+            {% else %}bg-gray-50 text-gray-500 border-gray-200{% endif %}">
+            {{ appointment.get_status_display }}
+          </span>
+
+          <div class="flex items-center gap-2">
+            <a href="{% url 'property_detail' appointment.property.pk %}"
+               class="text-xs text-blue-500 hover:underline">
+              View Property
+            </a>
+
+            {% if appointment.status == 'pending' or appointment.status == 'confirmed' %}
+            <form method="POST"
+                  action="{% url 'appointment_cancel' appointment.pk %}"
+                  onsubmit="return confirm('Are you sure you want to cancel this appointment?')">
+              {% csrf_token %}
+              <button type="submit"
+                      class="text-xs bg-red-50 hover:bg-red-100 text-red-500 border border-red-200 px-2.5 py-1 transition-colors">
+                <i class="fas fa-times text-[10px] mr-1"></i>Cancel
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="bg-white border border-gray-100 p-10 text-center">
+      <i class="fas fa-calendar text-3xl text-gray-200 mb-3 block"></i>
+      <p class="text-sm text-gray-400">No appointments scheduled yet.</p>
+      <a href="{% url 'properties' %}"
+         class="inline-block mt-4 bg-gray-900 hover:bg-yellow-600 text-white px-6 py-2.5 text-sm font-medium transition-colors">
+        Browse Properties
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}

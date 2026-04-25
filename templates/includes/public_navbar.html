@@ -1,303 +1,308 @@
+{% load humanize %}
 <nav class="bg-white border-b border-gray-100 sticky top-0 z-50">
   <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
 
-    <!-- Brand -->
-    <a href="{% url 'home' %}" class="flex items-center gap-2.5">
-      <div class="leading-tight">
-        <img src="/media/logo.png" class="h-10"/>
-      </div>
-    </a>
+    <!-- Left: Brand + Nav Links -->
+    <div class="flex items-center gap-8">
+      <a href="{% url 'home' %}" class="flex items-center gap-2.5 flex-shrink-0">
+        <div class="leading-tight">
+          <img src="/media/logo.png" class="h-11"/>
+        </div>
+      </a>
 
-    <!-- Desktop Nav Links -->
-    <div class="hidden md:flex items-center gap-8">
-      <a href="{% url 'home' %}"
-         class="text-sm font-medium transition
-         {% if request.resolver_match.url_name == 'home' %}text-yellow-500
-         {% else %}text-gray-600 hover:text-yellow-500{% endif %}">
-        Home
-      </a>
-      <a href="{% url 'properties' %}"
-         class="text-sm font-medium transition
-         {% if request.resolver_match.url_name == 'properties' %}text-yellow-500
-         {% else %}text-gray-600 hover:text-yellow-500{% endif %}">
-        Properties
-      </a>
-      <a href="{% url 'mortgage_calculator' %}"
-         class="text-sm font-medium transition
-         {% if request.resolver_match.url_name == 'mortgage_calculator' %}text-yellow-500
-         {% else %}text-gray-600 hover:text-yellow-500{% endif %}">
-        Calculator
-      </a>
-      <a href="{% url 'contact' %}"
-         class="text-sm font-medium transition
-         {% if request.resolver_match.url_name == 'contact' %}text-yellow-500
-         {% else %}text-gray-600 hover:text-yellow-500{% endif %}">
-        Contact
-      </a>
+      <!-- Desktop Nav Links -->
+      <div class="hidden md:flex items-center gap-6">
+        <a href="{% url 'home' %}"
+           class="text-[13px] font-medium transition whitespace-nowrap
+           {% if request.resolver_match.url_name == 'home' %}text-yellow-500
+           {% else %}text-gray-600 hover:text-yellow-500{% endif %}">
+          Home
+        </a>
+        <a href="{% url 'properties' %}"
+           class="text-[13px] font-medium transition whitespace-nowrap
+           {% if request.resolver_match.url_name == 'properties' %}text-yellow-500
+           {% else %}text-gray-600 hover:text-yellow-500{% endif %}">
+          Properties
+        </a>
+        <a href="{% url 'preference_form' %}"
+           class="text-[13px] font-medium transition whitespace-nowrap
+           {% if request.resolver_match.url_name == 'preference_form' %}text-yellow-500
+           {% else %}text-gray-600 hover:text-yellow-500{% endif %}">
+          Find Your Property
+        </a>
+        <a href="{% url 'contact' %}"
+           class="text-[13px] font-medium transition whitespace-nowrap
+           {% if request.resolver_match.url_name == 'contact' %}text-yellow-500
+           {% else %}text-gray-600 hover:text-yellow-500{% endif %}">
+          Contact Us
+        </a>
+      </div>
     </div>
 
-    <!-- Desktop Auth Buttons -->
-    <div class="hidden md:flex items-center gap-3">
-      {% if user.is_authenticated %}
-        {% if user.role == 'client' %}
-          <a href="{% url 'favorites' %}"
-             class="text-sm text-gray-600 hover:text-red-500 transition font-medium">
-            <i class="fas fa-heart mr-1 text-red-400"></i>Favorites
-          </a>
-          <a href="{% url 'my_reservations' %}"
-             class="text-sm text-gray-600 hover:text-yellow-500 transition font-medium">
-            My Reservations
-          </a>
-          <a href="{% url 'client_chat_inbox' %}"
-             class="relative text-sm font-medium transition
-             {% if request.resolver_match.url_name == 'client_chat_inbox' %}text-yellow-500
-             {% else %}text-gray-600 hover:text-yellow-500{% endif %}">
-            <i class="fas fa-comments mr-1"></i>Messages
-            <span id="nav-unread-badge"
-                  class="hidden absolute -top-2 -right-3 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
-            </span>
+    <!-- Right: Auth Buttons + Hamburger -->
+    <div class="flex items-center gap-4">
+
+      <!-- Desktop Auth -->
+      <div class="hidden md:flex items-center gap-4">
+        {% if user.is_authenticated %}
+          {% if user.role == 'client' %}
+            <a href="{% url 'favorites' %}"
+               class="text-[13px] text-gray-600 hover:text-red-500 transition font-medium whitespace-nowrap">
+              <i class="fas fa-heart mr-1 text-red-400"></i>Favorites
+            </a>
+
+            <a href="/my-messages/"
+               class="relative text-[13px] font-medium transition text-gray-600 hover:text-yellow-500 cursor-pointer whitespace-nowrap">
+              <i class="fas fa-comments mr-1"></i>Messages
+              <span id="nav-unread-badge"
+                    class="hidden absolute -top-2 -right-3 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
+              </span>
+            </a>
+
+            <!-- Notification Bell -->
+            <div class="relative" id="notif-bell-wrapper">
+              <button onclick="toggleNotifDropdown()" class="relative text-[13px] font-medium transition text-gray-600 hover:text-yellow-500 cursor-pointer whitespace-nowrap">
+                <i class="fas fa-bell"></i>
+                <span id="notif-count-badge"
+                      class="hidden absolute -top-2 -right-3 bg-red-500 text-white text-[10px] rounded-full min-w-[16px] h-4 flex items-center justify-center font-bold px-1">
+                </span>
+              </button>
+              <!-- Notification Dropdown -->
+              <div id="notif-dropdown"
+                   class="hidden absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                  <span class="text-sm font-semibold text-gray-800">Notifications</span>
+                  <a href="{% url 'accounts:notifications' %}" class="text-xs text-blue-500 hover:underline">View All</a>
+                </div>
+                <div id="notif-list" class="max-h-72 overflow-y-auto divide-y divide-gray-50">
+                  <div class="px-4 py-6 text-center text-xs text-gray-400">No new notifications</div>
+                </div>
+              </div>
+            </div>
+          {% else %}
+            <a href="{% url 'dashboard' %}"
+               class="text-[13px] text-gray-600 hover:text-yellow-500 transition font-medium whitespace-nowrap">
+              Dashboard
+            </a>
+          {% endif %}
+          <a href="{% url 'accounts:logout' %}"
+             class="text-[13px] bg-red-50 text-red-500 hover:bg-red-100 px-4 py-2 rounded-xl font-medium transition whitespace-nowrap">
+            Logout
           </a>
         {% else %}
-          <a href="{% url 'dashboard' %}"
-             class="text-sm text-gray-600 hover:text-yellow-500 transition font-medium">
-            Dashboard
+          <a href="{% url 'accounts:login' %}"
+             class="text-[13px] text-gray-600 hover:text-yellow-500 font-medium transition whitespace-nowrap">
+            Sign In
+          </a>
+          <a href="{% url 'accounts:register' %}"
+             class="text-[13px] bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-xl font-medium transition whitespace-nowrap">
+            Register
           </a>
         {% endif %}
-        <a href="{% url 'accounts:logout' %}"
-           class="text-sm bg-red-50 text-red-500 hover:bg-red-100 px-4 py-2 rounded-xl font-medium transition">
-          Logout
-        </a>
-      {% else %}
-        <a href="{% url 'accounts:login' %}"
-           class="text-sm text-gray-600 hover:text-yellow-500 font-medium transition">
-          Sign In
-        </a>
-        <a href="{% url 'accounts:register' %}"
-           class="text-sm bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-xl font-medium transition">
-          Register
-        </a>
-      {% endif %}
-    </div>
+      </div>
 
-    <!-- Mobile — Right side (unread badge + hamburger) -->
-    <div class="flex md:hidden items-center gap-3">
-
-      <!-- Unread badge for mobile (client only) -->
-      {% if user.is_authenticated and user.role == 'client' %}
-      <a href="{% url 'client_chat_inbox' %}" class="relative">
-        <i class="fas fa-comments text-gray-600 text-lg"></i>
-        <span id="nav-unread-badge-mobile"
-              class="hidden absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
-        </span>
-      </a>
-      {% endif %}
+      <!-- Mobile Hamburger -->
+      <div class="relative flex md:hidden items-center">
 
       <!-- Hamburger -->
       <button onclick="toggleMobileMenu()"
               id="hamburger-btn"
-              class="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition">
+              class="relative z-[60] p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition">
         <i class="fas fa-bars text-lg" id="hamburger-icon"></i>
       </button>
-    </div>
 
-  </div>
+      <!-- Dropdown card anchored to hamburger -->
+      <div id="mobile-menu"
+           class="hidden absolute right-0 mt-3 w-52 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden" style="top:100%">
+        <div class="px-2 py-2 space-y-0.5">
 
-  <!-- ── Mobile Menu ── -->
-  <div id="mobile-menu"
-       class="hidden md:hidden border-t border-gray-100 bg-white">
-    <div class="max-w-7xl mx-auto px-6 py-4 space-y-1">
+          {% if user.is_authenticated %}
 
-      <!-- Nav Links -->
-      <a href="{% url 'home' %}"
-         class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition
-         {% if request.resolver_match.url_name == 'home' %}bg-yellow-50 text-yellow-600
-         {% else %}text-gray-600 hover:bg-gray-50{% endif %}">
-        <i class="fas fa-home w-4 text-center"></i>
-        Home
-      </a>
+            {% if user.role == 'client' %}
+            <a href="{% url 'accounts:client_account' %}"
+               class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg transition
+               {% if request.resolver_match.url_name == 'client_account' %}bg-gray-100 text-gray-800
+               {% else %}text-gray-600 hover:bg-gray-50{% endif %}">
+              <i class="fas fa-user w-4 text-center text-[11px] text-gray-400"></i>
+              My Account
+            </a>
 
-      <a href="{% url 'properties' %}"
-         class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition
-         {% if request.resolver_match.url_name == 'properties' %}bg-yellow-50 text-yellow-600
-         {% else %}text-gray-600 hover:bg-gray-50{% endif %}">
-        <i class="fas fa-building w-4 text-center"></i>
-        Properties
-      </a>
+            <a href="{% url 'my_reservations' %}"
+               class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg transition
+               {% if request.resolver_match.url_name == 'my_reservations' %}bg-gray-100 text-gray-800
+               {% else %}text-gray-600 hover:bg-gray-50{% endif %}">
+              <i class="fas fa-bookmark w-4 text-center text-[11px] text-gray-400"></i>
+              Reservation
+            </a>
 
-      <a href="{% url 'mortgage_calculator' %}"
-         class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition
-         {% if request.resolver_match.url_name == 'mortgage_calculator' %}bg-yellow-50 text-yellow-600
-         {% else %}text-gray-600 hover:bg-gray-50{% endif %}">
-        <i class="fas fa-calculator w-4 text-center"></i>
-        Mortgage Calculator
-      </a>
+            <a href="{% url 'my_appointments' %}"
+               class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg transition
+               {% if request.resolver_match.url_name == 'my_appointments' %}bg-gray-100 text-gray-800
+               {% else %}text-gray-600 hover:bg-gray-50{% endif %}">
+              <i class="fas fa-calendar-check w-4 text-center text-[11px] text-gray-400"></i>
+              Appointment
+            </a>
 
-      <a href="{% url 'contact' %}"
-         class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition
-         {% if request.resolver_match.url_name == 'contact' %}bg-yellow-50 text-yellow-600
-         {% else %}text-gray-600 hover:bg-gray-50{% endif %}">
-        <i class="fas fa-envelope w-4 text-center"></i>
-        Contact
-      </a>
+            <a href="{% url 'accounts:notifications' %}"
+               class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg transition
+               {% if request.resolver_match.url_name == 'notifications' %}bg-gray-100 text-gray-800
+               {% else %}text-gray-600 hover:bg-gray-50{% endif %}">
+              <i class="fas fa-bell w-4 text-center text-[11px] text-gray-400"></i>
+              Notifications
+              <span id="mobile-notif-badge" class="hidden ml-auto bg-red-500 text-white text-[10px] rounded-full min-w-[16px] h-4 flex items-center justify-center font-bold px-1"></span>
+            </a>
 
-      <!-- Divider -->
-      <div class="border-t border-gray-100 my-2"></div>
-
-      {% if user.is_authenticated %}
-
-        {% if user.role == 'client' %}
-        <!-- Client Links -->
-        <a href="{% url 'my_reservations' %}"
-           class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition
-           {% if request.resolver_match.url_name == 'my_reservations' %}bg-yellow-50 text-yellow-600
-           {% else %}text-gray-600 hover:bg-gray-50{% endif %}">
-          <i class="fas fa-bookmark w-4 text-center"></i>
-          My Reservations
-        </a>
-
-        <a href="{% url 'client_chat_inbox' %}"
-           class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition
-           {% if request.resolver_match.url_name == 'client_chat_inbox' %}bg-yellow-50 text-yellow-600
-           {% else %}text-gray-600 hover:bg-gray-50{% endif %}">
-          <i class="fas fa-comments w-4 text-center"></i>
-          Messages
-          <span id="mobile-menu-unread"
-                class="hidden ml-auto bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">
-          </span>
-        </a>
-
-        <a href="{% url 'favorites' %}"
-           class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition
-           {% if request.resolver_match.url_name == 'favorites' %}bg-yellow-50 text-yellow-600
-           {% else %}text-gray-600 hover:bg-gray-50{% endif %}">
-          <i class="fas fa-heart w-4 text-center text-red-400"></i>
-          Saved Properties
-        </a>
-
-        {% else %}
-        <!-- Company User Links -->
-        <a href="{% url 'dashboard' %}"
-           class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition text-gray-600 hover:bg-gray-50">
-          <i class="fas fa-tachometer-alt w-4 text-center"></i>
-          Dashboard
-        </a>
-        {% endif %}
-
-        <!-- Divider -->
-        <div class="border-t border-gray-100 my-2"></div>
-
-        <!-- User Info -->
-        <div class="flex items-center gap-3 px-3 py-2">
-          <div class="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
-            {% if user.profile_picture %}
-              <img src="{{ user.profile_picture.url }}"
-                   class="w-8 h-8 rounded-full object-cover">
             {% else %}
-              <span class="text-white text-xs font-bold">
-                {{ user.get_initials }}
-              </span>
+            <a href="{% url 'dashboard' %}"
+               class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg transition
+               {% if request.resolver_match.url_name == 'dashboard' %}bg-gray-100 text-gray-800
+               {% else %}text-gray-600 hover:bg-gray-50{% endif %}">
+              <i class="fas fa-tachometer-alt w-4 text-center text-[11px] text-gray-400"></i>
+              Dashboard
+            </a>
             {% endif %}
-          </div>
-          <div class="min-w-0">
-            <p class="text-sm font-semibold text-gray-800 truncate">
-              {{ user.get_full_name|default:user.username }}
-            </p>
-            <p class="text-xs text-gray-400 truncate">{{ user.email }}</p>
-          </div>
+
+            <div class="border-t border-gray-100 my-1"></div>
+
+            <a href="{% url 'accounts:logout' %}"
+               class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg transition text-red-500 hover:bg-red-50">
+              <i class="fas fa-sign-out-alt w-4 text-center text-[11px]"></i>
+              Logout
+            </a>
+
+          {% else %}
+
+            <a href="{% url 'accounts:login' %}"
+               class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg transition text-gray-600 hover:bg-gray-50">
+              <i class="fas fa-sign-in-alt w-4 text-center text-[11px] text-gray-400"></i>
+              Sign In
+            </a>
+
+            <a href="{% url 'accounts:register' %}"
+               class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg transition bg-yellow-500 text-white hover:bg-yellow-600 justify-center">
+              <i class="fas fa-user-plus w-4 text-center text-[11px]"></i>
+              Register
+            </a>
+
+          {% endif %}
+
         </div>
+      </div>
+    </div><!-- end hamburger wrapper -->
+    </div><!-- end right group -->
 
-        <a href="{% url 'accounts:logout' %}"
-           class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition text-red-500 hover:bg-red-50">
-          <i class="fas fa-sign-out-alt w-4 text-center"></i>
-          Logout
-        </a>
-
-      {% else %}
-      <!-- Guest Links -->
-      <a href="{% url 'accounts:login' %}"
-         class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition text-gray-600 hover:bg-gray-50">
-        <i class="fas fa-sign-in-alt w-4 text-center"></i>
-        Sign In
-      </a>
-
-      <a href="{% url 'accounts:register' %}"
-         class="flex items-center justify-center gap-2 mx-3 py-2.5 text-sm font-semibold rounded-xl transition bg-yellow-500 hover:bg-yellow-600 text-white">
-        <i class="fas fa-user-plus text-xs"></i>
-        Create Account
-      </a>
-      {% endif %}
-
-    </div>
-  </div>
 </nav>
 
+<!-- Invisible overlay to close menu on outside click -->
+<div id="mobile-overlay" onclick="toggleMobileMenu()"
+     class="fixed inset-0 z-40 hidden"></div>
+
 <script>
-  function toggleMobileMenu() {
-    const menu = document.getElementById('mobile-menu');
-    const icon = document.getElementById('hamburger-icon');
-    const isOpen = !menu.classList.contains('hidden');
+function toggleMobileMenu() {
+  var menu = document.getElementById('mobile-menu');
+  var overlay = document.getElementById('mobile-overlay');
+  var icon = document.getElementById('hamburger-icon');
+  var isOpen = !menu.classList.contains('hidden');
+  if (isOpen) {
+    menu.classList.add('hidden');
+    overlay.classList.add('hidden');
+    icon.classList.remove('fa-times');
+    icon.classList.add('fa-bars');
+  } else {
+    menu.classList.remove('hidden');
+    overlay.classList.remove('hidden');
+    icon.classList.remove('fa-bars');
+    icon.classList.add('fa-times');
+  }
+}
 
-    if (isOpen) {
-      menu.classList.add('hidden');
-      icon.classList.remove('fa-times');
-      icon.classList.add('fa-bars');
+/* ── Notification Bell ── */
+function toggleNotifDropdown() {
+  var dd = document.getElementById('notif-dropdown');
+  if (!dd) return;
+  dd.classList.toggle('hidden');
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', function(e) {
+  var wrapper = document.getElementById('notif-bell-wrapper');
+  var dd = document.getElementById('notif-dropdown');
+  if (wrapper && dd && !wrapper.contains(e.target)) {
+    dd.classList.add('hidden');
+  }
+});
+
+function updateNotifBadge(count) {
+  var badge = document.getElementById('notif-count-badge');
+  var mobileBadge = document.getElementById('mobile-notif-badge');
+  if (badge) {
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : count;
+      badge.classList.remove('hidden');
+      badge.classList.add('flex');
     } else {
-      menu.classList.remove('hidden');
-      icon.classList.remove('fa-bars');
-      icon.classList.add('fa-times');
+      badge.classList.add('hidden');
+      badge.classList.remove('flex');
     }
   }
-
-  // Close menu when clicking outside
-  document.addEventListener('click', function(e) {
-    const menu = document.getElementById('mobile-menu');
-    const btn = document.getElementById('hamburger-btn');
-    if (!menu.contains(e.target) && !btn.contains(e.target)) {
-      menu.classList.add('hidden');
-      const icon = document.getElementById('hamburger-icon');
-      icon.classList.remove('fa-times');
-      icon.classList.add('fa-bars');
+  if (mobileBadge) {
+    if (count > 0) {
+      mobileBadge.textContent = count > 99 ? '99+' : count;
+      mobileBadge.classList.remove('hidden');
+      mobileBadge.classList.add('flex');
+    } else {
+      mobileBadge.classList.add('hidden');
+      mobileBadge.classList.remove('flex');
     }
-  });
-
-  // Load unread count for client
-  {% if user.is_authenticated and user.role == 'client' %}
-  function loadClientUnread() {
-    fetch('{% url "client_unread_count" %}')
-      .then(res => res.json())
-      .then(data => {
-        // Desktop badge
-        const desktopBadge = document.getElementById('nav-unread-badge');
-        // Mobile icon badge
-        const mobileBadge = document.getElementById('nav-unread-badge-mobile');
-        // Mobile menu badge
-        const menuBadge = document.getElementById('mobile-menu-unread');
-
-        if (data.count > 0) {
-          if (desktopBadge) {
-            desktopBadge.textContent = data.count;
-            desktopBadge.classList.remove('hidden');
-          }
-          if (mobileBadge) {
-            mobileBadge.textContent = data.count;
-            mobileBadge.classList.remove('hidden');
-          }
-          if (menuBadge) {
-            menuBadge.textContent = data.count;
-            menuBadge.classList.remove('hidden');
-          }
-        } else {
-          [desktopBadge, mobileBadge, menuBadge].forEach(el => {
-            if (el) el.classList.add('hidden');
-          });
-        }
-      })
-      .catch(() => {});
   }
+}
 
-  document.addEventListener('DOMContentLoaded', function() {
-    loadClientUnread();
-    setInterval(loadClientUnread, 30000);
-  });
-  {% endif %}
+function notifIcon(type) {
+  if (type.indexOf('reservation') !== -1) return 'fa-bookmark';
+  if (type.indexOf('appointment') !== -1) return 'fa-calendar-check';
+  if (type.indexOf('favorite') !== -1) return 'fa-heart';
+  if (type.indexOf('listing') !== -1) return 'fa-home';
+  return 'fa-bell';
+}
+
+function loadNotifications() {
+  fetch('/auth/notifications/json/')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var list = document.getElementById('notif-list');
+      if (!list) return;
+      if (!data.notifications || data.notifications.length === 0) {
+        list.innerHTML = '<div class="px-4 py-6 text-center text-xs text-gray-400">No new notifications</div>';
+        return;
+      }
+      var html = '';
+      data.notifications.forEach(function(n) {
+        html += '<a href="/auth/notifications/' + n.id + '/read/" class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition">'
+          + '<div class="flex-shrink-0 mt-0.5"><div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center">'
+          + '<i class="fas ' + notifIcon(n.type) + ' text-xs text-blue-500"></i></div></div>'
+          + '<div class="flex-1 min-w-0">'
+          + '<p class="text-xs font-semibold text-gray-800 truncate">' + n.title + '</p>'
+          + '<p class="text-xs text-gray-500 mt-0.5 line-clamp-2">' + n.message + '</p>'
+          + '<p class="text-[10px] text-gray-400 mt-1">' + n.time + '</p>'
+          + '</div></a>';
+      });
+      list.innerHTML = html;
+    })
+    .catch(function() {});
+}
+
+function pollNotifCount() {
+  fetch('/auth/notifications/count/')
+    .then(function(r) { return r.json(); })
+    .then(function(data) { updateNotifBadge(data.count || 0); })
+    .catch(function() {});
+}
+
+{% if user.is_authenticated and user.role == 'client' %}
+// Poll every 30 seconds
+pollNotifCount();
+loadNotifications();
+setInterval(pollNotifCount, 30000);
+setInterval(loadNotifications, 30000);
+{% endif %}
 </script>
