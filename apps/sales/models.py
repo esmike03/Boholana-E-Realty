@@ -9,8 +9,6 @@ class Sale(models.Model):
     PAYMENT_SCHEME_CHOICES = (
         ('spot_cash', 'Spot Cash'),
         ('installment', 'Installment'),
-        ('bank_financing', 'Bank Financing'),
-        ('in_house_financing', 'In-House Financing'),
     )
 
     STATUS_CHOICES = (

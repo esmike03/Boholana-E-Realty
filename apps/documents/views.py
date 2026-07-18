@@ -74,8 +74,22 @@ def document_list(request):
     if type_filter:
         documents = documents.filter(document_type=type_filter)
 
+    documents = documents.order_by('property__title', '-created_at')
+
+    # Group documents by property for a "documents by property" view
+    grouped = {}
+    unlinked = []
+    for doc in documents:
+        if doc.property_id:
+            grouped.setdefault(doc.property_id, {'property': doc.property, 'docs': []})
+            grouped[doc.property_id]['docs'].append(doc)
+        else:
+            unlinked.append(doc)
+    property_groups = sorted(grouped.values(), key=lambda g: g['property'].title.lower())
+
     context = {
-        'documents': documents.order_by('-created_at'),
+        'property_groups': property_groups,
+        'unlinked_documents': unlinked,
         'search': search,
         'status_filter': status_filter,
         'type_filter': type_filter,
@@ -95,6 +109,14 @@ def document_list(request):
 
 @login_required
 def document_upload(request):
+    # Manual document upload has been removed. Documents are tracked per
+    # property/sale through the workflow; this entry point is disabled.
+    messages.info(request, 'Manual document upload has been removed. Documents are tracked by property.')
+    return redirect('documents:list')
+
+
+@login_required
+def _document_upload_disabled(request):
     if request.method == 'POST':
         title = request.POST.get('title')
         document_type = request.POST.get('document_type')

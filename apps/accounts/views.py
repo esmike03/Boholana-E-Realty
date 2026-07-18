@@ -9,6 +9,7 @@ from apps.reservations.models import Reservation, Appointment
 from apps.sales.models import Sale
 from apps.documents.models import Document
 from .models import CustomUser, UserActivityLog, UserPreference, Notification
+from .validators import validate_phone_number, validate_not_future_date
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST
@@ -85,21 +86,37 @@ def register_view(request):
         password1 = request.POST.get('password1')
         password2 = request.POST.get('password2')
 
+        email = (email or '').strip()
+        username = (username or '').strip()
+
+        # Preserve entered values so the form isn't cleared on error
+        form_data = {
+            'first_name': first_name, 'last_name': last_name,
+            'username': username, 'email': email,
+            'phone_number': phone_number, 'address': address,
+        }
+
+        def reject(msg):
+            messages.error(request, msg)
+            return render(request, 'accounts/register.html', {'form_data': form_data})
+
+        phone_number, phone_error = validate_phone_number(phone_number)
+        form_data['phone_number'] = phone_number
+
         if password1 != password2:
-            messages.error(request, 'Passwords do not match.')
-            return render(request, 'accounts/register.html')
+            return reject('Passwords do not match.')
 
-        if CustomUser.objects.filter(username=username).exists():
-            messages.error(request, 'Username already taken.')
-            return render(request, 'accounts/register.html')
+        if len(password1 or '') < 8:
+            return reject('Password must be at least 8 characters.')
 
-        if CustomUser.objects.filter(email=email).exists():
-            messages.error(request, 'Email already registered.')
-            return render(request, 'accounts/register.html')
+        if phone_error:
+            return reject(phone_error)
 
-        if len(password1) < 8:
-            messages.error(request, 'Password must be at least 8 characters.')
-            return render(request, 'accounts/register.html')
+        if CustomUser.objects.filter(username__iexact=username).exists():
+            return reject('Username already taken.')
+
+        if CustomUser.objects.filter(email__iexact=email).exists():
+            return reject('Email already registered.')
 
         user = CustomUser.objects.create_user(
             username=username,
@@ -288,12 +305,22 @@ def profile_view(request):
         form_type = request.POST.get('form_type')
 
         if form_type == 'personal':
+            phone_clean, phone_error = validate_phone_number(request.POST.get('phone_number'))
+            birth_date = request.POST.get('birth_date') or None
+            birth_error = validate_not_future_date(birth_date, 'Birth date')
+            if phone_error:
+                messages.error(request, phone_error)
+                return redirect('accounts:profile')
+            if birth_error:
+                messages.error(request, birth_error)
+                return redirect('accounts:profile')
+
             user.first_name = request.POST.get('first_name', user.first_name)
             user.last_name = request.POST.get('last_name', user.last_name)
             user.email = request.POST.get('email', user.email)
-            user.phone_number = request.POST.get('phone_number', user.phone_number)
+            user.phone_number = phone_clean
             user.address = request.POST.get('address', user.address)
-            user.birth_date = request.POST.get('birth_date') or None
+            user.birth_date = birth_date
             user.gender = request.POST.get('gender', user.gender)
             if request.FILES.get('profile_picture'):
                 user.profile_picture = request.FILES['profile_picture']
@@ -382,10 +409,14 @@ def client_account_view(request):
         form_type = request.POST.get('form_type')
 
         if form_type == 'personal':
+            phone_clean, phone_error = validate_phone_number(request.POST.get('phone_number'))
+            if phone_error:
+                messages.error(request, phone_error)
+                return redirect(request.path)
             user.first_name = request.POST.get('first_name', user.first_name)
             user.last_name = request.POST.get('last_name', user.last_name)
             user.email = request.POST.get('email', user.email)
-            user.phone_number = request.POST.get('phone_number', user.phone_number)
+            user.phone_number = phone_clean
             user.address = request.POST.get('address', user.address)
             if request.FILES.get('profile_picture'):
                 user.profile_picture = request.FILES['profile_picture']
@@ -497,10 +528,14 @@ def property_owner_account_view(request):
         form_type = request.POST.get('form_type')
 
         if form_type == 'personal':
+            phone_clean, phone_error = validate_phone_number(request.POST.get('phone_number'))
+            if phone_error:
+                messages.error(request, phone_error)
+                return redirect(request.path)
             user.first_name = request.POST.get('first_name', user.first_name)
             user.last_name = request.POST.get('last_name', user.last_name)
             user.email = request.POST.get('email', user.email)
-            user.phone_number = request.POST.get('phone_number', user.phone_number)
+            user.phone_number = phone_clean
             user.address = request.POST.get('address', user.address)
             if request.FILES.get('profile_picture'):
                 user.profile_picture = request.FILES['profile_picture']
@@ -571,8 +606,13 @@ def users_list_view(request):
     elif status_filter == 'disabled':
         users = users.filter(is_disabled=True)
 
+    from apps.pagination import paginate
+    page_obj, querystring = paginate(request, users, per_page=12)
+
     context = {
-        'users': users,
+        'users': page_obj,
+        'page_obj': page_obj,
+        'querystring': querystring,
         'role_filter': role_filter,
         'search': search,
         'status_filter': status_filter,
@@ -604,24 +644,48 @@ def user_create_view(request):
         password1 = request.POST.get('password1')
         password2 = request.POST.get('password2')
 
+        email = (email or '').strip()
+        username = (username or '').strip()
+
+        form_data = {
+            'first_name': first_name, 'last_name': last_name,
+            'username': username, 'email': email, 'role': role,
+            'phone_number': phone_number, 'address': address,
+            'employee_id': employee_id, 'department': department,
+        }
+
+        def reject(msg):
+            messages.error(request, msg)
+            return render(request, 'accounts/user_create.html', {
+                'role_choices': CustomUser.ROLE_CHOICES,
+                'form_data': form_data,
+            })
+
+        valid_roles = [r[0] for r in CustomUser.ROLE_CHOICES if r[0] != 'client']
+        phone_number, phone_error = validate_phone_number(phone_number)
+        form_data['phone_number'] = phone_number
+
         # Validations
+        if not username or not email:
+            return reject('Username and email are required.')
+
+        if role not in valid_roles:
+            return reject('Please select a valid role.')
+
         if password1 != password2:
-            messages.error(request, 'Passwords do not match.')
-            return render(request, 'accounts/user_create.html', {
-                'role_choices': CustomUser.ROLE_CHOICES
-            })
+            return reject('Passwords do not match.')
 
-        if CustomUser.objects.filter(username=username).exists():
-            messages.error(request, 'Username already taken.')
-            return render(request, 'accounts/user_create.html', {
-                'role_choices': CustomUser.ROLE_CHOICES
-            })
+        if len(password1 or '') < 8:
+            return reject('Password must be at least 8 characters.')
 
-        if CustomUser.objects.filter(email=email).exists():
-            messages.error(request, 'Email already registered.')
-            return render(request, 'accounts/user_create.html', {
-                'role_choices': CustomUser.ROLE_CHOICES
-            })
+        if phone_error:
+            return reject(phone_error)
+
+        if CustomUser.objects.filter(username__iexact=username).exists():
+            return reject('Username already taken.')
+
+        if CustomUser.objects.filter(email__iexact=email).exists():
+            return reject('Email already registered.')
 
         user = CustomUser.objects.create_user(
             username=username,
@@ -680,10 +744,14 @@ def user_update_view(request, pk):
     user = get_object_or_404(CustomUser, pk=pk)
 
     if request.method == 'POST':
+        phone_clean, phone_error = validate_phone_number(request.POST.get('phone_number'))
+        if phone_error:
+            messages.error(request, phone_error)
+            return redirect('accounts:user_update', pk=user.pk)
         user.first_name = request.POST.get('first_name', user.first_name)
         user.last_name = request.POST.get('last_name', user.last_name)
         user.email = request.POST.get('email', user.email)
-        user.phone_number = request.POST.get('phone_number', user.phone_number)
+        user.phone_number = phone_clean
         user.address = request.POST.get('address', user.address)
         user.role = request.POST.get('role', user.role)
         user.employee_id = request.POST.get('employee_id', user.employee_id)

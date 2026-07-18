@@ -49,8 +49,10 @@
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1.5">Phone Number</label>
-                    <input type="text" name="phone_number"
+                    <input type="tel" name="phone_number"
                            value="{{ viewed_user.phone_number|default:'' }}"
+                           placeholder="09171234567" inputmode="numeric" pattern="[0-9]{11}" maxlength="11"
+                           title="Enter exactly 11 digits (e.g. 09171234567)"
                            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
                 </div>
             </div>

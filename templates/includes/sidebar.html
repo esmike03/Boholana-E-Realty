@@ -2,7 +2,17 @@
 <!-- Sidebar -->
 <aside
   class="fixed top-0 left-0 h-full w-64 z-50 flex flex-col"
-  style="background: linear-gradient(180deg, #0f2942 0%, #1a4a7a 100%)"
+  {% if user.role == 'broker' %}
+    style="background: linear-gradient(180deg, #0f3a2e 0%, #1a7a5a 100%)"
+  {% elif user.role == 'staff' %}
+    style="background: linear-gradient(180deg, #3a2a0f 0%, #7a5a1a 100%)"
+  {% elif user.role == 'property_owner' %}
+    style="background: linear-gradient(180deg, #2a0f3a 0%, #5a1a7a 100%)"
+  {% elif user.role == 'sale_assistant' %}
+    style="background: linear-gradient(180deg, #0f2a3a 0%, #1a5a7a 100%)"
+  {% else %}
+    style="background: linear-gradient(180deg, #0f2942 0%, #1a4a7a 100%)"
+  {% endif %}
 >
   <!-- Brand -->
   <div class="px-6 py-5 border-b border-white/10">
@@ -172,13 +182,37 @@
       <i class="fas fa-handshake w-4"></i>
       Sales
     </a>
-    {% if user.role == 'broker' or user.role == 'sale_assistant' or user.role == 'property_owner' %}
+    {% if user.role == 'broker' or user.role == 'sale_assistant' %}
+    <a
+      href="{% url 'sales:disbursements' %}"
+      class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all {% if 'disbursements' in request.path %} text-white bg-white/15 border-l-4 border-yellow-400 {% else %} text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent {% endif %}"
+    >
+      <i class="fas fa-percentage w-4"></i>
+      Commissions
+    </a>
+    {% elif user.role == 'property_owner' %}
     <a
       href="{% url 'sales:disbursements' %}"
       class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all {% if 'disbursements' in request.path %} text-white bg-white/15 border-l-4 border-yellow-400 {% else %} text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent {% endif %}"
     >
       <i class="fas fa-money-bill-wave w-4"></i>
       Disbursements
+    </a>
+    {% endif %}
+    {% if user.role == 'admin' or user.is_superuser %}
+    <a
+      href="{% url 'sales:disbursements' %}"
+      class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all {% if 'disbursements' in request.path %} text-white bg-white/15 border-l-4 border-yellow-400 {% else %} text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent {% endif %}"
+    >
+      <i class="fas fa-money-bill-wave w-4"></i>
+      Disbursements
+    </a>
+    <a
+      href="{% url 'reports:transactions' %}"
+      class="flex items-center gap-3 px-6 py-2.5 text-sm transition-all {% if 'transactions' in request.path %} text-white bg-white/15 border-l-4 border-yellow-400 {% else %} text-white/70 hover:text-white hover:bg-white/10 border-l-4 border-transparent {% endif %}"
+    >
+      <i class="fas fa-receipt w-4"></i>
+      Transactions
     </a>
     {% endif %}
 

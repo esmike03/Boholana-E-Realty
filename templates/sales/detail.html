@@ -82,11 +82,37 @@
             {% endif %}
         </div>
 
+        <!-- Payment Summary -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h4 class="font-semibold text-gray-800 text-sm mb-4">Payment Summary</h4>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-gray-50 rounded-xl p-4 text-center">
+                    <p class="text-xs text-gray-400 mb-1">Net Price</p>
+                    <p class="font-bold text-gray-800">₱{{ sale.net_price|floatformat:2|intcomma }}</p>
+                </div>
+                <div class="bg-green-50 rounded-xl p-4 text-center">
+                    <p class="text-xs text-green-500 mb-1">Total Paid</p>
+                    <p class="font-bold text-green-700">₱{{ total_paid|floatformat:2|intcomma }}</p>
+                </div>
+                <div class="bg-yellow-50 rounded-xl p-4 text-center">
+                    <p class="text-xs text-yellow-600 mb-1">Balance</p>
+                    <p class="font-bold text-yellow-700">₱{{ balance|floatformat:2|intcomma }}</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Commission Breakdown -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h4 class="font-semibold text-gray-800 text-sm mb-4">
                 Commission Breakdown
             </h4>
+            {% if not has_payment %}
+            <div class="p-4 bg-gray-50 rounded-xl text-center">
+                <i class="fas fa-info-circle text-gray-300 text-2xl mb-2"></i>
+                <p class="text-sm text-gray-500">No payment recorded yet.</p>
+                <p class="text-xs text-gray-400 mt-1">Commissions are calculated once a payment is recorded.</p>
+            </div>
+            {% else %}
             <div class="space-y-3">
                 <div class="flex items-center justify-between p-3 bg-green-50 rounded-xl">
                     <div>
@@ -123,6 +149,7 @@
                     <p class="font-bold text-yellow-700">₱{{ commissions.owner|floatformat:2|intcomma }}</p>
                 </div>
             </div>
+            {% endif %}
         </div>
 
         <!-- Payment Schedule -->
@@ -202,17 +229,25 @@
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
             <h4 class="font-semibold text-gray-800 text-sm mb-4">Actions</h4>
             <div class="space-y-2">
-                {% if user.role in 'broker,staff,admin' or user.is_superuser %}
+                {% if can_manage %}
                     {% if sale.status == 'pending_verification' or sale.status == 'ready_for_approval' %}
                     <a href="{% url 'sales:verify' sale.pk %}"
                        class="block w-full text-center bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-xl text-sm font-semibold transition">
-                        <i class="fas fa-check-double mr-2"></i>Verify & Approve
+                        <i class="fas fa-check-double mr-2"></i>Verify &amp; Approve
                     </a>
                     {% endif %}
+                    {% if balance > 0 and sale.status != 'cancelled' %}
+                    <button type="button" onclick="document.getElementById('payment-modal').classList.remove('hidden')"
+                       class="block w-full text-center bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-sm font-semibold transition">
+                        <i class="fas fa-money-bill-wave mr-2"></i>Record Payment
+                    </button>
+                    {% endif %}
+                    {% if user.role == 'admin' or user.is_superuser %}
                     <a href="{% url 'sales:update_status' sale.pk %}"
                        class="block w-full text-center bg-blue-100 hover:bg-blue-200 text-blue-700 py-2.5 rounded-xl text-sm font-semibold transition">
                         <i class="fas fa-edit mr-2"></i>Update Status
                     </a>
+                    {% endif %}
                     <a href="{% url 'sales:assign_task' sale.pk %}"
                        class="block w-full text-center bg-purple-100 hover:bg-purple-200 text-purple-700 py-2.5 rounded-xl text-sm font-semibold transition">
                         <i class="fas fa-tasks mr-2"></i>Assign Task
@@ -262,4 +297,51 @@
         </div>
     </div>
 </div>
+
+<!-- Record Payment Modal -->
+{% if can_manage %}
+<div id="payment-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-gray-800 text-lg">Record Payment</h3>
+            <button type="button" onclick="document.getElementById('payment-modal').classList.add('hidden')"
+                    class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <p class="text-xs text-gray-400 mb-4">
+            Remaining balance: <span class="font-semibold text-gray-600">₱{{ balance|floatformat:2|intcomma }}</span>
+        </p>
+        <form method="POST" action="{% url 'sales:record_payment' sale.pk %}" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1.5">Amount (₱)</label>
+                <input type="number" name="amount" required min="0.01" step="0.01" max="{{ balance|stringformat:'.2f' }}"
+                       placeholder="0.00"
+                       class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-gray-50">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1.5">Payment Date</label>
+                <input type="date" name="payment_date" value="{% now 'Y-m-d' %}" max="{% now 'Y-m-d' %}"
+                       class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-gray-50">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1.5">Remarks (optional)</label>
+                <input type="text" name="remarks" placeholder="e.g. Down payment"
+                       class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-gray-50">
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="submit"
+                        class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-sm font-semibold transition">
+                    <i class="fas fa-check mr-2"></i>Save Payment
+                </button>
+                <button type="button" onclick="document.getElementById('payment-modal').classList.add('hidden')"
+                        class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-5 py-2.5 rounded-xl text-sm font-semibold transition">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

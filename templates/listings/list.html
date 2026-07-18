@@ -240,10 +240,12 @@
 
             No properties found.
 
+            {% if user.role == 'property_owner' or user.role == 'admin' or user.role == 'staff' or user.is_superuser %}
             <a href="{% url 'listings:create' %}"
                class="text-blue-500 hover:underline ml-1">
               Add one now
             </a>
+            {% endif %}
 
           </td>
         </tr>
@@ -252,6 +254,9 @@
       </tbody>
 
     </table>
+  </div>
+  <div class="px-6 pb-4">
+    {% include 'includes/pagination.html' %}
   </div>
 
 </div>

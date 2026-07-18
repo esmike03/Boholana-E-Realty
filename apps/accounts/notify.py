@@ -162,7 +162,7 @@ def notify_reservation_status(reservation, changed_by):
         message=f'Your reservation for "{reservation.property.title}" is now {reservation.get_status_display()}.',
         notification_type=f'reservation_{reservation.status}',
         sender=changed_by,
-        link=f'/my-reservations/',
+        link=f'/manage/reservations/{reservation.pk}/',
         priority='high',
     )
 
@@ -185,7 +185,7 @@ def notify_appointment_confirmed(appointment):
         title='Appointment Confirmed',
         message=f'Your visit to "{appointment.property.title}" is confirmed on {appointment.confirmed_date or appointment.preferred_date}.',
         notification_type='appointment_confirmed',
-        link=f'/my-reservations/',
+        link=f'/my-appointments/',
         priority='high',
     )
 
@@ -234,7 +234,7 @@ def notify_disbursement_approved(disbursement, approved_by):
         message=f'Your {disbursement.get_disbursement_type_display()} of ₱{amount:,.2f} has been approved and is pending payment.',
         notification_type='disbursement_approved',
         sender=approved_by,
-        link=f'/sales/disbursements/',
+        link=f'/manage/sales/disbursements/',
         priority='high',
     )
 
@@ -254,7 +254,7 @@ def notify_disbursement_completed(disbursement):
         title='Payment Completed',
         message=f'Your {disbursement.get_disbursement_type_display()} of ₱{amount:,.2f} has been completed.',
         notification_type='disbursement_completed',
-        link=f'/sales/disbursements/',
+        link=f'/manage/sales/disbursements/',
         priority='medium',
     )
 

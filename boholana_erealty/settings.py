@@ -30,7 +30,7 @@ DEBUG = config('DEBUG', cast=bool, default=True)
 _env_allowed_hosts = config(
     'ALLOWED_HOSTS',
     cast=Csv(),
-    default='127.0.0.1,localhost,.ngrok-free.app,.ngrok.app'
+    default='127.0.0.1,localhost,.ngrok-free.app,.ngrok.app,192.168.1.14'
 )
 ALLOWED_HOSTS = [h.strip() for h in _env_allowed_hosts if str(h).strip()]
 for required_host in ['127.0.0.1', 'localhost', '.ngrok-free.app', '.ngrok.app']:
@@ -184,6 +184,35 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# ── Persistent media storage (Cloudinary) ─────────────────────────────
+# Render's filesystem is ephemeral: anything uploaded to MEDIA_ROOT is wiped
+# on every redeploy/restart, which is why uploaded pictures "disappear" in
+# production. When Cloudinary credentials are set, store uploads on Cloudinary
+# so they persist. With no credentials, we fall back to local storage, so
+# local development keeps working exactly as before.
+CLOUDINARY_CLOUD_NAME = config('CLOUDINARY_CLOUD_NAME', default='')
+CLOUDINARY_API_KEY = config('CLOUDINARY_API_KEY', default='')
+CLOUDINARY_API_SECRET = config('CLOUDINARY_API_SECRET', default='')
+USE_CLOUDINARY = bool(
+    CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET
+)
+
+if USE_CLOUDINARY:
+    INSTALLED_APPS += ['cloudinary', 'cloudinary_storage']
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
+        'API_KEY': CLOUDINARY_API_KEY,
+        'API_SECRET': CLOUDINARY_API_SECRET,
+    }
+    STORAGES = {
+        'default': {
+            'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

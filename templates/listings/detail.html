@@ -186,7 +186,7 @@
                     </a>
                 {% endif %}
 
-                {% if user.role in 'broker,admin,staff' or user.is_superuser %}
+                {% if user.role == 'broker' or user.role == 'admin' or user.is_superuser %}
                     {% if property.listing_status == 'pending_approval' or property.listing_status == 'flagged' %}
                         <a href="{% url 'listings:approve' property.pk %}"
                            class="block w-full text-center bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-xl text-sm font-semibold transition">
@@ -208,17 +208,45 @@
                         </form>
                     {% endif %}
 
-                    <a href="{% url 'listings:archive' property.pk %}"
-                       class="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold transition">
-                        <i class="fas fa-archive mr-2"></i>Archive
-                    </a>
+                    {% if property.listing_status == 'archived' %}
+                        <form method="POST" action="{% url 'listings:restore' property.pk %}">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="w-full bg-green-100 hover:bg-green-200 text-green-700 py-2.5 rounded-xl text-sm font-semibold transition">
+                                <i class="fas fa-trash-restore mr-2"></i>Restore Listing
+                            </button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'listings:archive' property.pk %}"
+                           class="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold transition">
+                            <i class="fas fa-archive mr-2"></i>Archive
+                        </a>
+                    {% endif %}
                 {% endif %}
 
-                {% if user.role in 'broker,staff,admin' or user.is_superuser %}
+                {% if user.role == 'broker' or user.role == 'admin' or user.is_superuser %}
                     <a href="{% url 'listings:flag' property.pk %}"
                        class="block w-full text-center bg-orange-100 hover:bg-orange-200 text-orange-700 py-2.5 rounded-xl text-sm font-semibold transition">
                         <i class="fas fa-flag mr-2"></i>Flag for Review
                     </a>
+                {% endif %}
+
+                <!-- Property owner: archive / restore own listing -->
+                {% if user.role == 'property_owner' and user == property.owner %}
+                    {% if property.listing_status == 'archived' %}
+                        <form method="POST" action="{% url 'listings:restore' property.pk %}">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="w-full bg-green-100 hover:bg-green-200 text-green-700 py-2.5 rounded-xl text-sm font-semibold transition">
+                                <i class="fas fa-trash-restore mr-2"></i>Restore Listing
+                            </button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'listings:archive' property.pk %}"
+                           class="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold transition">
+                            <i class="fas fa-archive mr-2"></i>Archive
+                        </a>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>

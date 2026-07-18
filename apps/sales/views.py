@@ -133,8 +133,13 @@ def sale_list(request):
 
     total_amount = sales.aggregate(total=Sum('net_price'))['total'] or 0
 
+    from apps.pagination import paginate
+    page_obj, querystring = paginate(request, sales.order_by('-created_at'), per_page=12)
+
     context = {
-        'sales': sales.order_by('-created_at'),
+        'sales': page_obj,
+        'page_obj': page_obj,
+        'querystring': querystring,
         'search': search,
         'status_filter': status_filter,
         'status_choices': Sale.STATUS_CHOICES,
@@ -166,10 +171,33 @@ def sale_create(request):
         # ✅ Convert to Decimal (precise money handling)
         try:
             selling_price = Decimal(selling_price_str)
-            discount = Decimal(discount_str)
-        except:
+            discount = Decimal(discount_str or '0')
+        except Exception:
             messages.error(request, 'Invalid selling price or discount.')
             return redirect('sales:create')
+
+        # Reject negative values (also blocks "-0")
+        if selling_price <= 0:
+            messages.error(request, 'Selling price must be greater than zero.')
+            return redirect('sales:create')
+        if discount < 0:
+            messages.error(request, 'Discount cannot be negative.')
+            return redirect('sales:create')
+        if discount > selling_price:
+            messages.error(request, 'Discount cannot exceed the selling price.')
+            return redirect('sales:create')
+
+        # Sale date cannot be in the future
+        from datetime import date as _date, datetime as _dt
+        if sale_date:
+            try:
+                _sd = _dt.strptime(sale_date, '%Y-%m-%d').date()
+                if _sd > _date.today():
+                    messages.error(request, 'Sale date cannot be in the future.')
+                    return redirect('sales:create')
+            except ValueError:
+                messages.error(request, 'Invalid sale date.')
+                return redirect('sales:create')
 
         property_obj = get_object_or_404(Property, pk=property_id)
         client = get_object_or_404(CustomUser, pk=client_id, role='client')
@@ -197,60 +225,19 @@ def sale_create(request):
             status='pending_verification',
         )
 
-        try:
-            commissions = calculate_commissions(sale)
-            created_count = 0
+        # Mark property as sold
+        property_obj.listing_status = 'sold'
+        property_obj.save()
 
-            # Sale Assistant Commission
-            if sale.sale_assistant:
-                Disbursement.objects.create(
-                    sale=sale,
-                    recipient=sale.sale_assistant,
-                    disbursement_type='sale_assistant_commission',
-                    amount=commissions['sale_assistant'],
-                    percentage=2.5,
-                    status='in_review',
-                )
-                created_count += 1
-
-            # Broker Commission (if broker exists)
-            if sale.broker:
-                Disbursement.objects.create(
-                    sale=sale,
-                    recipient=sale.broker,
-                    disbursement_type='broker_commission',
-                    amount=commissions['broker'],
-                    percentage=2.5,
-                    status='in_review',
-                )
-                created_count += 1
-
-            # Owner Proceeds
-            Disbursement.objects.create(
-                sale=sale,
-                recipient=property_obj.owner,
-                disbursement_type='owner_proceeds',
-                amount=commissions['owner'],
-                percentage=93.5,
-                status='in_review',
-            )
-            created_count += 1
-
-            # Mark property as sold
-            property_obj.listing_status = 'sold'
-            property_obj.save()
-
-            messages.success(
-                request, 
-                f'Sale #{sale.id} created successfully! '
-                f'{created_count} disbursements were automatically generated.'
-            )
-
-            # Notify AFTER disbursements are created
-            notify_sale_created(sale)
-
-        except Exception as e:
-            messages.error(request, f'Sale created, but error generating disbursements: {str(e)}')
+        # NOTE: Commissions/disbursements are NOT generated here. They are
+        # calculated only once a payment has been recorded for the sale
+        # (see record_payment). This enforces "cannot calculate if no payment".
+        messages.success(
+            request,
+            f'Sale #{sale.id} created successfully! '
+            f'Record a payment to generate commissions and disbursements.'
+        )
+        notify_sale_created(sale)
 
         return redirect('sales:detail', pk=sale.pk)
 
@@ -288,12 +275,20 @@ def sale_detail(request, pk):
     payment_schedules = PaymentSchedule.objects.filter(sale=sale)
     tasks = SaleTask.objects.filter(sale=sale)
 
+    total_paid = payment_schedules.aggregate(t=Sum('amount_paid'))['t'] or Decimal('0')
+    has_payment = total_paid > 0
+
     return render(request, 'sales/detail.html', {
         'sale': sale,
         'disbursements': disbursements,
         'payment_schedules': payment_schedules,
         'tasks': tasks,
-        'commissions': calculate_commissions(sale),
+        # Commissions can only be calculated once a payment exists
+        'commissions': calculate_commissions(sale) if has_payment else None,
+        'has_payment': has_payment,
+        'total_paid': total_paid,
+        'balance': (sale.net_price - total_paid),
+        'can_manage': request.user.role in ['broker', 'staff', 'admin'] or request.user.is_superuser,
     })
 
 
@@ -407,24 +402,95 @@ def sale_verify(request, pk):
 
 @login_required
 def sale_update_status(request, pk):
-    if request.user.role not in ['broker', 'staff', 'admin'] \
-            and not request.user.is_superuser:
-        messages.error(request, 'You do not have permission.')
-        return redirect('sales:list')
+    # Only admins may manually change a sale's status.
+    # Staff and brokers can view status but not change it.
+    if request.user.role != 'admin' and not request.user.is_superuser:
+        messages.error(request, 'Only administrators can change a sale status.')
+        return redirect('sales:detail', pk=pk)
 
     sale = get_object_or_404(Sale, pk=pk)
 
     if request.method == 'POST':
         new_status = request.POST.get('status')
+        valid = [s[0] for s in Sale.STATUS_CHOICES]
+        if new_status not in valid:
+            messages.error(request, 'Invalid status.')
+            return redirect('sales:detail', pk=sale.pk)
         sale.status = new_status
         sale.save()
-        messages.success(request, f'Sale status updated to {new_status}.')
+        messages.success(request, f'Sale status updated to {sale.get_status_display()}.')
         return redirect('sales:detail', pk=sale.pk)
 
     return render(request, 'sales/update_status.html', {
         'sale': sale,
         'status_choices': Sale.STATUS_CHOICES,
     })
+
+
+@login_required
+def record_payment(request, pk):
+    """Single action to record a client payment against a sale.
+
+    On the first payment, commissions/disbursements are generated
+    (they are intentionally not created before any payment exists).
+    """
+    if request.user.role not in ['broker', 'staff', 'admin', 'sale_assistant'] \
+            and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to record payments.')
+        return redirect('sales:detail', pk=pk)
+
+    sale = get_object_or_404(Sale, pk=pk)
+
+    if request.method == 'POST':
+        amount_str = request.POST.get('amount', '')
+        pay_date = request.POST.get('payment_date') or timezone.now().date()
+        remarks = request.POST.get('remarks', '')
+
+        try:
+            amount = Decimal(amount_str)
+        except Exception:
+            messages.error(request, 'Invalid payment amount.')
+            return redirect('sales:detail', pk=pk)
+
+        if amount <= 0:
+            messages.error(request, 'Payment amount must be greater than zero.')
+            return redirect('sales:detail', pk=pk)
+
+        already_paid = PaymentSchedule.objects.filter(sale=sale).aggregate(
+            t=Sum('amount_paid'))['t'] or Decimal('0')
+        if amount > (sale.net_price - already_paid):
+            messages.error(request, 'Payment exceeds the remaining balance.')
+            return redirect('sales:detail', pk=pk)
+
+        PaymentSchedule.objects.create(
+            sale=sale,
+            due_date=pay_date,
+            amount_due=amount,
+            amount_paid=amount,
+            status='paid',
+            paid_at=timezone.now(),
+            remarks=remarks,
+        )
+
+        # First payment → generate commissions/disbursements
+        if not Disbursement.objects.filter(sale=sale).exists():
+            created = create_disbursements_for_sale(sale)
+            messages.success(
+                request,
+                f'Payment of ₱{amount} recorded. {created} disbursement(s) generated.'
+            )
+        else:
+            messages.success(request, f'Payment of ₱{amount} recorded.')
+
+        # Mark sale completed once fully paid
+        total_paid = already_paid + amount
+        if total_paid >= sale.net_price and sale.status not in ['cancelled', 'defaulted']:
+            sale.status = 'completed'
+            sale.save()
+
+        return redirect('sales:detail', pk=sale.pk)
+
+    return redirect('sales:detail', pk=sale.pk)
 
 
 @login_required
@@ -504,8 +570,13 @@ def disbursement_list(request):
 
     total_amount = disbursements.aggregate(total=Sum('amount'))['total'] or 0
 
+    from apps.pagination import paginate
+    page_obj, querystring = paginate(request, disbursements.order_by('-created_at'), per_page=12)
+
     context = {
-        'disbursements': disbursements.order_by('-created_at'),
+        'disbursements': page_obj,
+        'page_obj': page_obj,
+        'querystring': querystring,
         'tab': tab,
         'total_amount': total_amount,
         'in_review_count': Disbursement.objects.filter(status='in_review').count(),
@@ -517,8 +588,9 @@ def disbursement_list(request):
 
 @login_required
 def disbursement_approve(request, pk):
-    if request.user.role != 'broker' and not request.user.is_superuser:
-        messages.error(request, 'Only brokers can approve disbursements.')
+    # Disbursement approval is an admin action; brokers have view-only access.
+    if request.user.role != 'admin' and not request.user.is_superuser:
+        messages.error(request, 'Only administrators can approve disbursements.')
         return redirect('sales:disbursements')
 
     disbursement = get_object_or_404(Disbursement, pk=pk)

@@ -123,7 +123,7 @@ def reservation_detail(request, pk):
     user = request.user
     if user.role == 'client' and reservation.client != user:
         messages.error(request, 'You do not have permission.')
-        return redirect('reservations:list')
+        return redirect('my_reservations')
     if user.role == 'property_owner' and reservation.property.owner != user:
         messages.error(request, 'You do not have permission.')
         return redirect('reservations:list')
@@ -132,7 +132,10 @@ def reservation_detail(request, pk):
         reservation=reservation
     ).order_by('-changed_at')
 
-    return render(request, 'reservations/detail.html', {
+    # Clients get the public-facing layout; staff/brokers get the admin layout.
+    template = 'public/reservation_detail.html' if user.role == 'client' else 'reservations/detail.html'
+
+    return render(request, template, {
         'reservation': reservation,
         'status_logs': status_logs,
     })

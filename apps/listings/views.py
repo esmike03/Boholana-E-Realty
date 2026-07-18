@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q, Count
+from decimal import Decimal
 from .models import Property, PropertyImage, PropertyTag, PropertyStatusLog
 from apps.accounts.email_notifications import email_new_inquiry
 from apps.accounts.notify import (
@@ -196,8 +197,13 @@ def listing_list(request):
     if type_filter:
         properties = properties.filter(property_type=type_filter)
 
+    from apps.pagination import paginate
+    page_obj, querystring = paginate(request, properties.order_by('-created_at'), per_page=12)
+
     context = {
-        'properties': properties.order_by('-created_at'),
+        'properties': page_obj,
+        'page_obj': page_obj,
+        'querystring': querystring,
         'search': search,
         'status_filter': status_filter,
         'type_filter': type_filter,
@@ -213,11 +219,13 @@ def listing_list(request):
 
 @login_required
 def listing_create(request):
-    if request.user.role not in ['broker', 'property_owner', 'admin', 'staff'] \
+    # Only property owners and staff (and admins) may create listings.
+    # Brokers can view/approve listings but not create them.
+    if request.user.role not in ['property_owner', 'admin', 'staff'] \
             and not request.user.is_superuser:
         messages.error(request, 'You do not have permission to add listings.')
         return redirect('listings:list')
-    
+
     if request.method == 'POST':
         title = request.POST.get('title')
         description = request.POST.get('description')
@@ -227,6 +235,15 @@ def listing_create(request):
         province = request.POST.get('province')
         zip_code = request.POST.get('zip_code')
         price = request.POST.get('price')
+
+        # Reject non-positive / negative prices (blocks "-0")
+        try:
+            if Decimal(price) <= 0:
+                messages.error(request, 'Price must be greater than zero.')
+                return redirect('listings:create')
+        except Exception:
+            messages.error(request, 'Please enter a valid price.')
+            return redirect('listings:create')
         lot_area = request.POST.get('lot_area') or None
         floor_area = request.POST.get('floor_area') or None
         bedrooms = request.POST.get('bedrooms', 0)
@@ -413,7 +430,8 @@ def listing_update(request, pk):
 
 @login_required
 def listing_approve(request, pk):
-    if request.user.role not in ['broker', 'admin', 'staff'] and not request.user.is_superuser:
+    # Approving is a status change — brokers/admins only (staff can create, not approve).
+    if request.user.role not in ['broker', 'admin'] and not request.user.is_superuser:
         messages.error(request, 'You do not have permission to approve listings.')
         return redirect('listings:list')
 
@@ -474,7 +492,7 @@ def listing_reject(request, pk):
 
 @login_required
 def listing_flag(request, pk):
-    if request.user.role not in ['broker', 'staff', 'admin'] \
+    if request.user.role not in ['broker', 'admin'] \
             and not request.user.is_superuser:
         messages.error(request, 'You do not have permission to flag listings.')
         return redirect('listings:list')
@@ -507,11 +525,14 @@ def listing_flag(request, pk):
 
 @login_required
 def listing_archive(request, pk):
-    if request.user.role not in ['broker', 'admin'] and not request.user.is_superuser:
-        messages.error(request, 'Only brokers can archive listings.')
-        return redirect('listings:list')
-
     property = get_object_or_404(Property, pk=pk)
+
+    # Brokers/admins can archive any listing; property owners their own.
+    is_owner = request.user.role == 'property_owner' and property.owner == request.user
+    if request.user.role not in ['broker', 'admin'] and not is_owner \
+            and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to archive this listing.')
+        return redirect('listings:list')
 
     if request.method == 'POST':
         old_status = property.listing_status
@@ -530,6 +551,42 @@ def listing_archive(request, pk):
         return redirect('listings:list')
 
     return render(request, 'listings/archive.html', {'property': property})
+
+
+@login_required
+def listing_restore(request, pk):
+    """Restore an archived listing back to approved status."""
+    property = get_object_or_404(Property, pk=pk)
+
+    is_owner = request.user.role == 'property_owner' and property.owner == request.user
+    if request.user.role not in ['broker', 'admin'] and not is_owner \
+            and not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to restore this listing.')
+        return redirect('listings:list')
+
+    if property.listing_status != 'archived':
+        messages.error(request, 'Only archived listings can be restored.')
+        return redirect('listings:detail', pk=property.pk)
+
+    if request.method == 'POST':
+        old_status = property.listing_status
+        # Property owners' restored listings go back for approval; staff/broker
+        # restore directly to approved.
+        new_status = 'pending_approval' if is_owner else 'approved'
+        property.listing_status = new_status
+        property.save()
+
+        PropertyStatusLog.objects.create(
+            property=property,
+            changed_by=request.user,
+            old_status=old_status,
+            new_status=new_status,
+            remarks=request.POST.get('remarks', 'Listing restored from archive.')
+        )
+        messages.success(request, f'"{property.title}" has been restored.')
+        return redirect('listings:detail', pk=property.pk)
+
+    return redirect('listings:detail', pk=property.pk)
 
 
 @login_required

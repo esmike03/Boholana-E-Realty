@@ -10,6 +10,7 @@ urlpatterns = [
     path('<int:pk>/', views.sale_detail, name='detail'),
     path('<int:pk>/verify/', views.sale_verify, name='verify'),
     path('<int:pk>/status/', views.sale_update_status, name='update_status'),
+    path('<int:pk>/payment/', views.record_payment, name='record_payment'),
     path('<int:pk>/task/', views.assign_task, name='assign_task'),
 
     # Disbursements

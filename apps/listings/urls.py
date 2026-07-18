@@ -13,6 +13,7 @@ urlpatterns = [
     path('<int:pk>/reject/', views.listing_reject, name='reject'),
     path('<int:pk>/flag/', views.listing_flag, name='flag'),
     path('<int:pk>/archive/', views.listing_archive, name='archive'),
+    path('<int:pk>/restore/', views.listing_restore, name='restore'),
     path('<int:pk>/sold/', views.listing_mark_sold, name='mark_sold'),
     path('<int:pk>/favorite/', views.toggle_favorite, name='favorite'),
     

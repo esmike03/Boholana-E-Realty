@@ -32,8 +32,6 @@ class Report(models.Model):
 
     FORMAT_CHOICES = (
         ('pdf', 'PDF'),
-        ('excel', 'Excel'),
-        ('csv', 'CSV'),
     )
 
     # Relations

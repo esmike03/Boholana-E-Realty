@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% load humanize %}
-{% block title %}Disbursements — Boholana E-Realty{% endblock %}
-{% block page_title %}Disbursements{% endblock %}
-{% block page_subtitle %}Manage commission disbursements{% endblock %}
+{% block title %}{% if user.role == 'broker' or user.role == 'sale_assistant' %}Commissions{% else %}Disbursements{% endif %} — Boholana E-Realty{% endblock %}
+{% block page_title %}{% if user.role == 'broker' or user.role == 'sale_assistant' %}Commissions{% else %}Disbursements{% endif %}{% endblock %}
+{% block page_subtitle %}{% if user.role == 'broker' or user.role == 'sale_assistant' %}View your commission earnings{% else %}Manage commission disbursements{% endif %}{% endblock %}
 
 {% block content %}
 
@@ -97,7 +97,7 @@
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-1">
-                            {% if user.role == 'broker' or user.is_superuser %}
+                            {% if user.role == 'admin' or user.is_superuser %}
                                 {% if disbursement.status == 'in_review' %}
                                 <a href="{% url 'sales:disbursement_approve' disbursement.pk %}"
                                    class="bg-green-100 hover:bg-green-200 text-green-600 px-3 py-1.5 rounded-lg text-xs transition">
@@ -124,6 +124,9 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+    <div class="px-6 pb-4">
+        {% include 'includes/pagination.html' %}
     </div>
 </div>
 {% endblock %}

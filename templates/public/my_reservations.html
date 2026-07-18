@@ -98,6 +98,14 @@
             </span>
 
             <div class="flex items-center gap-2">
+              <!-- View Details -->
+              <a
+                href="{% url 'reservations:detail' reservation.pk %}"
+                class="text-xs bg-gray-900 hover:bg-yellow-600 text-white px-2.5 py-1 transition-colors"
+              >
+                <i class="fas fa-eye text-[10px] mr-1"></i>View Details
+              </a>
+
               <!-- View Property -->
               <a
                 href="{% url 'property_detail' reservation.property.pk %}"
